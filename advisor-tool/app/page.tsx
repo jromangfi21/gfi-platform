@@ -8,14 +8,14 @@ import {
 } from 'recharts';
 import { 
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
-  Printer, PlayCircle, Eye, ChevronRight, CheckCircle2,
+  Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
   MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame
 } from 'lucide-react';
 
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
-  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('backtest');
+  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('story');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('stocks_fia_vs_6040');
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
 
@@ -308,7 +308,7 @@ export default function AdvisorTool() {
         {/* Workspace Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Left Controls */}
+          {/* Left Controls (4 Cols) */}
           <div className="lg:col-span-4 bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 h-fit text-sm print:hidden">
             
             <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
@@ -379,160 +379,6 @@ export default function AdvisorTool() {
                 Carrier
               </button>
             </div>
-
-            {/* SECTION 4: CARRIER, FIA DUAL-STRATEGY SPLIT & BENCHMARKS */}
-            {openSection === 'carrier' && (
-              <div className="space-y-4 pt-1">
-                {/* DUAL-STRATEGY FIA ALLOCATION SLIDER */}
-                <div className="p-4 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 border border-indigo-500/40 rounded-xl space-y-3 shadow-sm">
-                  <div className="flex items-center justify-between text-xs font-bold text-white">
-                    <span className="flex items-center gap-1.5 text-indigo-300">
-                      <PieChart className="w-4 h-4 text-indigo-400" /> FIA Strategy Split
-                    </span>
-                    <span className="text-emerald-400 font-mono font-black">
-                      {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed
-                    </span>
-                  </div>
-
-                  <div>
-                    <input
-                      type="range"
-                      min="0.50"
-                      max="1.00"
-                      step="0.05"
-                      value={fiaIndexedAllocationPct}
-                      onChange={(e) => setFiaIndexedAllocationPct(Number(e.target.value))}
-                      className="w-full accent-indigo-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
-                    />
-                    <div className="flex justify-between text-xs text-slate-400 mt-1">
-                      <span>50/50</span>
-                      <span className="text-indigo-300 font-bold">80/20 Target</span>
-                      <span>100% S&P</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 text-xs">
-                    <div>
-                      <span className="text-slate-400 block">Fixed Bucket Rate:</span>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <input
-                          type="number"
-                          step={0.25}
-                          min={1.0}
-                          max={5.0}
-                          value={Number((fiaFixedYieldRate * 100).toFixed(2))}
-                          onChange={(e) => setFiaFixedYieldRate(Number(e.target.value) / 100)}
-                          className="w-16 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-white font-bold text-xs"
-                        />
-                        <span className="text-slate-400 font-bold">%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Guaranteed Floor:</span>
-                      <span className="text-emerald-400 font-black text-sm block mt-0.5">
-                        +{effectiveGuaranteedFloorPct.toFixed(2)}% / yr
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sequence of Returns Shock Test Button */}
-                <button
-                  onClick={() => setApplySequenceShock(!applySequenceShock)}
-                  className={`w-full py-2.5 px-3 rounded-lg border text-left text-xs transition flex items-center justify-between ${
-                    applySequenceShock 
-                      ? 'bg-rose-500/20 border-rose-500 text-rose-300 font-bold shadow-sm'
-                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Flame className="w-4 h-4 text-rose-400" /> Early Bear Market Shock (Yr 1-3)
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-bold">
-                    {applySequenceShock ? 'Active' : 'Test'}
-                  </span>
-                </button>
-
-                {/* PAYCHECK CUSTOM DEPOSIT */}
-                <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2.5">
-                  <div className="flex justify-between items-center text-slate-200 text-xs">
-                    <span className="font-bold text-emerald-300 flex items-center gap-1.5">
-                      <Wallet className="w-3.5 h-3.5" /> Income FIA Deposit:
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400">$</span>
-                      <input
-                        type="number"
-                        step={10000}
-                        value={customFiaDeposit}
-                        onChange={(e) => setCustomFiaDeposit(Number(e.target.value))}
-                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-emerald-400 font-black text-right text-sm"
-                      />
-                    </div>
-                  </div>
-                  <input
-                    type="range"
-                    min="100000"
-                    max={iraBalance || 2000000}
-                    step="25000"
-                    value={customFiaDeposit}
-                    onChange={(e) => setCustomFiaDeposit(Number(e.target.value))}
-                    className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
-                  />
-                  <div className="flex justify-between text-xs text-slate-300 font-medium">
-                    <span>Paychecks: ${customFiaDeposit.toLocaleString()}</span>
-                    <span>Playchecks: ${playcheckEquitiesRemaining.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span className="font-semibold">Contractual GLWB Payout Rate:</span>
-                    <span className="font-black text-emerald-400 text-sm">{(incomePayoutRate * 100).toFixed(1)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.05"
-                    max="0.08"
-                    step="0.0025"
-                    value={incomePayoutRate}
-                    onChange={(e) => setIncomePayoutRate(Number(e.target.value))}
-                    className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
-                  />
-                </div>
-
-                <div className="pt-2 border-t border-slate-800">
-                  <label className="text-slate-300 block mb-1 text-xs font-semibold">Stress Backtest Period:</label>
-                  <select
-                    value={backtestPeriod}
-                    onChange={(e) => setBacktestPeriod(e.target.value as BacktestPeriod)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs font-bold"
-                  >
-                    <option value="2000_2010">2000–2010 (Dot-Com + 2008 Crash)</option>
-                    <option value="2008_2018">2008–2018 (Great Recession Recovery)</option>
-                    <option value="2015_2025">2015–2024 (Modern Volatility & Tech Rally)</option>
-                    <option value="all_25_years">Full 25-Year Cycle (2000–2024)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span className="font-semibold">S&P 500 Annual Cap:</span>
-                    <span className="font-black text-cyan-400 text-sm">{(fiaCap * 100).toFixed(1)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.06"
-                    max="0.14"
-                    step="0.005"
-                    value={fiaCap}
-                    onChange={(e) => setFiaCap(Number(e.target.value))}
-                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
-                  />
-                  <span className="text-xs text-slate-400 mt-1 block">Contractual 0% floor on indexed portion</span>
-                </div>
-              </div>
-            )}
 
             {/* SECTION 1: PROFILE */}
             {openSection === 'client' && (
@@ -710,6 +556,59 @@ export default function AdvisorTool() {
                     onChange={(e) => setWithdrawalNeed(Number(e.target.value))}
                     className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
+                  <span className="text-xs text-slate-400 block mt-1">Drives living taxes paid per year during retirement</span>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
+                    <span>Social Security (Combined):</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={1000}
+                        value={socialSecurity}
+                        onChange={(e) => setSocialSecurity(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
+                      />
+                      <span className="text-slate-400">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="10000"
+                    max="80000"
+                    step="1000"
+                    value={socialSecurity}
+                    onChange={(e) => setSocialSecurity(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
+                    <span>Pension / Other Annuities:</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={1000}
+                        value={fixedIncome}
+                        onChange={(e) => setFixedIncome(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
+                      />
+                      <span className="text-slate-400">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80000"
+                    step="2000"
+                    value={fixedIncome}
+                    onChange={(e) => setFixedIncome(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
                 </div>
               </div>
             )}
@@ -755,10 +654,447 @@ export default function AdvisorTool() {
               </div>
             )}
 
+            {/* SECTION 4: CARRIER, FIA DUAL-STRATEGY SPLIT & BENCHMARKS */}
+            {openSection === 'carrier' && (
+              <div className="space-y-4 pt-1">
+                {/* DUAL-STRATEGY FIA ALLOCATION SLIDER */}
+                <div className="p-4 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 border border-indigo-500/40 rounded-xl space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-bold text-white">
+                    <span className="flex items-center gap-1.5 text-indigo-300">
+                      <PieChart className="w-4 h-4 text-indigo-400" /> FIA Strategy Split
+                    </span>
+                    <span className="text-emerald-400 font-mono font-black">
+                      {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed
+                    </span>
+                  </div>
+
+                  <div>
+                    <input
+                      type="range"
+                      min="0.50"
+                      max="1.00"
+                      step="0.05"
+                      value={fiaIndexedAllocationPct}
+                      onChange={(e) => setFiaIndexedAllocationPct(Number(e.target.value))}
+                      className="w-full accent-indigo-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    />
+                    <div className="flex justify-between text-xs text-slate-400 mt-1">
+                      <span>50/50</span>
+                      <span className="text-indigo-300 font-bold">80/20 Target</span>
+                      <span>100% S&P</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 text-xs">
+                    <div>
+                      <span className="text-slate-400 block">Fixed Bucket Rate:</span>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <input
+                          type="number"
+                          step={0.25}
+                          min={1.0}
+                          max={5.0}
+                          value={Number((fiaFixedYieldRate * 100).toFixed(2))}
+                          onChange={(e) => setFiaFixedYieldRate(Number(e.target.value) / 100)}
+                          className="w-16 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-white font-bold text-xs"
+                        />
+                        <span className="text-slate-400 font-bold">%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Guaranteed Floor:</span>
+                      <span className="text-emerald-400 font-black text-sm block mt-0.5">
+                        +{effectiveGuaranteedFloorPct.toFixed(2)}% / yr
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sequence of Returns Shock Test Button */}
+                <button
+                  onClick={() => setApplySequenceShock(!applySequenceShock)}
+                  className={`w-full py-2.5 px-3 rounded-lg border text-left text-xs transition flex items-center justify-between ${
+                    applySequenceShock 
+                      ? 'bg-rose-500/20 border-rose-500 text-rose-300 font-bold shadow-sm'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-rose-400" /> Early Bear Market Shock (Yr 1-3)
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-bold">
+                    {applySequenceShock ? 'Active' : 'Test'}
+                  </span>
+                </button>
+
+                {/* PAYCHECK CUSTOM DEPOSIT */}
+                <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2.5">
+                  <div className="flex justify-between items-center text-slate-200 text-xs">
+                    <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+                      <Wallet className="w-3.5 h-3.5" /> Income FIA Deposit:
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={10000}
+                        value={customFiaDeposit}
+                        onChange={(e) => setCustomFiaDeposit(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-emerald-400 font-black text-right text-sm"
+                      />
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="100000"
+                    max={iraBalance || 2000000}
+                    step="25000"
+                    value={customFiaDeposit}
+                    onChange={(e) => setCustomFiaDeposit(Number(e.target.value))}
+                    className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                  <div className="flex justify-between text-xs text-slate-300 font-medium">
+                    <span>Paychecks: ${customFiaDeposit.toLocaleString()}</span>
+                    <span>Playchecks: ${playcheckEquitiesRemaining.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
+                    <span className="font-semibold">Contractual GLWB Payout Rate:</span>
+                    <span className="font-black text-emerald-400 text-sm">{(incomePayoutRate * 100).toFixed(1)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.08"
+                    step="0.0025"
+                    value={incomePayoutRate}
+                    onChange={(e) => setIncomePayoutRate(Number(e.target.value))}
+                    className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-slate-800">
+                  <label className="text-slate-300 block mb-1 text-xs font-semibold">Stress Backtest Period:</label>
+                  <select
+                    value={backtestPeriod}
+                    onChange={(e) => setBacktestPeriod(e.target.value as BacktestPeriod)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs font-bold"
+                  >
+                    <option value="2000_2010">2000–2010 (Dot-Com + 2008 Crash)</option>
+                    <option value="2008_2018">2008–2018 (Great Recession Recovery)</option>
+                    <option value="2015_2025">2015–2024 (Modern Volatility & Tech Rally)</option>
+                    <option value="all_25_years">Full 25-Year Cycle (2000–2024)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
+                    <span className="font-semibold">S&P 500 Annual Cap:</span>
+                    <span className="font-black text-cyan-400 text-sm">{(fiaCap * 100).toFixed(1)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.06"
+                    max="0.14"
+                    step="0.005"
+                    value={fiaCap}
+                    onChange={(e) => setFiaCap(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                  <span className="text-xs text-slate-400 mt-1 block">Contractual 0% floor on indexed portion</span>
+                </div>
+              </div>
+            )}
+
           </div>
 
-          {/* Right Presentation Dashboard */}
+          {/* Right Presentation Dashboard (8 Cols) */}
           <div className="lg:col-span-8 space-y-6">
+
+            {/* TAB: STORY MODE */}
+            {activeTab === 'story' && (
+              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <h2 className="text-xl font-black text-white flex items-center gap-2.5">
+                    {storyStep === 1 && <span className="text-rose-400 flex items-center gap-2"><ShieldAlert className="w-6 h-6" /> Act 1: The IRS Tax Avalanche Trap</span>}
+                    {storyStep === 2 && <span className="text-emerald-400 flex items-center gap-2"><Award className="w-6 h-6" /> Act 2: The Tactical Roth Discount Runway</span>}
+                    {storyStep === 3 && <span className="text-cyan-400 flex items-center gap-2"><ShieldCheck className="w-6 h-6" /> Act 3: Paychecks &amp; Playchecks Framework</span>}
+                  </h2>
+                  <div className="flex gap-2">
+                    <button onClick={() => setStoryStep(1)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 1 ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>1. The Trap</button>
+                    <button onClick={() => setStoryStep(2)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 2 ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>2. The Solution</button>
+                    <button onClick={() => setStoryStep(3)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 3 ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>3. Paychecks</button>
+                  </div>
+                </div>
+
+                {/* ACT 1: THE TRAP */}
+                {storyStep === 1 && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">Estimated Total IRS Check</span>
+                        <div className="text-3xl font-black text-rose-500">${taxAnalysis.totalBaselineTax.toLocaleString()}</div>
+                        <p className="text-xs text-slate-300">Taxes paid from working years through age 95 without conversion planning.</p>
+                      </div>
+                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">Forced RMD Trigger Age</span>
+                        <div className="text-3xl font-black text-white">Age 73</div>
+                        <p className="text-xs text-slate-300">Compulsory distributions push you into peak tax brackets.</p>
+                      </div>
+                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">Social Security Tax Torpedo</span>
+                        <div className="text-3xl font-black text-amber-400">Up to 85%</div>
+                        <p className="text-xs text-slate-300">Taxable retirement withdrawals cause up to 85% of Social Security benefits to be taxed.</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2.5">
+                        Annual Tax Burden Under Inaction (Reflects salary, retirement spending, and age 73 RMDs):
+                      </div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={taxAnalysis.yearlyData}>
+                            <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Bar dataKey="baselineTax" name="Forced Tax Liability Under Inaction" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <button onClick={() => setStoryStep(2)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
+                      Step 2: See How We Dismantle This With Roth Conversions <ChevronRight className="w-5 h-5" />
+                    </button>
+
+                    {/* ADVISOR PROMPT CARD (ACT 1) */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Act 1: The Trap
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, ¿qué sucedería si sus retiros de jubilación a partir de los ${retirementAge} años lo empujan a un tramo impositivo más alto de lo planeado, seguido por las RMD obligatorias a los 73 años? ¿Cómo impactaría esto su estilo de vida?"`
+                              : `"${firstName}, what would happen if your retirement withdrawals starting at age ${retirementAge} push you into a higher tax bracket than expected, followed by compulsory RMDs at 73—how would that affect your lifestyle?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Los jubilados no le temen tanto a las caídas del mercado como a perder el control sobre sus ingresos. Las RMD le otorgan al IRS el control total de su factura fiscal."`
+                              : `"Retirees don't fear market crashes as much as they fear losing control over their income. RMDs give the IRS total control over your tax bill."`
+                            }
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si esto no se soluciona antes de que cambien las leyes tributarias, ¿qué cantidad de estos $${taxAnalysis.totalBaselineTax.toLocaleString()} se sentiría cómodo entregando al gobierno en lugar de dejárselo a su familia?"`
+                              : `"${firstName}, if this isn't addressed now before tax laws shift, how much of this $${taxAnalysis.totalBaselineTax.toLocaleString()} do you feel comfortable handing over to the government instead of leaving it to your family?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Acumular saldos antes de impuestos sin una planificación proactiva convierte al IRS en su socio mayoritario."`
+                              : `"Compounding pre-tax balances without proactive distribution planning turns the IRS into your majority wealth partner."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ACT 2: THE SOLUTION */}
+                {storyStep === 2 && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-5 bg-emerald-950/30 border border-emerald-500/50 rounded-xl space-y-1.5 shadow-sm">
+                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider">Your Lifetime Tax Savings</span>
+                        <div className="text-4xl font-black text-emerald-400">${taxAnalysis.lifetimeTaxSaved.toLocaleString()}</div>
+                        <p className="text-xs text-slate-200 font-medium">Front-loading conversions into current lower tax brackets before age 73.</p>
+                      </div>
+                      <div className="p-5 bg-indigo-950/30 border border-indigo-500/50 rounded-xl space-y-1.5 shadow-sm">
+                        <span className="text-xs text-indigo-400 uppercase font-black tracking-wider">HEIRS 10-YR TAX SHIELD</span>
+                        <div className="text-4xl font-black text-indigo-400">${taxAnalysis.heirSavings.toLocaleString()}</div>
+                        <p className="text-xs text-slate-200 font-medium">Preserves wealth your beneficiaries would lose to the 10-year inherited IRA liquidation rule.</p>
+                      </div>
+                    </div>
+
+                    {/* VISUAL FOR ACT 2: WEALTH CONVERSION PROGRESSION */}
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2.5">
+                        Tactical Wealth Transformation (Pre-Tax IRA Shrinks to $0 while Tax-Free Roth Compounds):
+                      </div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={taxAnalysis.yearlyData}>
+                            <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Line type="monotone" dataKey="planIra" name="Pre-Tax IRA Balance (Target: $0)" stroke="#f43f5e" strokeWidth={3} strokeDasharray="4 4" />
+                            <Line type="monotone" dataKey="planRoth" name="Tax-Free Roth Balance (Zero RMDs)" stroke="#10b981" strokeWidth={3} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <button onClick={() => setStoryStep(3)} className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
+                      Step 3: Secure Your Guaranteed Paychecks &amp; Playchecks <ChevronRight className="w-5 h-5" />
+                    </button>
+
+                    {/* ADVISOR PROMPT CARD (ACT 2) */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Act 2: The Solution
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si existiera una forma de aprovechar las tasas tributarias actuales para proteger permanentemente $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} de impuestos futuros, ¿le daría eso mayor tranquilidad?"`
+                              : `"${firstName}, if there was a way to take advantage of today's lower tax rates and permanently protect $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} from compulsory IRS taxes, would that give you greater confidence?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"El mayor regalo que puede dejarle a su familia es una jubilación y un legado 100% libres de impuestos. Los impuestos están con descuento hoy; no lo estarán mañana."`
+                              : `"The single greatest gift you can give your family is a 100% tax-free retirement and legacy. Taxes are on sale today; they won't be tomorrow."`
+                            }
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, sabiendo que bajo la ley SECURE sus hijos deben liquidar una cuenta heredada en 10 años, ¿qué tan importante es garantizar que reciban este patrimonio completamente libre de impuestos?"`
+                              : `"${firstName}, knowing that under the SECURE Act your children have to liquidate an inherited IRA within 10 years, how important is it to make sure they inherit this 100% tax-free?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Sus hijos se verán obligados a liquidar su IRA tradicional en sus años de mayores ingresos a menos que lo convirtamos proactivamente ahora."`
+                              : `"Your kids will be forced to take your pre-tax IRA distributions in their highest-earning career years unless we convert it now."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ACT 3: PAYCHECKS & PLAYCHECKS */}
+                {storyStep === 3 && (
+                  <div className="space-y-6">
+                    <div className="p-6 bg-slate-950 border border-slate-800 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div className="text-sm font-bold text-slate-200 uppercase tracking-wide flex items-center gap-2">
+                          <Compass className="w-5 h-5 text-emerald-400" /> Paychecks &amp; Playchecks Framework
+                        </div>
+                        <span className="text-xs bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-full font-mono font-bold">
+                          MATH &amp; SCIENCE DRIVEN
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="p-5 bg-emerald-950/20 border border-emerald-500/40 rounded-xl space-y-2">
+                          <div className="text-xs font-black text-emerald-400 uppercase tracking-wide">Bucket 1: Guaranteed Paychecks (Life Essentials)</div>
+                          <div className="text-3xl font-black text-white">${guaranteedFiaIncome.toLocaleString()} / Year</div>
+                          <div className="text-xs text-slate-300">Funded by: <b className="text-white">${customFiaDeposit.toLocaleString()}</b> FIA Contract</div>
+                          <ul className="text-xs text-slate-200 space-y-2 pt-2">
+                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Contractually guaranteed for life via Income FIA</li>
+                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Completely neutralizes Sequence-of-Returns Risk</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-5 bg-sky-950/20 border border-sky-500/40 rounded-xl space-y-2">
+                          <div className="text-xs font-black text-sky-400 uppercase tracking-wide">Bucket 2: Playchecks &amp; Growth (Freedom &amp; Family)</div>
+                          <div className="text-3xl font-black text-white">${playcheckEquitiesRemaining.toLocaleString()} Invested</div>
+                          <div className="text-xs text-slate-300">100% Unencumbered Equities (Growth Engine)</div>
+                          <ul className="text-xs text-slate-200 space-y-2 pt-2">
+                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-sky-400 shrink-0" /> Invested for upside without crash liquidation pressure</li>
+                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-sky-400 shrink-0" /> Funds lifestyle, travel, and family inheritance</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* VISUAL FOR ACT 3: PAYCHECK STABILITY VS 60/40 FLUCTUATION */}
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">
+                        Guaranteed Life Paycheck Floor vs. Fluctuating 60/40 Portfolio Cash Flow:
+                      </div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={incomePaycheckComparison}>
+                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                            <Bar dataKey="guaranteedFiaPaycheck" name="Guaranteed Life Paycheck (Contractual Floor)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <button onClick={() => setActiveTab('summary')} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
+                      View Executive Takeaway Proposal <ChevronRight className="w-5 h-5" />
+                    </button>
+
+                    {/* ADVISOR PROMPT CARD (ACT 3) */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Act 3: Paychecks &amp; Playchecks
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si podemos garantizar que reciba $${guaranteedFiaIncome.toLocaleString()} cada año de por vida—incluso si el mercado cae 30%—¿con cuánta mayor tranquilidad dejaría el resto de su dinero invertido para crecer?"`
+                              : `"${firstName}, if we can guarantee $${guaranteedFiaIncome.toLocaleString()} hits your bank account every single year for life—even if the market drops 30%—how much easier would it be to leave the rest of your portfolio invested for long-term growth?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Las anualidades no son buenas ni malas; cumplen una función matemática única: fabricar créditos de mortalidad garantizados. No ponemos todo su dinero en una anualidad; solo lo suficiente para cubrir sus costos de vida básicos de por vida."`
+                              : `"Annuities aren't good or bad; they do a mathematical job no stock, bond, or fund can do: manufacture guaranteed mortality credits. You don't put all your money in an annuity; you only put enough to cover basic living costs for life."`
+                            }
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, con un portafolio tradicional 60/40, cuando el mercado cae como en 2008, retirar $32,000 lo obliga a vender acciones en pérdida. ¿Prefiere basar su sustento diario en la volatilidad de la bolsa o en una garantía legal contractual?"`
+                              : `"${firstName}, with a traditional 60/40 portfolio, when the market crashes like in 2008, withdrawing $32,000 forces you to sell stocks at rock bottom. Do you want your grocery and healthcare money dependent on market timing, or backed by a legal contract?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Si fallece temprano, sus herederos reciben el saldo restante. Pero los planes de retiro no se diseñan para morir joven, sino para la verdadera catástrofe financiera: vivir hasta los 95 años y quedarse sin dinero."`
+                              : `"If you die early, your heirs receive the remaining balance. But retirement plans aren't designed for dying young—they are built for the catastrophe of living to 95 and running out of money."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* TAB: GFILOGIX BACKTEST STUDIO */}
             {activeTab === 'backtest' && (
@@ -897,7 +1233,7 @@ export default function AdvisorTool() {
                       </div>
                     </div>
 
-                    {/* ADVISOR PROMPT CARD */}
+                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
                         <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — The Decumulation Defense
@@ -908,6 +1244,13 @@ export default function AdvisorTool() {
                             {lang === 'es'
                               ? `"${firstName}, el mayor peligro en la jubilación no es que las acciones caigan; es verse forzado a liquidar bonos o acciones a la baja para cubrir sus $${withdrawalNeed.toLocaleString()} anuales. Al mover su porción conservadora a una FIA con piso del 0% y tasa fija positiva de +${effectiveGuaranteedFloorPct.toFixed(2)}%, sus cheques de vida provienen de un bolsillo protegido, dando a sus acciones el tiempo necesario para rebotar sin pérdidas forzadas. ¿Tiene sentido eliminar el riesgo de liquidación en su plan?"`
                               : `"${firstName}, the single greatest threat in retirement is not that equities drop—it's being forced to sell bonds or stocks at a loss to fund your $${withdrawalNeed.toLocaleString()} in annual living expenses. By shifting your conservative 40% into an FIA with a contractual floor and a +${effectiveGuaranteedFloorPct.toFixed(2)}% guaranteed baseline, your living paychecks are drawn from an insulated bucket, giving your equities the runway they need to recover. Does it make sense to remove liquidation risk from your plan?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Los bonos agresivos tienen una alta correlación con la bolsa de valores; cuando las acciones caen, los bonos chatarra se desploman. Una FIA ofrece una verdadera descorrelación con piso del 0% garantizado."`
+                              : `"High-yield aggressive bonds are heavily correlated with equities; when stocks crash, junk bonds plunge too. An FIA provides true non-correlated defense with a legal 0% floor."`
                             }
                           </div>
                         </div>
@@ -1153,112 +1496,30 @@ export default function AdvisorTool() {
                     </table>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* TAB: STORY MODE */}
-            {activeTab === 'story' && (
-              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <h2 className="text-xl font-black text-white flex items-center gap-2.5">
-                    {storyStep === 1 && <span className="text-rose-400 flex items-center gap-2"><ShieldAlert className="w-6 h-6" /> Act 1: The IRS Tax Avalanche Trap</span>}
-                    {storyStep === 2 && <span className="text-emerald-400 flex items-center gap-2"><Award className="w-6 h-6" /> Act 2: The Tactical Roth Discount Runway</span>}
-                    {storyStep === 3 && <span className="text-cyan-400 flex items-center gap-2"><ShieldCheck className="w-6 h-6" /> Act 3: Paychecks &amp; Playchecks</span>}
-                  </h2>
-                  <div className="flex gap-2">
-                    <button onClick={() => setStoryStep(1)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 1 ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>1. The Trap</button>
-                    <button onClick={() => setStoryStep(2)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 2 ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>2. The Solution</button>
-                    <button onClick={() => setStoryStep(3)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 3 ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>3. Paychecks</button>
+                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT) */}
+                <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                    <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — Tactical Roth Runway
+                  </div>
+                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, al modelar su salario actual de $${currentEarnedIncome.toLocaleString()} antes de la jubilación y su ingreso meta de $${withdrawalNeed.toLocaleString()} al jubilarse, calibramos exactamente cuánto espacio libre queda en el tramo impositivo elegido sin sobrepasar su límite marginal. Con el bono del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es solo del ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido ejecutar esta conversión estratégica?"`
+                          : `"${firstName}, by incorporating your current salary of $${currentEarnedIncome.toLocaleString()} prior to retirement and your target income of $${withdrawalNeed.toLocaleString()} once retired, we identify the exact room remaining in your selected tax bracket without spilling over into higher rates. With the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is just ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this disciplined tax strategy into practice?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1.5">•</span>
+                        {lang === 'es'
+                          ? `"Pagar impuestos ahora no es un gasto; es comprar un dólar libre de impuestos por un descuento significativo. El bono de la aseguradora absorbe el costo para que sus herederos reciban el 100% libre de impuestos bajo la ley SECURE."`
+                          : `"Paying taxes now isn't an expense; it's buying a future tax-free dollar at a major discount. The carrier's upfront bonus absorbs the friction so your children inherit 100% tax-free wealth under the SECURE Act."`
+                        }
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {storyStep === 1 && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
-                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">Estimated Total IRS Check</span>
-                        <div className="text-3xl font-black text-rose-500">${taxAnalysis.totalBaselineTax.toLocaleString()}</div>
-                        <p className="text-xs text-slate-300">Taxes paid from working years through age 95 without conversion planning.</p>
-                      </div>
-                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
-                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">Forced RMD Trigger Age</span>
-                        <div className="text-3xl font-black text-white">Age 73</div>
-                        <p className="text-xs text-slate-300">Compulsory distributions push you into peak tax brackets.</p>
-                      </div>
-                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
-                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">Social Security Tax Torpedo</span>
-                        <div className="text-3xl font-black text-amber-400">Up to 85%</div>
-                        <p className="text-xs text-slate-300">Taxable retirement withdrawals cause up to 85% of Social Security benefits to be taxed.</p>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setStoryStep(2)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      Step 2: See How We Dismantle This With Roth Conversions <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-
-                {storyStep === 2 && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-5 bg-emerald-950/30 border border-emerald-500/50 rounded-xl space-y-1.5 shadow-sm">
-                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider">Your Lifetime Tax Savings</span>
-                        <div className="text-4xl font-black text-emerald-400">${taxAnalysis.lifetimeTaxSaved.toLocaleString()}</div>
-                        <p className="text-xs text-slate-200 font-medium">Front-loading conversions into current lower tax brackets before age 73.</p>
-                      </div>
-                      <div className="p-5 bg-indigo-950/30 border border-indigo-500/50 rounded-xl space-y-1.5 shadow-sm">
-                        <span className="text-xs text-indigo-400 uppercase font-black tracking-wider">HEIRS 10-YR TAX SHIELD</span>
-                        <div className="text-4xl font-black text-indigo-400">${taxAnalysis.heirSavings.toLocaleString()}</div>
-                        <p className="text-xs text-slate-200 font-medium">Preserves wealth your beneficiaries would lose to the 10-year inherited IRA liquidation rule.</p>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setStoryStep(3)} className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      Step 3: Secure Your Guaranteed Paychecks &amp; Playchecks <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-
-                {storyStep === 3 && (
-                  <div className="space-y-6">
-                    <div className="p-6 bg-slate-950 border border-slate-800 rounded-xl space-y-4 shadow-sm">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <div className="text-sm font-bold text-slate-200 uppercase tracking-wide flex items-center gap-2">
-                          <Compass className="w-5 h-5 text-emerald-400" /> Paychecks &amp; Playchecks Framework
-                        </div>
-                        <span className="text-xs bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-full font-mono font-bold">
-                          MATH &amp; SCIENCE DRIVEN
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="p-5 bg-emerald-950/20 border border-emerald-500/40 rounded-xl space-y-2">
-                          <div className="text-xs font-black text-emerald-400 uppercase tracking-wide">Bucket 1: Guaranteed Paychecks (Life Essentials)</div>
-                          <div className="text-3xl font-black text-white">${guaranteedFiaIncome.toLocaleString()} / Year</div>
-                          <div className="text-xs text-slate-300">Funded by: <b className="text-white">${customFiaDeposit.toLocaleString()}</b> FIA Contract</div>
-                          <ul className="text-xs text-slate-200 space-y-2 pt-2">
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Contractually guaranteed for life via Income FIA</li>
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Completely neutralizes Sequence-of-Returns Risk</li>
-                          </ul>
-                        </div>
-
-                        <div className="p-5 bg-sky-950/20 border border-sky-500/40 rounded-xl space-y-2">
-                          <div className="text-xs font-black text-sky-400 uppercase tracking-wide">Bucket 2: Playchecks &amp; Growth (Freedom &amp; Family)</div>
-                          <div className="text-3xl font-black text-white">${playcheckEquitiesRemaining.toLocaleString()} Invested</div>
-                          <div className="text-xs text-slate-300">100% Unencumbered Equities (Growth Engine)</div>
-                          <ul className="text-xs text-slate-200 space-y-2 pt-2">
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-sky-400 shrink-0" /> Invested for upside without crash liquidation pressure</li>
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-sky-400 shrink-0" /> Funds lifestyle, travel, and family inheritance</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setActiveTab('summary')} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      View Executive Takeaway Proposal <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 
@@ -1348,6 +1609,31 @@ export default function AdvisorTool() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* SUMMARY ADVISOR PROMPT CARD */}
+                <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm print:hidden">
+                  <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                    <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — Closing Recommendation
+                  </div>
+                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, cuando combinamos el ahorro impositivo de $${taxAnalysis.lifetimeTaxSaved.toLocaleString()}, la protección de $${taxAnalysis.heirSavings.toLocaleString()} para sus hijos y el cheque vitalicio garantizado de $${guaranteedFiaIncome.toLocaleString()}/año, su ventaja financiera integral neta supera los $${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}. Con estos números en la mano, ¿hay alguna razón por la que no debamos implementar esta estructura?"`
+                          : `"${firstName}, when you combine the $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} in avoided lifetime taxes, the $${taxAnalysis.heirSavings.toLocaleString()} protected for your children, and the guaranteed paycheck floor of $${guaranteedFiaIncome.toLocaleString()}/year, your total comprehensive wealth advantage exceeds $${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}. Based on these numbers, is there any reason we shouldn't put this blueprint into motion?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1.5">•</span>
+                        {lang === 'es'
+                          ? `"El costo de la inacción es de $${taxAnalysis.totalBaselineTax.toLocaleString()} pagados al IRS. Actuar ahora congela ese costo permanentemente."`
+                          : `"The cost of inaction is $${taxAnalysis.totalBaselineTax.toLocaleString()} surrendered to the IRS. Taking action now locks in a permanent family discount."`
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 
