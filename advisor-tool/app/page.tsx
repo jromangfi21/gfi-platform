@@ -215,7 +215,7 @@ export default function AdvisorTool() {
       rowTotal: "Total Comprehensive Wealth Advantage",
     },
     es: {
-      platformTitle: "The GFI Distribution Blueprint™",
+      platformTitle: "The GFI Distribution Blueprint",
       platformSubtitle: "Optimización Fiscal y Arquitectura de Ingresos",
       educationalBadge: "MODELO EDUCATIVO E INFORMATIVO ÚNICAMENTE",
       preparedFor: "Preparado para:",
