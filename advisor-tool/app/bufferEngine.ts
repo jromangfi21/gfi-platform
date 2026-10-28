@@ -1,10 +1,11 @@
 export type BacktestPeriod = '2000_2010' | '2008_2018' | '2015_2025' | 'all_25_years';
+export type BondType = 'corporate_ig' | 'high_yield' | 'aggregate';
 
 export interface BacktestYearData {
   year: number;
   calendarYear: number;
   sp500Return: number;
-  bondReturn: number;
+  selectedBondReturn: number;
   equityBalance: number;
   fiaBalance: number;
   fixedAnnuityBalance: number;
@@ -18,6 +19,7 @@ export interface WealthLogixBacktestParams {
   initialDeposit: number;
   annualWithdrawal: number;
   period: BacktestPeriod;
+  bondType?: BondType;
   fiaCap: number;
   fiaFloor: number;
   fiaParticipation: number;
@@ -35,33 +37,37 @@ export interface WealthLogixBacktestOutput {
   zeroLossYearsCount: number;
 }
 
-// Historical Benchmark Annual Returns (S&P 500 Price Return & US Aggregate Bond Index)
-const HISTORICAL_DATA: Record<number, { sp500: number; bond: number }> = {
-  2000: { sp500: -9.10, bond: 11.63 },
-  2001: { sp500: -11.89, bond: 8.44 },
-  2002: { sp500: -22.10, bond: 10.26 },
-  2003: { sp500: 28.68, bond: 4.10 },
-  2004: { sp500: 10.88, bond: 4.34 },
-  2005: { sp500: 4.91, bond: 2.43 },
-  2006: { sp500: 15.79, bond: 4.33 },
-  2007: { sp500: 5.49, bond: 6.97 },
-  2008: { sp500: -37.00, bond: 5.24 },
-  2009: { sp500: 26.46, bond: 5.93 },
-  2010: { sp500: 15.06, bond: 6.54 },
-  2011: { sp500: 2.11, bond: 7.84 },
-  2012: { sp500: 16.00, bond: 4.22 },
-  2013: { sp500: 32.39, bond: -2.02 },
-  2014: { sp500: 13.69, bond: 5.97 },
-  2015: { sp500: 1.38, bond: 0.55 },
-  2016: { sp500: 11.96, bond: 2.65 },
-  2017: { sp500: 21.83, bond: 3.54 },
-  2018: { sp500: -4.38, bond: 0.01 },
-  2019: { sp500: 31.49, bond: 8.72 },
-  2020: { sp500: 18.40, bond: 7.51 },
-  2021: { sp500: 28.71, bond: -1.54 },
-  2022: { sp500: -18.11, bond: -13.01 }, // Historic dual crash
-  2023: { sp500: 26.29, bond: 5.53 },
-  2024: { sp500: 25.02, bond: 1.25 },
+// Historical Benchmark Annual Returns (%):
+// sp500: S&P 500 Price Return
+// agg: Bloomberg US Aggregate Bond Index
+// corp: Bloomberg US Corporate Investment Grade Index
+// hy: Bloomberg US Corporate High Yield (Aggressive / Junk) Index
+const HISTORICAL_DATA: Record<number, { sp500: number; agg: number; corp: number; hy: number }> = {
+  2000: { sp500: -9.10, agg: 11.63, corp: 9.38, hy: -5.86 },
+  2001: { sp500: -11.89, agg: 8.44, corp: 10.36, hy: 5.28 },
+  2002: { sp500: -22.10, agg: 10.26, corp: 10.01, hy: -1.41 },
+  2003: { sp500: 28.68, agg: 4.10, corp: 8.35, hy: 28.97 },
+  2004: { sp500: 10.88, agg: 4.34, corp: 5.38, hy: 11.13 },
+  2005: { sp500: 4.91, agg: 2.43, corp: 1.68, hy: 2.74 },
+  2006: { sp500: 15.79, agg: 4.33, corp: 4.30, hy: 11.85 },
+  2007: { sp500: 5.49, agg: 6.97, corp: 4.56, hy: 1.87 },
+  2008: { sp500: -37.00, agg: 5.24, corp: -4.94, hy: -26.16 }, // Aggressive bonds crashed alongside equities
+  2009: { sp500: 26.46, agg: 5.93, corp: 18.68, hy: 58.21 },
+  2010: { sp500: 15.06, agg: 6.54, corp: 9.47, hy: 15.12 },
+  2011: { sp500: 2.11, agg: 7.84, corp: 8.15, hy: 4.98 },
+  2012: { sp500: 16.00, agg: 4.22, corp: 9.82, hy: 15.81 },
+  2013: { sp500: 32.39, agg: -2.02, corp: -1.53, hy: 7.44 },
+  2014: { sp500: 13.69, agg: 5.97, corp: 7.46, hy: 2.45 },
+  2015: { sp500: 1.38, agg: 0.55, corp: -0.68, hy: -4.47 },
+  2016: { sp500: 11.96, agg: 2.65, corp: 6.11, hy: 17.13 },
+  2017: { sp500: 21.83, agg: 3.54, corp: 6.42, hy: 7.50 },
+  2018: { sp500: -4.38, agg: 0.01, corp: -2.51, hy: -2.08 },
+  2019: { sp500: 31.49, agg: 8.72, corp: 14.54, hy: 14.32 },
+  2020: { sp500: 18.40, agg: 7.51, corp: 9.89, hy: 7.11 },
+  2021: { sp500: 28.71, agg: -1.54, corp: -1.04, hy: 5.28 },
+  2022: { sp500: -18.11, agg: -13.01, corp: -15.76, hy: -11.19 }, // Severe interest-rate & credit loss
+  2023: { sp500: 26.29, agg: 5.53, corp: 8.52, hy: 13.44 },
+  2024: { sp500: 25.02, agg: 1.25, corp: 2.13, hy: 8.19 },
 };
 
 export function runWealthLogixBacktest(params: WealthLogixBacktestParams): WealthLogixBacktestOutput {
@@ -69,6 +75,7 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     initialDeposit,
     annualWithdrawal,
     period,
+    bondType = 'corporate_ig',
     fiaCap,
     fiaFloor = 0.0,
     fiaParticipation = 1.0,
@@ -102,11 +109,15 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
 
   let idx = 1;
   for (let y = startYear; y <= endYear; y++) {
-    const market = HISTORICAL_DATA[y] || { sp500: 6.5, bond: 3.5 };
+    const market = HISTORICAL_DATA[y] || { sp500: 6.5, agg: 3.5, corp: 4.0, hy: 6.0 };
     const spRaw = market.sp500;
-    const bondRaw = market.bond;
+    
+    // Select specific bond sleeve return
+    let bondRaw = market.corp;
+    if (bondType === 'high_yield') bondRaw = market.hy;
+    if (bondType === 'aggregate') bondRaw = market.agg;
 
-    // Apply annual living withdrawal first
+    // Apply living withdrawal
     equityBal = Math.max(0, equityBal - annualWithdrawal);
     fiaBal = Math.max(0, fiaBal - annualWithdrawal);
     fixedBal = Math.max(0, fixedBal - annualWithdrawal);
@@ -130,11 +141,11 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     // 3. Taxable Fixed Benchmark
     fixedBal = Math.max(0, fixedBal * (1 + afterTaxFixedRate));
 
-    // 4. Traditional 60/40 (60% S&P 500 / 40% Barclays Aggregate Bonds)
+    // 4. Traditional 60/40 (60% Equities / 40% Chosen Bond Sleeve)
     const tradBlend = (0.60 * (spRaw / 100)) + (0.40 * (bondRaw / 100));
     trad6040Bal = Math.max(0, trad6040Bal * (1 + tradBlend));
 
-    // 5. Modernized 60/40 (60% S&P 500 / 40% FIA Bond Replacement with 0% Floor)
+    // 5. Modernized 60/40 (60% Equities / 40% FIA Buffer with 0% Floor)
     const modBlend = (0.60 * (spRaw / 100)) + (0.40 * fiaCredited);
     mod6040FiaBal = Math.max(0, mod6040FiaBal * (1 + modBlend));
 
@@ -142,7 +153,7 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
       year: idx,
       calendarYear: y,
       sp500Return: spRaw,
-      bondReturn: bondRaw,
+      selectedBondReturn: bondRaw,
       equityBalance: Math.round(equityBal),
       fiaBalance: Math.round(fiaBal),
       fixedAnnuityBalance: Math.round(fixedBal),

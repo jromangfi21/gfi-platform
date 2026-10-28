@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { runRobustTaxSimulation, FilingStatus, STATE_TAX_RATES, FreeWithdrawalSchedule } from './taxEngine';
-import { runWealthLogixBacktest, BacktestPeriod } from './bufferEngine';
+import { runWealthLogixBacktest, BacktestPeriod, BondType } from './bufferEngine';
 import { 
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
@@ -15,8 +15,8 @@ import {
 
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
-  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('roth');
-  const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('income_fia_vs_portfolio');
+  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('backtest');
+  const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('stocks_fia_vs_6040');
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
 
   // Accordion Navigation
@@ -53,8 +53,11 @@ export default function AdvisorTool() {
   const [customFiaDeposit, setCustomFiaDeposit] = useState(500000);
   const [incomePayoutRate, setIncomePayoutRate] = useState(0.065);
 
+  // Bond Replacement Category Selector: Corporate vs Aggressive vs Aggregate
+  const [selectedBondType, setSelectedBondType] = useState<BondType>('corporate_ig');
+
   // Backtest Parameters
-  const [backtestPeriod, setBacktestPeriod] = useState<BacktestPeriod>('2000_2010');
+  const [backtestPeriod, setBacktestPeriod] = useState<BacktestPeriod>('2008_2018');
   const [fiaCap, setFiaCap] = useState(0.095);
   const [fixedRate, setFixedRate] = useState(0.0475);
 
@@ -96,6 +99,7 @@ export default function AdvisorTool() {
     initialDeposit: iraBalance,
     annualWithdrawal: withdrawalNeed,
     period: backtestPeriod,
+    bondType: selectedBondType,
     fiaCap,
     fiaFloor: 0.0,
     fiaParticipation: 1.0,
@@ -114,7 +118,7 @@ export default function AdvisorTool() {
   let simulated6040Bal = customFiaDeposit;
   const incomePaycheckComparison = backtest.results.map((r) => {
     const stockReturn = r.sp500Return / 100;
-    const bondReturn = r.bondReturn / 100;
+    const bondReturn = r.selectedBondReturn / 100;
     const blendedReturn = (stockReturn * 0.60) + (bondReturn * 0.40);
 
     simulated6040Bal = Math.max(0, (simulated6040Bal - guaranteedFiaIncome) * (1 + blendedReturn));
@@ -308,7 +312,7 @@ export default function AdvisorTool() {
       downYearsDefended: "Años de Caída de Mercado Defendidos",
       zeroLossNote: "Capital preservado en ciclos de crisis con cero rendimientos negativos.",
       summaryTitle: "The GFI Distribution Blueprint — Resumen Ejecutivo",
-      practiceName: "Global Financial Impact Advisory Practice",
+      practiceName: "Práctica de Asesoría de Global Financial Impact",
       tableDim: "Dimensión Estratégica",
       tableCurrent: "Ruta Actual (Inacción / 60-40)",
       tablePlan: "Plan Integrado GFI",
@@ -437,7 +441,7 @@ export default function AdvisorTool() {
           </div>
         </header>
 
-        {/* Top 4 Stat Banners - Enlarged Presentation Headers */}
+        {/* Top 4 Stat Banners */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
             <div className="flex items-center gap-2 text-emerald-400 mb-1.5 text-xs font-bold uppercase tracking-wide">
@@ -1083,7 +1087,7 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* Conversion Runway Table - ZOOM LEGIBLE */}
+                {/* Conversion Runway Table */}
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
                   <div className="text-xs font-bold text-slate-300 uppercase tracking-wide flex justify-between items-center mb-1">
                     <span className="text-sm font-bold text-white">Full Tactical Conversion Runway to $0 IRA Balance</span>
@@ -1146,7 +1150,7 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT - ZOOM READY) */}
+                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT) */}
                 <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                   <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
                     <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Tactical Roth Runway
@@ -1164,22 +1168,6 @@ export default function AdvisorTool() {
                         {lang === 'es'
                           ? `"Pagar impuestos ahora no es un gasto; es comprar un dólar libre de impuestos por un descuento significativo. El bono de la aseguradora absorbe el costo para que sus herederos reciban el 100% libre de impuestos bajo la ley SECURE."`
                           : `"Paying taxes now isn't an expense; it's buying a future tax-free dollar at a major discount. The carrier's upfront bonus absorbs the friction so your children inherit 100% tax-free wealth under the SECURE Act."`
-                        }
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                        {lang === 'es'
-                          ? `"${firstName}, ya que limitamos la conversión de cada año para que los impuestos queden completamente cubiertos por el retiro libre de penalidades contractuales, ¿qué tranquilidad le da saber que no tendrá que pagarle al IRS de su propio bolsillo?"`
-                          : `"${firstName}, since we calibrate each year's conversion so the taxes are fully covered by your contractual penalty-free withdrawal, how does it feel knowing you won't have to write a check out of pocket to the IRS?"`
-                        }
-                      </div>
-                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                        <span className="text-amber-400 font-bold mr-1.5">•</span>
-                        {lang === 'es'
-                          ? `"Nunca tocamos su liquidez de emergencia. El propio contrato financia la factura del IRS utilizando la provisión de retiro anual libre de penalidades."`
-                          : `"We never compromise your emergency cash reserves. The annuity contract itself finances the tax bill using its penalty-free annual liquidity provision."`
                         }
                       </div>
                     </div>
@@ -1261,7 +1249,7 @@ export default function AdvisorTool() {
                     </div>
 
                     <button onClick={() => setStoryStep(3)} className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      {currentT.btnGoToAct3} <ChevronRight className="w-5 h-5" />
+                      {currentT.btnGoToAct3} <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -1302,7 +1290,7 @@ export default function AdvisorTool() {
                     </div>
 
                     <button onClick={() => setActiveTab('summary')} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      {currentT.btnGoToSummary} <ChevronRight className="w-5 h-5" />
+                      {currentT.btnGoToSummary} <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -1318,15 +1306,8 @@ export default function AdvisorTool() {
                     <p className="text-sm text-slate-300 mt-0.5">{currentT.backtestSubheading}</p>
                   </div>
 
+                  {/* 4 Backtest Modes */}
                   <div className="flex flex-wrap bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs gap-1">
-                    <button
-                      onClick={() => setBacktestMode('income_fia_vs_portfolio')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'income_fia_vs_portfolio' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {currentT.modeIncomeFia}
-                    </button>
                     <button
                       onClick={() => setBacktestMode('stocks_fia_vs_6040')}
                       className={`px-3 py-1.5 rounded font-bold transition ${
@@ -1334,6 +1315,14 @@ export default function AdvisorTool() {
                       }`}
                     >
                       {currentT.modeBondReplacement}
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('income_fia_vs_portfolio')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'income_fia_vs_portfolio' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {currentT.modeIncomeFia}
                     </button>
                     <button
                       onClick={() => setBacktestMode('equity_vs_fia')}
@@ -1394,7 +1383,116 @@ export default function AdvisorTool() {
                   </button>
                 </div>
 
-                {/* MODE 1: PAYCHECKS (FIA) VS 60/40 */}
+                {/* MODE: BOND REPLACEMENT STRATEGY (WITH CORPORATE VS AGGRESSIVE SELECTOR) */}
+                {backtestMode === 'stocks_fia_vs_6040' && (
+                  <div className="space-y-4">
+                    {/* BOND CATEGORY SELECTOR */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800 gap-3">
+                      <div>
+                        <span className="text-sm font-bold text-white block">Compare FIA 0% Floor Against Bond Type:</span>
+                        <span className="text-xs text-slate-400">Select which conservative sleeve you are replacing with a contract floor</span>
+                      </div>
+                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
+                        <button
+                          onClick={() => setSelectedBondType('corporate_ig')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'corporate_ig' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          Corporate Bonds (IG)
+                        </button>
+                        <button
+                          onClick={() => setSelectedBondType('high_yield')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'high_yield' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          Aggressive / Junk Bonds (HY)
+                        </button>
+                        <button
+                          onClick={() => setSelectedBondType('aggregate')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'aggregate' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          US Aggregate
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/50 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 mb-1.5 uppercase tracking-wide">
+                          <Layers className="w-4 h-4" /> Modernized 60/40 (Stocks + FIA 0% Floor)
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          ${backtest.finalModernized6040Fia.toLocaleString()}
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          Ending balance with ${withdrawalNeed.toLocaleString()}/yr living withdrawals. Conservative 40% sleeve never dropped below 0.0%.
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-950 p-5 rounded-xl border border-rose-500/50 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-rose-400 mb-1.5 uppercase tracking-wide">
+                          <Activity className="w-4 h-4" /> Traditional 60/40 (Stocks + {selectedBondType === 'corporate_ig' ? 'Corporate IG Bonds' : selectedBondType === 'high_yield' ? 'Aggressive Junk Bonds' : 'US Aggregate Bonds'})
+                        </div>
+                        <div className="text-3xl font-black text-rose-400">
+                          ${backtest.finalTraditional6040.toLocaleString()}
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          {selectedBondType === 'high_yield' 
+                            ? 'Aggressive bonds crashed by -26.16% in 2008 alongside equities, wiping out conservative ballast.'
+                            : 'Subject to duration losses and interest rate spikes (e.g. -15.76% corporate loss in 2022).'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">
+                        Portfolio Wealth Progression ($1.25M with ${withdrawalNeed.toLocaleString()}/yr Retirement Withdrawals):
+                      </div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={backtest.results}>
+                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Line type="monotone" dataKey="traditional6040Balance" name={`Traditional 60/40 (Stocks + ${selectedBondType === 'corporate_ig' ? 'Corporate' : selectedBondType === 'high_yield' ? 'Aggressive' : 'Agg'} Bonds)`} stroke="#f43f5e" strokeWidth={3} />
+                            <Line type="monotone" dataKey="modernized6040FiaBalance" name="Modernized 60/40 (Stocks + FIA 0% Floor)" stroke="#10b981" strokeWidth={3} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Corporate &amp; Aggressive Bond Replacement
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, muchos inversionistas usan bonos corporativos o de alto rendimiento buscando más interés, pero en 2008 los bonos agresivos cayeron más del 26% al mismo tiempo que las acciones. Al mover ese 40% a una FIA con piso del 0%, protegemos su capital contra quiebras y tasas de interés mientras sus acciones continúan creciendo. ¿Tiene sentido blindar su porción conservadora?"`
+                              : `"${firstName}, many investors turn to corporate or aggressive high-yield bonds seeking higher coupon payments, but in 2008, aggressive bonds crashed by over 26% right alongside the stock market. By shifting that conservative 40% into an FIA with a 0% floor, we eliminate credit default and interest rate risk completely while leaving your 60% equities unconstrained for growth. Does it make sense to remove market risk from your conservative ballast?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Los bonos agresivos tienen una alta correlación con la bolsa de valores; cuando las acciones caen, los bonos chatarra se desploman. Una FIA ofrece una verdadera descorrelación con piso del 0% garantizado."`
+                              : `"High-yield aggressive bonds are heavily correlated with equities; when stocks crash, junk bonds plunge too. An FIA provides true non-correlated defense with a legal 0% floor."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE: PAYCHECKS (FIA) VS 60/40 */}
                 {backtestMode === 'income_fia_vs_portfolio' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1442,56 +1540,7 @@ export default function AdvisorTool() {
                   </div>
                 )}
 
-                {/* MODE 2: BOND REPLACEMENT STRATEGY */}
-                {backtestMode === 'stocks_fia_vs_6040' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/50 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 mb-1.5 uppercase tracking-wide">
-                          <Layers className="w-4 h-4" /> Modernized 60/40 (Stocks + FIA Buffer)
-                        </div>
-                        <div className="text-3xl font-black text-white">
-                          ${backtest.finalModernized6040Fia.toLocaleString()}
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1">
-                          Ending portfolio balance after ${withdrawalNeed.toLocaleString()}/yr distributions. Conservative 40% sleeve never dropped below 0.0%.
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-950 p-5 rounded-xl border border-rose-500/50 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-rose-400 mb-1.5 uppercase tracking-wide">
-                          <Activity className="w-4 h-4" /> Traditional 60/40 (Stocks + US Agg Bonds)
-                        </div>
-                        <div className="text-3xl font-black text-rose-400">
-                          ${backtest.finalTraditional6040.toLocaleString()}
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1">
-                          Subject to bond market duration losses and interest rate hikes (e.g. 2022 crash).
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-bold text-slate-200 mb-2">
-                        Portfolio Wealth Progression ($1.25M with ${withdrawalNeed.toLocaleString()}/yr Retirement Withdrawals):
-                      </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={backtest.results}>
-                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                            <Line type="monotone" dataKey="traditional6040Balance" name="Traditional 60/40 (Stocks + Bonds)" stroke="#f43f5e" strokeWidth={3} />
-                            <Line type="monotone" dataKey="modernized6040FiaBalance" name="Modernized 60/40 (Stocks + FIA 0% Floor)" stroke="#10b981" strokeWidth={3} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE 3: EQUITIES VS FIA ACCUMULATION */}
+                {/* MODE: EQUITIES VS FIA ACCUMULATION */}
                 {backtestMode === 'equity_vs_fia' && (
                   <div className="space-y-4">
                     <div className="h-72 w-full">
@@ -1522,7 +1571,7 @@ export default function AdvisorTool() {
                   </div>
                 )}
 
-                {/* MODE 4: FIXED ANNUITY VS FIA */}
+                {/* MODE: FIXED ANNUITY VS FIA */}
                 {backtestMode === 'fixed_vs_fia' && (
                   <div className="space-y-4">
                     <div className="h-72 w-full">
@@ -1552,30 +1601,6 @@ export default function AdvisorTool() {
                     </div>
                   </div>
                 )}
-
-                {/* ADVISOR PROMPT CARD (BACKTEST STUDIO) */}
-                <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Backtest &amp; Capital Protection
-                  </div>
-                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                        {lang === 'es'
-                          ? `"${firstName}, en 2022 los bonos tradicionales cayeron más del 13% junto con las acciones, demostrando que los bonos ya no son un ancla segura. Al reemplazar el 40% de bonos con una FIA, mantenemos el 60% en acciones para crecer, pero aseguramos contractualmente un piso del 0% en la parte conservadora. ¿Prefiere arriesgar su dinero conservador a tasas de interés, o blindarlo legalmente contra pérdidas?"`
-                          : `"${firstName}, in 2022, traditional bonds lost over 13% at the same time equities dropped, proving that bonds no longer guarantee safe ballast. By replacing the 40% bond sleeve with an FIA, we leave your 60% equities 100% invested for growth, while contractually locking in a 0% floor on the conservative portion. Does it make sense to remove interest rate risk from your conservative money?"`
-                        }
-                      </div>
-                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                        <span className="text-amber-400 font-bold mr-1.5">•</span>
-                        {lang === 'es'
-                          ? `"Retirar ingresos de un portafolio de acciones desprotegido durante un mercado bajista agota el capital de forma irreversible. Un colchón de ingresos garantizados elimina ese peligro para siempre."`
-                          : `"Taking income from an unprotected equity portfolio during a bear market is financial suicide. A guaranteed income buffer eliminates that danger permanently."`
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
               </div>
             )}
