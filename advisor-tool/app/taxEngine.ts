@@ -92,6 +92,7 @@ export interface YearlySimulationResult {
   planTax: number;
   conversionAmount: number;
   maxFreeWithdrawalRatePct: number;
+  isSurrenderExpired: boolean;
   maxFreeWithdrawal: number;
   taxesPaidFromWithdrawal: number;
   statutoryRatePct: number;
@@ -162,10 +163,14 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
   for (let age = currentAge; age <= endAge; age++) {
     const contractYear = age - currentAge + 1;
 
-    // Determine current year contractual free withdrawal allowance
+    // After Year 10 (Year 11+), surrender charges expire -> 100% full liquidity
     let maxFreeWithdrawalRate = 0.10;
-    if (freeWithdrawalSchedule === 'tiered_2_12') {
-      maxFreeWithdrawalRate = contractYear === 1 ? 0.02 : contractYear <= 10 ? 0.12 : 0.10;
+    const isSurrenderExpired = contractYear > 10;
+
+    if (isSurrenderExpired) {
+      maxFreeWithdrawalRate = 1.00; // 100% Free / No Surrender Penalty
+    } else if (freeWithdrawalSchedule === 'tiered_2_12') {
+      maxFreeWithdrawalRate = contractYear === 1 ? 0.02 : 0.12;
     } else if (freeWithdrawalSchedule === 'standard_10') {
       maxFreeWithdrawalRate = contractYear === 1 ? 0.00 : 0.10;
     } else {
@@ -210,7 +215,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       const combinedStatRate = (capacity > 100000 ? 0.22 : 0.12) + stateTaxRate;
       statRatePct = Number((combinedStatRate * 100).toFixed(1));
 
-      // Calculate conversion capacity strictly within free withdrawal liquidity
+      // In Year 11+, maxFreeDollars is 100% of the balance, removing the free withdrawal constraint
       const maxConversionPossible = Math.round(maxFreeDollars / combinedStatRate);
       conversionAmount = Math.min(planIra, Math.min(capacity, maxConversionPossible));
 
@@ -257,6 +262,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       planTax: planYearTax,
       conversionAmount,
       maxFreeWithdrawalRatePct: Number((maxFreeWithdrawalRate * 100).toFixed(0)),
+      isSurrenderExpired,
       maxFreeWithdrawal: maxFreeDollars,
       taxesPaidFromWithdrawal,
       statutoryRatePct: statRatePct || Number(((0.22 + stateTaxRate) * 100).toFixed(1)),

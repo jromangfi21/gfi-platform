@@ -9,7 +9,7 @@ import {
 import { 
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, Eye, EyeOff, Sparkles, ChevronRight, CheckCircle2, RefreshCw,
-  Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, MapPin, Compass, FileText
+  Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, MapPin, Compass, FileText, Unlock
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -19,7 +19,7 @@ export default function AdvisorTool() {
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
   const [showAdvisorNotes, setShowAdvisorNotes] = useState(true);
 
-  // Accordion Section State
+  // Accordion Navigation for Inputs
   const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('tax');
 
   // Client Demographics & Balances
@@ -43,7 +43,7 @@ export default function AdvisorTool() {
 
   const stateTaxRate = (STATE_TAX_RATES[selectedState]?.rate ?? 0.00);
 
-  // Carrier Bonus & Dynamic Schedule
+  // Carrier Bonus & Tiered Free Withdrawal Schedule
   const [carrierBonusPct, setCarrierBonusPct] = useState(0.12);
   const [freeWithdrawalSchedule, setFreeWithdrawalSchedule] = useState<FreeWithdrawalSchedule>('tiered_2_12');
   const [customFreeWithdrawalPct, setCustomFreeWithdrawalPct] = useState(0.10);
@@ -57,7 +57,7 @@ export default function AdvisorTool() {
 
   const firstName = clientName.split('&')[0].trim() || (lang === 'es' ? 'Cliente' : 'Client');
 
-  // Multi-Year Tax Simulation Execution
+  // Run Calculations
   const taxAnalysis = runRobustTaxSimulation({
     currentAge,
     retirementAge,
@@ -90,7 +90,7 @@ export default function AdvisorTool() {
     taxRateOnFixed: 0.24,
   });
 
-  // Income Modeling Calculations
+  // Income Calculations
   const incomeDedicatedCapital = Math.round(iraBalance * incomeAllocationPct);
   const guaranteedFiaIncome = Math.round(incomeDedicatedCapital * incomePayoutRate);
   const traditional4PctIncome = Math.round(incomeDedicatedCapital * 0.04);
@@ -796,6 +796,7 @@ export default function AdvisorTool() {
                     </div>
                   </div>
 
+                  {/* Free Withdrawal Schedule Selector */}
                   <div>
                     <label className="text-slate-300 block mb-1 font-semibold flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-emerald-300">
@@ -807,13 +808,13 @@ export default function AdvisorTool() {
                       onChange={(e) => setFreeWithdrawalSchedule(e.target.value as FreeWithdrawalSchedule)}
                       className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white font-medium text-xs"
                     >
-                      <option value="tiered_2_12">American Equity Schedule (2% Yr 1 → 12% Yrs 2–10)</option>
-                      <option value="standard_10">Standard Industry Schedule (0% Yr 1 → 10% Yr 2+)</option>
-                      <option value="flat_10">Flat Allowance (10% Every Year)</option>
+                      <option value="tiered_2_12">American Equity Schedule (2% Yr 1 → 12% Yrs 2–10 → 100% Yr 11+)</option>
+                      <option value="standard_10">Standard Industry Schedule (0% Yr 1 → 10% Yrs 2–10 → 100% Yr 11+)</option>
+                      <option value="flat_10">Flat Allowance (10% Annual Flat)</option>
                     </select>
                     <span className="text-[10px] text-slate-400 mt-1 block">
-                      {freeWithdrawalSchedule === 'tiered_2_12' && 'Year 1 permits 2% free withdrawal (~$' + Math.round(iraBalance * 0.02).toLocaleString() + ') to start immediate conversions, increasing to 12% in Year 2+.'}
-                      {freeWithdrawalSchedule === 'standard_10' && 'Conversions begin Year 2 once 10% penalty-free withdrawal becomes active.'}
+                      {freeWithdrawalSchedule === 'tiered_2_12' && 'Year 1 permits 2% free withdrawal (~$' + Math.round(iraBalance * 0.02).toLocaleString() + ') to start immediate conversions, increasing to 12% in Years 2–10, and unlocking 100% liquidity post-surrender.'}
+                      {freeWithdrawalSchedule === 'standard_10' && 'Conversions begin Year 2 once 10% penalty-free withdrawal becomes active, unlocking 100% liquidity in Year 11+.'}
                       {freeWithdrawalSchedule === 'flat_10' && 'Flat 10% annual free liquidity modeled across all contract durations.'}
                     </span>
                   </div>
@@ -935,7 +936,7 @@ export default function AdvisorTool() {
                       {lang === 'es' ? 'Estrategia Roth con Calendario de Retiros Libres' : 'Roth Blueprint with Full Conversion Runway'}
                     </h3>
                     <p className="text-xs text-slate-400">
-                      State: <b className="text-cyan-300">{STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}%)</b> • Schedule: <b className="text-emerald-300">{freeWithdrawalSchedule === 'tiered_2_12' ? '2% Yr 1 → 12% Yrs 2–10' : freeWithdrawalSchedule}</b>
+                      State: <b className="text-cyan-300">{STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}%)</b> • Schedule: <b className="text-emerald-300">{freeWithdrawalSchedule === 'tiered_2_12' ? '2% Yr 1 → 12% Yrs 2–10 → 100% Yr 11+' : freeWithdrawalSchedule}</b>
                     </p>
                   </div>
                   <span className="text-xs font-bold text-emerald-400 bg-emerald-950/50 border border-emerald-800 px-3 py-1 rounded-full">
@@ -1035,7 +1036,15 @@ export default function AdvisorTool() {
                             <td className="py-2.5 text-emerald-400 font-bold">${d.conversionAmount.toLocaleString()}</td>
                             <td className="py-2.5 text-slate-300 font-medium">
                               ${d.maxFreeWithdrawal.toLocaleString()}
-                              <span className="text-[10px] text-cyan-400 ml-1">({d.maxFreeWithdrawalRatePct}%)</span>
+                              <span className="text-[10px] text-cyan-400 ml-1">
+                                {d.isSurrenderExpired ? (
+                                  <span className="text-emerald-400 font-semibold inline-flex items-center gap-0.5">
+                                    <Unlock className="w-3 h-3 inline" /> 100% Free
+                                  </span>
+                                ) : (
+                                  `(${d.maxFreeWithdrawalRatePct}%)`
+                                )}
+                              </span>
                             </td>
                             <td className="py-2.5 text-rose-300 font-medium">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
                             <td className="py-2.5 text-slate-400">{d.statutoryRatePct}%</td>
@@ -1068,31 +1077,15 @@ export default function AdvisorTool() {
                       <div className="p-4 bg-slate-950/70 rounded-lg border border-amber-500/20 shadow-sm space-y-2.5">
                         <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
                           {lang === 'es'
-                            ? `"${firstName}, en el Año 1, el contrato permite un ${taxAnalysis.yearlyData[0]?.maxFreeWithdrawalRatePct}% de retiro libre de penalidad ($${taxAnalysis.yearlyData[0]?.maxFreeWithdrawal.toLocaleString()}) para iniciar de inmediato su conversión a Roth, aumentando al 12% a partir del Año 2. Con el bono inicial del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es de solo ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido poner a trabajar este beneficio para proteger su patrimonio para siempre?"`
-                            : `"${firstName}, in Year 1, this contract permits a ${taxAnalysis.yearlyData[0]?.maxFreeWithdrawalRatePct}% penalty-free withdrawal ($${taxAnalysis.yearlyData[0]?.maxFreeWithdrawal.toLocaleString()}) to begin immediate Roth conversions, expanding to 12% in Year 2+. Combined with the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is only ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this contract liquidity to work immediately?"`
+                            ? `"${firstName}, durante los primeros 10 años su contrato le otorga retiros libres de penalidad anuales para absorber los impuestos de conversión. Y a partir del año 11, las penalidades de rescate terminan, dándole un 100% de liquidez total. ¿Tiene sentido que usemos esta ventana para blindar su dinero?"`
+                            : `"${firstName}, for the first 10 years, your annuity contract provides annual penalty-free liquidity to absorb conversion taxes, and after Year 10, the surrender schedule expires completely, giving you 100% unrestricted liquidity. Does it make sense to structure your conversions so you never pay carrier surrender penalties?"`
                           }
                         </div>
                         <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
                           <span className="text-amber-400 font-bold mr-1">•</span>
                           {lang === 'es'
-                            ? `"Pagar impuestos ahora no es un gasto; es comprar un dólar libre de impuestos por un descuento significativo. El bono de la aseguradora absorbe el costo para que sus herederos reciban el 100% libre de impuestos bajo la ley SECURE."`
-                            : `"Paying taxes now isn't an expense; it's buying a future tax-free dollar at a major discount. The carrier's upfront bonus absorbs the friction so your children inherit 100% tax-free wealth under the SECURE Act."`
-                          }
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-slate-950/70 rounded-lg border border-amber-500/20 shadow-sm space-y-2.5">
-                        <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                          {lang === 'es'
-                            ? `"${firstName}, ya que limitamos la conversión de cada año para que los impuestos queden completamente cubiertos por el retiro libre de penalidades contractuales, ¿qué tranquilidad le da saber que no tendrá que pagarle al IRS de su propio bolsillo?"`
-                            : `"${firstName}, since we calibrate each year's conversion so the taxes are fully covered by your contractual penalty-free withdrawal, how does it feel knowing you won't have to write a check out of pocket to the IRS?"`
-                          }
-                        </div>
-                        <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                          <span className="text-amber-400 font-bold mr-1">•</span>
-                          {lang === 'es'
-                            ? `"Nunca tocamos su liquidez de emergencia. El propio contrato financia la factura del IRS utilizando la provisión de retiro anual libre de penalidades."`
-                            : `"We never compromise your emergency cash reserves. The annuity contract itself finances the tax bill using its penalty-free annual liquidity provision."`
+                            ? `"El contrato está diseñado con liquidez programada. Al año 11 el capital está completamente disponible sin restricciones ni cargos de rescate."`
+                            : `"The contract is designed with calibrated liquidity: 2% in Year 1, 12% in Years 2 through 10, and 100% full liquidity in Year 11 and beyond."`
                           }
                         </div>
                       </div>
