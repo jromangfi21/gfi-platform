@@ -9,7 +9,7 @@ import {
 import { 
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, Eye, EyeOff, Sparkles, ChevronRight, CheckCircle2, RefreshCw,
-  Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, MapPin, Compass, FileText, Unlock
+  Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, MapPin, Compass, FileText, Unlock, Briefcase
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -19,7 +19,7 @@ export default function AdvisorTool() {
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
   const [showAdvisorNotes, setShowAdvisorNotes] = useState(true);
 
-  // Accordion Navigation for Inputs
+  // Accordion Navigation
   const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('tax');
 
   // Client Demographics & Balances
@@ -31,13 +31,14 @@ export default function AdvisorTool() {
   const [iraBalance, setIraBalance] = useState(1250000);
   const [rothBalance, setRothBalance] = useState(40000);
 
-  // Retirement Income & Needs
+  // Pre-Retirement & Post-Retirement Cash Flows
+  const [currentEarnedIncome, setCurrentEarnedIncome] = useState(120000);
   const [withdrawalNeed, setWithdrawalNeed] = useState(60000);
   const [socialSecurity, setSocialSecurity] = useState(48000);
   const [fixedIncome, setFixedIncome] = useState(20000);
 
-  // Tax Planning Parameters
-  const [targetBracketCeiling, setTargetBracketCeiling] = useState(201050); // 22% MFJ
+  // Target Bracket Ceiling (Expanded to 37%)
+  const [targetBracketCeiling, setTargetBracketCeiling] = useState(403550); // 24% MFJ ceiling
   const [heirsTaxRate, setHeirsTaxRate] = useState(0.28);
   const [taxHikeActive, setTaxHikeActive] = useState(false);
 
@@ -57,12 +58,13 @@ export default function AdvisorTool() {
 
   const firstName = clientName.split('&')[0].trim() || (lang === 'es' ? 'Cliente' : 'Client');
 
-  // Run Calculations
+  // Multi-Year Tax Simulation Execution
   const taxAnalysis = runRobustTaxSimulation({
     currentAge,
     retirementAge,
     endAge: 95,
     filingStatus,
+    currentEarnedIncome,
     traditionalIra: iraBalance,
     rothBalance,
     taxableBrokerage: 0,
@@ -152,10 +154,11 @@ export default function AdvisorTool() {
       targetRetirementLabel: "Target Retirement:",
       preTaxIra: "Pre-Tax IRA / 401(k):",
       existingRoth: "Existing Roth IRA:",
+      earnedIncomeLabel: "Pre-Retirement Earned Income (W-2/1099):",
       spendingNeed: "Target Retirement Income:",
       socialSecurityLabel: "Social Security (Combined):",
       pensionLabel: "Pension / Other Annuities:",
-      targetBracketLabel: "Target Tax Bracket Ceiling:",
+      targetBracketLabel: "Target Conversion Tax Bracket Ceiling:",
       stateTaxLabel: "State Income Tax Rate:",
       heirsTaxLabel: "Heirs' Marginal Tax Bracket:",
       taxHikeTest: "🔥 Future Federal Tax Hike (+4%)",
@@ -166,7 +169,6 @@ export default function AdvisorTool() {
       timelineLabel: "Historical Stress Timeline:",
       fiaCapLabel: "FIA Annual Cap (S&P 500):",
       floorGuaranteed: "Contractual 0% Floor Guaranteed",
-      fixedBenchmarkLabel: "Fixed Annuity / CD Benchmark:",
       act1Title: `Act 1: The IRS Tax Avalanche Trap (Ages ${currentAge} to 95)`,
       act2Title: `Act 2: The Tactical Roth Discount Runway (Ages ${currentAge} to 95)`,
       act3Title: "Act 3: Paychecks & Playchecks (Guaranteed Life Income)",
@@ -179,7 +181,7 @@ export default function AdvisorTool() {
       forcedRmdDesc: "Compulsory distributions push you into peak tax brackets.",
       ssTorpedo: "Social Security Tax Torpedo",
       ssTorpedoDesc: "Taxable retirement withdrawals cause up to 85% of Social Security benefits to be taxed.",
-      inactionChartTitle: `Annual Tax Burden Under Inaction (Taxes start at retirement age ${retirementAge} and escalate at 73):`,
+      inactionChartTitle: `Annual Tax Burden Under Inaction (Reflects salary, retirement spending, and age 73 RMDs):`,
       btnGoToAct2: "Step 2: See How We Dismantle This With Roth Conversions",
       btnGoToAct3: "Step 3: Secure Your Guaranteed Paychecks & Playchecks",
       btnGoToSummary: "View Executive Takeaway Proposal",
@@ -246,6 +248,7 @@ export default function AdvisorTool() {
       targetRetirementLabel: "Jubilación Meta:",
       preTaxIra: "Cuenta Pre-Tributaria IRA / 401(k):",
       existingRoth: "Cuenta Roth IRA Actual:",
+      earnedIncomeLabel: "Ingresos Activos Pre-Jubilación (Salario):",
       spendingNeed: "Ingreso Meta para Jubilación:",
       socialSecurityLabel: "Seguro Social (Combinado):",
       pensionLabel: "Pensión / Otras Anualidades:",
@@ -260,7 +263,6 @@ export default function AdvisorTool() {
       timelineLabel: "Línea Temporal de Estrés Histórico:",
       fiaCapLabel: "Tope Anual FIA (S&P 500):",
       floorGuaranteed: "Garantía Contractual con Piso del 0%",
-      fixedBenchmarkLabel: "Rendimiento Anualidad Fija / CD:",
       act1Title: `Acto 1: La Trampa Fiscal de las RMD (Edades ${currentAge} a 95)`,
       act2Title: `Acto 2: La Ventana de Conversión Táctica a Roth (Edades ${currentAge} a 95)`,
       act3Title: "Acto 3: Ingreso Garantizado y Diversión (Paychecks & Playchecks)",
@@ -273,7 +275,7 @@ export default function AdvisorTool() {
       forcedRmdDesc: "Los retiros obligatorios forzosos disparan los tramos tributarios más altos.",
       ssTorpedo: "Impacto Fiscal al Seguro Social",
       ssTorpedoDesc: "Los retiros de jubilación causan impuestos sobre hasta el 85% de sus beneficios.",
-      inactionChartTitle: `Carga Tributaria Anual por Inacción (Los impuestos comienzan a la edad de retiro ${retirementAge} y suben a los 73):`,
+      inactionChartTitle: `Carga Tributaria Anual por Inacción (Refleja salarios, gastos y RMDs a los 73):`,
       btnGoToAct2: "Paso 2: Vea Cómo Neutralizamos Esto con Conversiones Roth",
       btnGoToAct3: "Paso 3: Asegure Sus Ingresos Básicos y Fondos de Diversión",
       btnGoToSummary: "Ver Propuesta Ejecutiva para el Cliente",
@@ -649,9 +651,38 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 2: INCOME & SPENDING */}
+            {/* SECTION 2: INCOME & SPENDING (INCLUDES PRE-RETIREMENT SALARY) */}
             {openSection === 'income' && (
               <div className="space-y-4 pt-1">
+                <div>
+                  <div className="flex justify-between items-center text-slate-300 mb-1">
+                    <span className="flex items-center gap-1 font-semibold text-sky-300">
+                      <Briefcase className="w-3.5 h-3.5" /> {currentT.earnedIncomeLabel}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-500">$</span>
+                      <input
+                        type="number"
+                        step={5000}
+                        value={currentEarnedIncome}
+                        onChange={(e) => setCurrentEarnedIncome(Number(e.target.value))}
+                        className="w-24 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-sky-400 font-bold text-right"
+                      />
+                      <span className="text-slate-500">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="500000"
+                    step="5000"
+                    value={currentEarnedIncome}
+                    onChange={(e) => setCurrentEarnedIncome(Number(e.target.value))}
+                    className="w-full accent-sky-400"
+                  />
+                  <span className="text-[10px] text-slate-500 block">W-2/1099 wages earned until age {retirementAge}</span>
+                </div>
+
                 <div>
                   <div className="flex justify-between items-center text-slate-300 mb-1">
                     <span>{currentT.spendingNeed}</span>
@@ -732,7 +763,7 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 3: TAXES, BONUS & DYNAMIC SCHEDULE */}
+            {/* SECTION 3: TAXES, BONUS & FULL BRACKETS (12% TO 37%) */}
             {openSection === 'tax' && (
               <div className="space-y-4 pt-1">
                 <div>
@@ -756,15 +787,18 @@ export default function AdvisorTool() {
                 </div>
 
                 <div>
-                  <label className="text-slate-300 block mb-1">{currentT.targetBracketLabel}</label>
+                  <label className="text-slate-300 block mb-1 font-semibold">{currentT.targetBracketLabel}</label>
                   <select
                     value={targetBracketCeiling}
                     onChange={(e) => setTargetBracketCeiling(Number(e.target.value))}
-                    className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-slate-200"
+                    className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-100 font-medium"
                   >
-                    <option value={94300}>{lang === 'es' ? 'Llenar Tramo 12% ($94.3k MFJ / $47.1k Indiv)' : 'Fill 12% Bracket ($94.3k MFJ / $47.1k Single)'}</option>
-                    <option value={201050}>{lang === 'es' ? 'Llenar Tramo 22% ($201k MFJ / $100k Indiv)' : 'Fill 22% Bracket ($201k MFJ / $100k Single)'}</option>
-                    <option value={383900}>{lang === 'es' ? 'Llenar Tramo 24% ($383.9k MFJ / $191k Indiv)' : 'Fill 24% Bracket ($383.9k MFJ / $191k Single)'}</option>
+                    <option value={100800}>{lang === 'es' ? 'Tramo 12% ($100.8k MFJ / $50.4k Single)' : 'Fill 12% Bracket ($100.8k MFJ / $50.4k Single)'}</option>
+                    <option value={211400}>{lang === 'es' ? 'Tramo 22% ($211.4k MFJ / $105.7k Single)' : 'Fill 22% Bracket ($211.4k MFJ / $105.7k Single)'}</option>
+                    <option value={403550}>{lang === 'es' ? 'Tramo 24% ($403.5k MFJ / $201.7k Single)' : 'Fill 24% Bracket ($403.5k MFJ / $201.7k Single)'}</option>
+                    <option value={512450}>{lang === 'es' ? 'Tramo 32% ($512.4k MFJ / $256.2k Single)' : 'Fill 32% Bracket ($512.4k MFJ / $256.2k Single)'}</option>
+                    <option value={768700}>{lang === 'es' ? 'Tramo 35% ($768.7k MFJ / $640.0k Single)' : 'Fill 35% Bracket ($768.7k MFJ / $640.0k Single)'}</option>
+                    <option value={1500000}>{lang === 'es' ? 'Tramo 37% (Máximo sin límite)' : 'Fill 37% Top Bracket (High Net Worth)'}</option>
                   </select>
                 </div>
 
@@ -796,7 +830,6 @@ export default function AdvisorTool() {
                     </div>
                   </div>
 
-                  {/* Free Withdrawal Schedule Selector */}
                   <div>
                     <label className="text-slate-300 block mb-1 font-semibold flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-emerald-300">
@@ -958,7 +991,7 @@ export default function AdvisorTool() {
 
                   <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-1">
                     <span className="text-[10px] text-emerald-400 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <Percent className="w-3.5 h-3.5" /> Gross Bracket Rate
+                      <Percent className="w-3.5 h-3.5" /> Effective Bracket Rate
                     </span>
                     <div className="text-xl font-black text-slate-300">{taxAnalysis.grossStatutoryRatePct}%</div>
                     <p className="text-[10px] text-slate-400">
@@ -992,7 +1025,7 @@ export default function AdvisorTool() {
                 {/* Multi-Year Taxes Graph */}
                 <div>
                   <div className="text-xs font-semibold text-slate-300 mb-2">
-                    Annual Tax Comparison (Reflects living withdrawals from age {retirementAge} and mandatory RMDs at 73):
+                    Annual Tax Comparison (Reflects salary, retirement spending, and age 73 RMDs):
                   </div>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -1077,15 +1110,15 @@ export default function AdvisorTool() {
                       <div className="p-4 bg-slate-950/70 rounded-lg border border-amber-500/20 shadow-sm space-y-2.5">
                         <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
                           {lang === 'es'
-                            ? `"${firstName}, durante los primeros 10 años su contrato le otorga retiros libres de penalidad anuales para absorber los impuestos de conversión. Y a partir del año 11, las penalidades de rescate terminan, dándole un 100% de liquidez total. ¿Tiene sentido que usemos esta ventana para blindar su dinero?"`
-                            : `"${firstName}, for the first 10 years, your annuity contract provides annual penalty-free liquidity to absorb conversion taxes, and after Year 10, the surrender schedule expires completely, giving you 100% unrestricted liquidity. Does it make sense to structure your conversions so you never pay carrier surrender penalties?"`
+                            ? `"${firstName}, al modelar su salario actual de $${currentEarnedIncome.toLocaleString()} antes de la jubilación, calibramos exactamente cuánto espacio libre queda en el tramo impositivo elegido sin sobrepasar su límite marginal. Con el bono del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es solo del ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido ejecutar esta conversión estratégica?"`
+                            : `"${firstName}, by incorporating your current salary of $${currentEarnedIncome.toLocaleString()} prior to retirement, we identify the exact room remaining in your selected tax bracket without spilling over into higher rates. With the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is just ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this disciplined tax strategy into practice?"`
                           }
                         </div>
                         <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
                           <span className="text-amber-400 font-bold mr-1">•</span>
                           {lang === 'es'
-                            ? `"El contrato está diseñado con liquidez programada. Al año 11 el capital está completamente disponible sin restricciones ni cargos de rescate."`
-                            : `"The contract is designed with calibrated liquidity: 2% in Year 1, 12% in Years 2 through 10, and 100% full liquidity in Year 11 and beyond."`
+                            ? `"Las conversiones no se hacen a ciegas; se calibran dólar a dólar para respetar su salario actual y el retiro libre contractual de penalidades."`
+                            : `"Conversions are never done blindly; they are calibrated dollar-for-dollar against your active earned income and contractual penalty-free allowances."`
                           }
                         </div>
                       </div>
@@ -1252,7 +1285,7 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* Scenario Buttons */}
+                {/* Historical Scenario Buttons */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     onClick={() => setBacktestPeriod('2000_2010')}
