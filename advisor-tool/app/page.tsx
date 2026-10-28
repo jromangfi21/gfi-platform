@@ -201,6 +201,10 @@ export default function AdvisorTool() {
       capitalEfficiencyTitle: "Capital Efficiency (Liberated Capital)",
       capitalEfficiencyDesc: `To generate $${guaranteedFiaIncome.toLocaleString()}/yr from a 60/40 portfolio safely, you need $${capitalNeededUnder4Pct.toLocaleString()}. The FIA achieves this with $${incomeDedicatedCapital.toLocaleString()}, leaving $${liberatedCapitalForGrowth.toLocaleString()} unencumbered for equity growth.`,
       paycheckChartTitle: `Annual Cash Flow: Guaranteed Paychecks vs. Fluctuating 60/40 Market Risk:`,
+      endingBal: "Ending Accumulated Balance",
+      zeroLossReality: "Contractual 0% Floor Protection",
+      downYearsDefended: "Down Market Years Defended",
+      zeroLossNote: "Principal preserved in crash cycles with zero negative returns.",
       summaryTitle: "Strategic Retirement & Legacy Blueprint (to Age 95)",
       practiceName: "Global Financial Impact Advisory Practice",
       tableDim: "Strategic Dimension",
@@ -296,6 +300,10 @@ export default function AdvisorTool() {
       capitalEfficiencyTitle: "Eficiencia de Capital (Capital Liberado)",
       capitalEfficiencyDesc: `Para generar $${guaranteedFiaIncome.toLocaleString()}/año de un portafolio 60/40 seguro, necesita $${capitalNeededUnder4Pct.toLocaleString()}. La FIA lo logra con $${incomeDedicatedCapital.toLocaleString()}, liberando $${liberatedCapitalForGrowth.toLocaleString()} para crecimiento en acciones.`,
       paycheckChartTitle: `Flujo Anual: Cheques Garantizados de por Vida vs. Riesgo de Mercado 60/40:`,
+      endingBal: "Balance Final Acumulado",
+      zeroLossReality: "Protección Contractual con Piso del 0%",
+      downYearsDefended: "Años de Caída de Mercado Defendidos",
+      zeroLossNote: "Capital preservado en ciclos de crisis con cero rendimientos negativos.",
       summaryTitle: "Plan Estratégico de Jubilación y Legado Patrimonial (hasta los 95 años)",
       practiceName: "Global Financial Impact Advisory Practice",
       tableDim: "Dimensión Estratégica",
@@ -999,7 +1007,7 @@ export default function AdvisorTool() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={taxAnalysis.yearlyData}>
                         <XAxis dataKey="age" stroke="#64748b" />
-                        <YAxis stroke="#64748b" tickFormatter={(v) => `$${v / 1000}k`} />
+                        <YAxis stroke="#64748b" tickFormatter={(v: number) => `$${v / 1000}k`} />
                         <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
                         <Legend />
                         <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#f43f5e" radius={[3, 3, 0, 0]} />
@@ -1050,7 +1058,7 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* DIALOGUE & QUESTIONS CARDS */}
+                {/* DIALOGUE & QUESTIONS CARDS (LARGER & READABLE) */}
                 {showAdvisorNotes && (
                   <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-xl space-y-4">
                     <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
@@ -1133,7 +1141,7 @@ export default function AdvisorTool() {
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={taxAnalysis.yearlyData}>
                             <XAxis dataKey="age" stroke="#64748b" />
-                            <YAxis stroke="#64748b" tickFormatter={(v) => `$${v / 1000}k`} />
+                            <YAxis stroke="#64748b" tickFormatter={(v: number) => `$${v / 1000}k`} />
                             <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
                             <Bar dataKey="baselineTax" name={lang === 'es' ? 'Impuestos Obligatorios' : 'Forced Tax Liability'} fill="#f43f5e" radius={[3, 3, 0, 0]} />
                           </BarChart>
@@ -1433,7 +1441,7 @@ export default function AdvisorTool() {
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={incomePaycheckComparison}>
                           <XAxis dataKey="calendarYear" stroke="#64748b" />
-                          <YAxis stroke="#64748b" tickFormatter={(v) => `$${v / 1000}k`} />
+                          <YAxis stroke="#64748b" tickFormatter={(v: number) => `$${v / 1000}k`} />
                           <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
                           <Legend />
                           <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
@@ -1487,6 +1495,7 @@ export default function AdvisorTool() {
                     </table>
                   </div>
 
+                  {/* PERSONALIZED CLIENT QUESTIONS WITH TALKING POINTS (LARGER) */}
                   {showAdvisorNotes && (
                     <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-xl space-y-4">
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
@@ -1533,7 +1542,7 @@ export default function AdvisorTool() {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={backtest.results}>
                         <XAxis dataKey="calendarYear" stroke="#64748b" />
-                        <YAxis stroke="#64748b" tickFormatter={(v) => `$${v / 1000}k`} />
+                        <YAxis stroke="#64748b" tickFormatter={(v: number) => `$${v / 1000}k`} />
                         <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
                         <Legend />
                         <Line type="monotone" dataKey="equityBalance" name={lang === 'es' ? 'Acciones S&P 500 (Comisión 1%)' : 'S&P 500 Equities (-1% Fee)'} stroke="#f43f5e" strokeWidth={3} />
@@ -1601,7 +1610,7 @@ export default function AdvisorTool() {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={backtest.results}>
                         <XAxis dataKey="calendarYear" stroke="#64748b" />
-                        <YAxis stroke="#64748b" tickFormatter={(v) => `$${v / 1000}k`} />
+                        <YAxis stroke="#64748b" tickFormatter={(v: number) => `$${v / 1000}k`} />
                         <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
                         <Legend />
                         <Line type="monotone" dataKey="fixedAnnuityBalance" name={lang === 'es' ? `Anualidad Fija / CD (${(fixedRate * 100).toFixed(2)}% Neto)` : `Fixed Annuity / CD (${(fixedRate * 100).toFixed(2)}% Net of Tax)`} stroke="#94a3b8" strokeWidth={3} />
@@ -1777,7 +1786,7 @@ export default function AdvisorTool() {
         </p>
 
         <p className="text-[10px] text-slate-500 print:text-gray-600">
-        © 2026 Global Financial Impact (GFI). All rights reserved. Calculations are generated via mathematical simulation models and do not constitute a formal insurance illustration or prospectus. For official contract values, obtain a carrier-approved product illustration from a properly appointed, state-licensed insurance producer.
+          © 2026 Global Financial Impact (GFI). All rights reserved. Calculations are generated via mathematical simulation models and do not constitute a formal insurance illustration or prospectus. For official contract values, obtain a carrier-approved product illustration from a properly appointed, state-licensed insurance producer.
         </p>
       </footer>
 
