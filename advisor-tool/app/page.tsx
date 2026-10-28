@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, Eye, Sparkles, ChevronRight, CheckCircle2, RefreshCw,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -20,7 +20,7 @@ export default function AdvisorTool() {
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
 
   // Accordion Navigation
-  const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('client');
+  const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('carrier');
 
   // Client Demographics & Balances (Cardinal Fields)
   const [clientName, setClientName] = useState('John & Mary Smith');
@@ -38,7 +38,7 @@ export default function AdvisorTool() {
   const [fixedIncome, setFixedIncome] = useState(20000);
 
   // Target Bracket Ceiling (Expanded to 37%)
-  const [targetBracketCeiling, setTargetBracketCeiling] = useState(403550); // 24% MFJ ceiling
+  const [targetBracketCeiling, setTargetBracketCeiling] = useState(403550);
   const [heirsTaxRate, setHeirsTaxRate] = useState(0.28);
   const [taxHikeActive, setTaxHikeActive] = useState(false);
 
@@ -49,12 +49,16 @@ export default function AdvisorTool() {
   const [freeWithdrawalSchedule, setFreeWithdrawalSchedule] = useState<FreeWithdrawalSchedule>('tiered_2_12');
   const [customFreeWithdrawalPct, setCustomFreeWithdrawalPct] = useState(0.10);
 
-  // Dynamic Paycheck vs Playchecks Custom Deposit & Payout Rate
+  // Dynamic Paycheck Custom Deposit & Payout Rate
   const [customFiaDeposit, setCustomFiaDeposit] = useState(500000);
   const [incomePayoutRate, setIncomePayoutRate] = useState(0.065);
 
-  // Bond Replacement Category Selector: Corporate vs Aggressive vs Aggregate
+  // Bond Replacement Strategy Category: Corporate vs Aggressive vs Aggregate
   const [selectedBondType, setSelectedBondType] = useState<BondType>('corporate_ig');
+
+  // FIA Sub-Allocation: 80% S&P 500 / 20% Fixed 3%
+  const [fiaIndexedAllocationPct, setFiaIndexedAllocationPct] = useState(0.80);
+  const [fiaFixedYieldRate, setFiaFixedYieldRate] = useState(0.03);
 
   // Backtest Parameters
   const [backtestPeriod, setBacktestPeriod] = useState<BacktestPeriod>('2008_2018');
@@ -105,7 +109,13 @@ export default function AdvisorTool() {
     fiaParticipation: 1.0,
     fixedRate,
     taxRateOnFixed: 0.24,
+    fiaIndexedAllocationPct,
+    fiaFixedAllocationRate: fiaFixedYieldRate,
   });
+
+  // Effective Minimum Contractual Floor (e.g. 80% * 0.0% + 20% * 3.0% = +0.60%)
+  const effectiveGuaranteedFloorPct = ((1 - fiaIndexedAllocationPct) * fiaFixedYieldRate * 100);
+  const effectiveMaxCappedCreditPct = (fiaIndexedAllocationPct * fiaCap * 100) + effectiveGuaranteedFloorPct;
 
   // Dynamic Paycheck vs. Playcheck Calculations
   const guaranteedFiaIncome = Math.round(customFiaDeposit * incomePayoutRate);
@@ -161,7 +171,7 @@ export default function AdvisorTool() {
       tabProfile: "Intake",
       tabIncome: "Income",
       tabTaxes: "Taxes & Bonus",
-      tabCarrier: "Carrier",
+      tabCarrier: "Carrier & FIA Split",
       clientNameLabel: "Client Name(s):",
       stateResidenceLabel: "State of Residence:",
       currentAgeLabel: "Current Age:",
@@ -181,8 +191,8 @@ export default function AdvisorTool() {
       carrierBonusLabel: "Carrier Upfront Bonus (0% - 25%):",
       freeWithdrawalScheduleLabel: "Free Withdrawal Liquidity Schedule:",
       timelineLabel: "Historical Stress Timeline:",
-      fiaCapLabel: "FIA Annual Cap (S&P 500):",
-      floorGuaranteed: "Contractual 0% Floor Guaranteed",
+      fiaCapLabel: "S&P 500 Sleeve Annual Cap:",
+      floorGuaranteed: "Contractual 0% Floor Guaranteed on Index Sleeve",
       act1Title: `Act 1: The IRS Tax Avalanche Trap (Ages ${currentAge} to 95)`,
       act2Title: `Act 2: The Tactical Roth Discount Runway (Ages ${currentAge} to 95)`,
       act3Title: "Act 3: Paychecks & Playchecks (Guaranteed Life Income)",
@@ -214,9 +224,9 @@ export default function AdvisorTool() {
       capitalEfficiencyDesc: `To generate $${guaranteedFiaIncome.toLocaleString()}/yr from a 60/40 portfolio safely, you need $${capitalNeededUnder4Pct.toLocaleString()}. The FIA achieves this with $${customFiaDeposit.toLocaleString()}, leaving $${liberatedCapitalForGrowth.toLocaleString()} unencumbered for equity growth.`,
       paycheckChartTitle: `Annual Cash Flow: Guaranteed Paychecks vs. Fluctuating 60/40 Market Risk:`,
       endingBal: "Ending Accumulated Balance",
-      zeroLossReality: "Contractual 0% Floor Protection",
-      downYearsDefended: "Down Market Years Defended",
-      zeroLossNote: "Principal preserved in crash cycles with zero negative returns.",
+      zeroLossReality: "Contractual Floor Defense",
+      downYearsDefended: "Down Market Years Protected",
+      zeroLossNote: "Principal preserved in crash cycles with positive fixed interest compounding.",
       summaryTitle: "The GFI Distribution Blueprint — Executive Summary",
       practiceName: "Global Financial Impact Advisory Practice",
       tableDim: "Strategic Dimension",
@@ -255,7 +265,7 @@ export default function AdvisorTool() {
       tabProfile: "Datos",
       tabIncome: "Ingresos",
       tabTaxes: "Impuestos y Bono",
-      tabCarrier: "Aseguradora",
+      tabCarrier: "Aseguradora y División FIA",
       clientNameLabel: "Nombre(s) del Cliente:",
       stateResidenceLabel: "Estado de Residencia:",
       currentAgeLabel: "Edad Actual:",
@@ -275,8 +285,8 @@ export default function AdvisorTool() {
       carrierBonusLabel: "Bono Inicial de Aseguradora (0% - 25%):",
       freeWithdrawalScheduleLabel: "Calendario de Retiro Libre de Penalidad:",
       timelineLabel: "Línea Temporal de Estrés Histórico:",
-      fiaCapLabel: "Tope Anual FIA (S&P 500):",
-      floorGuaranteed: "Garantía Contractual con Piso del 0%",
+      fiaCapLabel: "Tope Anual del Tramo S&P 500:",
+      floorGuaranteed: "Piso Contractual del 0% en Tramo Indexado",
       act1Title: `Acto 1: La Trampa Fiscal de las RMD (Edades ${currentAge} a 95)`,
       act2Title: `Acto 2: La Ventana de Conversión Táctica a Roth (Edades ${currentAge} a 95)`,
       act3Title: "Acto 3: Ingreso Garantizado y Diversión (Paychecks & Playchecks)",
@@ -308,9 +318,9 @@ export default function AdvisorTool() {
       capitalEfficiencyDesc: `Para generar $${guaranteedFiaIncome.toLocaleString()}/año de un portafolio 60/40 seguro, necesita $${capitalNeededUnder4Pct.toLocaleString()}. La FIA lo logra con $${customFiaDeposit.toLocaleString()}, liberando $${liberatedCapitalForGrowth.toLocaleString()} para crecimiento en acciones.`,
       paycheckChartTitle: `Flujo Anual: Cheques Garantizados de por Vida vs. Riesgo de Mercado 60/40:`,
       endingBal: "Balance Final Acumulado",
-      zeroLossReality: "Protección Contractual con Piso del 0%",
-      downYearsDefended: "Años de Caída de Mercado Defendidos",
-      zeroLossNote: "Capital preservado en ciclos de crisis con cero rendimientos negativos.",
+      zeroLossReality: "Defensa con Piso Contractual",
+      downYearsDefended: "Años de Caída de Mercado Protegidos",
+      zeroLossNote: "Capital preservado en crisis con rendimiento positivo de interés fijo.",
       summaryTitle: "The GFI Distribution Blueprint — Resumen Ejecutivo",
       practiceName: "Práctica de Asesoría de Global Financial Impact",
       tableDim: "Dimensión Estratégica",
@@ -917,10 +927,63 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 4: CARRIER & BENCHMARKS */}
+            {/* SECTION 4: CARRIER, FIA DUAL-STRATEGY SPLIT & BENCHMARKS */}
             {openSection === 'carrier' && (
               <div className="space-y-4 pt-1">
-                {/* DYNAMIC FIA DEPOSIT LEVER */}
+                {/* DUAL-STRATEGY FIA ALLOCATION SLIDER (80% S&P / 20% FIXED 3%) */}
+                <div className="p-4 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 border border-indigo-500/40 rounded-xl space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-bold text-white">
+                    <span className="flex items-center gap-1.5 text-indigo-300">
+                      <PieChart className="w-4 h-4 text-indigo-400" /> FIA Strategy Split
+                    </span>
+                    <span className="text-emerald-400 font-mono font-black">
+                      {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed
+                    </span>
+                  </div>
+
+                  <div>
+                    <input
+                      type="range"
+                      min="0.50"
+                      max="1.00"
+                      step="0.05"
+                      value={fiaIndexedAllocationPct}
+                      onChange={(e) => setFiaIndexedAllocationPct(Number(e.target.value))}
+                      className="w-full accent-indigo-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    />
+                    <div className="flex justify-between text-xs text-slate-400 mt-1">
+                      <span>50% S&P / 50% Fixed</span>
+                      <span className="text-indigo-300 font-bold">80/20 Optimal</span>
+                      <span>100% S&P</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 text-xs">
+                    <div>
+                      <span className="text-slate-400 block">Fixed Bucket Rate:</span>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <input
+                          type="number"
+                          step={0.25}
+                          min={1.0}
+                          max={5.0}
+                          value={Number((fiaFixedYieldRate * 100).toFixed(2))}
+                          onChange={(e) => setFiaFixedYieldRate(Number(e.target.value) / 100)}
+                          className="w-16 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-white font-bold text-xs"
+                        />
+                        <span className="text-slate-400 font-bold">%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Guaranteed Floor:</span>
+                      <span className="text-emerald-400 font-black text-sm block mt-0.5">
+                        +{effectiveGuaranteedFloorPct.toFixed(2)}% / yr
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PAYCHECK CUSTOM DEPOSIT */}
                 <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2.5">
                   <div className="flex justify-between items-center text-slate-200 text-xs">
                     <span className="font-bold text-emerald-300 flex items-center gap-1.5">
@@ -1006,6 +1069,316 @@ export default function AdvisorTool() {
           {/* Right Presentation Dashboard (8 Cols) */}
           <div className="lg:col-span-8 space-y-6">
 
+            {/* TAB: GFILOGIX BACKTEST STUDIO */}
+            {activeTab === 'backtest' && (
+              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
+                  <div>
+                    <h3 className="font-black text-white text-xl tracking-tight">{currentT.backtestHeading}</h3>
+                    <p className="text-sm text-slate-300 mt-0.5">{currentT.backtestSubheading}</p>
+                  </div>
+
+                  {/* 4 Backtest Modes */}
+                  <div className="flex flex-wrap bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs gap-1">
+                    <button
+                      onClick={() => setBacktestMode('stocks_fia_vs_6040')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'stocks_fia_vs_6040' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {currentT.modeBondReplacement}
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('income_fia_vs_portfolio')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'income_fia_vs_portfolio' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {currentT.modeIncomeFia}
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('equity_vs_fia')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'equity_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {currentT.modeEqVsFia}
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('fixed_vs_fia')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'fixed_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {currentT.modeFixedVsFia}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Historical Scenario Selector Buttons */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <button
+                    onClick={() => setBacktestPeriod('2000_2010')}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
+                      backtestPeriod === '2000_2010' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="text-sm font-bold">2000–2010</div>
+                    <div className="text-xs font-normal opacity-80 mt-0.5">Dot-Com + 2008</div>
+                  </button>
+                  <button
+                    onClick={() => setBacktestPeriod('2008_2018')}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
+                      backtestPeriod === '2008_2018' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="text-sm font-bold">2008–2018</div>
+                    <div className="text-xs font-normal opacity-80 mt-0.5">Great Recession</div>
+                  </button>
+                  <button
+                    onClick={() => setBacktestPeriod('2015_2025')}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
+                      backtestPeriod === '2015_2025' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="text-sm font-bold">2015–2024</div>
+                    <div className="text-xs font-normal opacity-80 mt-0.5">Modern Volatility</div>
+                  </button>
+                  <button
+                    onClick={() => setBacktestPeriod('all_25_years')}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
+                      backtestPeriod === 'all_25_years' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="text-sm font-bold">2000–2024</div>
+                    <div className="text-xs font-normal opacity-80 mt-0.5">Full 25-Year Cycle</div>
+                  </button>
+                </div>
+
+                {/* MODE: BOND REPLACEMENT STRATEGY (WITH CORPORATE VS AGGRESSIVE SELECTOR) */}
+                {backtestMode === 'stocks_fia_vs_6040' && (
+                  <div className="space-y-4">
+                    {/* BOND CATEGORY SELECTOR & STRATEGY CALLOUT */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800 gap-3">
+                      <div>
+                        <span className="text-sm font-bold text-white block">Compare FIA Split Against:</span>
+                        <span className="text-xs text-emerald-400 font-semibold">
+                          Current FIA Blend: {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P 500 ({(fiaCap * 100).toFixed(1)}% Cap) + {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed ({(fiaFixedYieldRate * 100).toFixed(1)}%)
+                        </span>
+                      </div>
+                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
+                        <button
+                          onClick={() => setSelectedBondType('corporate_ig')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'corporate_ig' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          Corporate Bonds (IG)
+                        </button>
+                        <button
+                          onClick={() => setSelectedBondType('high_yield')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'high_yield' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          Aggressive / Junk Bonds (HY)
+                        </button>
+                        <button
+                          onClick={() => setSelectedBondType('aggregate')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'aggregate' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          US Aggregate
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/50 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 mb-1.5 uppercase tracking-wide">
+                          <Layers className="w-4 h-4" /> Modernized 60/40 (Stocks + Blended FIA Buffer)
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          ${backtest.finalModernized6040Fia.toLocaleString()}
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          Ending balance with ${withdrawalNeed.toLocaleString()}/yr living withdrawals. Never drops below a <b>+{effectiveGuaranteedFloorPct.toFixed(2)}%</b> positive contractual floor.
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-950 p-5 rounded-xl border border-rose-500/50 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-rose-400 mb-1.5 uppercase tracking-wide">
+                          <Activity className="w-4 h-4" /> Traditional 60/40 (Stocks + {selectedBondType === 'corporate_ig' ? 'Corporate IG Bonds' : selectedBondType === 'high_yield' ? 'Aggressive Junk Bonds' : 'US Aggregate Bonds'})
+                        </div>
+                        <div className="text-3xl font-black text-rose-400">
+                          ${backtest.finalTraditional6040.toLocaleString()}
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          {selectedBondType === 'high_yield' 
+                            ? 'Aggressive bonds crashed by -26.16% in 2008 alongside equities, wiping out conservative ballast.'
+                            : 'Subject to duration losses and interest rate spikes (e.g. -15.76% corporate loss in 2022).'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">
+                        Portfolio Wealth Progression ($1.25M with ${withdrawalNeed.toLocaleString()}/yr Retirement Withdrawals):
+                      </div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={backtest.results}>
+                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Line type="monotone" dataKey="traditional6040Balance" name={`Traditional 60/40 (Stocks + ${selectedBondType === 'corporate_ig' ? 'Corporate' : selectedBondType === 'high_yield' ? 'Aggressive' : 'Agg'} Bonds)`} stroke="#f43f5e" strokeWidth={3} />
+                            <Line type="monotone" dataKey="modernized6040FiaBalance" name={`Modernized 60/40 (Stocks + ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed / ${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P FIA)`} stroke="#10b981" strokeWidth={3} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Dual-Blend (80% S&amp;P / 20% Fixed)
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, al colocar un 80% en la estrategia S&P 500 y un 20% en una tasa fija garantizada del 3%, su contrato tiene un piso mínimo positivo de +${effectiveGuaranteedFloorPct.toFixed(2)}% cada año sin importar lo que haga la bolsa. ¿Le da tranquilidad saber que su dinero nunca tendrá un año de 0% o pérdidas?"`
+                              : `"${firstName}, by structuring the FIA with 80% linked to the S&P 500 and 20% in a 3% fixed account, your contract locks in a guaranteed minimum floor of +${effectiveGuaranteedFloorPct.toFixed(2)}% every single year—even during market crashes like 2008. Does it give you confidence knowing your conservative money earns positive interest in any environment?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"La porción fija del 20% absorbe cualquier cargo de rider y garantiza que el contrato siempre crezca, mientras el 80% indexado captura el repunte del S&P 500."`
+                              : `"The 20% fixed sleeve guarantees positive compound interest every year, while the 80% index sleeve captures strong S&P 500 bull market runs up to the cap."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE: PAYCHECKS (FIA) VS 60/40 */}
+                {backtestMode === 'income_fia_vs_portfolio' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 uppercase tracking-wide">
+                          <Wallet className="w-4 h-4" /> {currentT.incomeSpreadTitle}
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          ${guaranteedFiaIncome.toLocaleString()}/yr
+                          <span className="text-sm text-emerald-400 ml-2 font-bold">
+                            (+${annualIncomeAdvantage.toLocaleString()}/yr vs. 4% rule)
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          Generated from ${customFiaDeposit.toLocaleString()} allocation at a {(incomePayoutRate * 100).toFixed(1)}% contractual rate.
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-950 p-5 rounded-xl border border-cyan-500/40 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wide">
+                          <Landmark className="w-4 h-4" /> {currentT.capitalEfficiencyTitle}
+                        </div>
+                        <div className="text-3xl font-black text-cyan-300">
+                          +${liberatedCapitalForGrowth.toLocaleString()} Liberated
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">{currentT.capitalEfficiencyDesc}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">{currentT.paycheckChartTitle}</div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={incomePaycheckComparison}>
+                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                            <Bar dataKey="guaranteedFiaPaycheck" name="Guaranteed Life Paycheck (Contractual Floor)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE: EQUITIES VS FIA ACCUMULATION */}
+                {backtestMode === 'equity_vs_fia' && (
+                  <div className="space-y-4">
+                    <div className="h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={backtest.results}>
+                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                          <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (-1% Fee)" stroke="#f43f5e" strokeWidth={3} />
+                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.endingBal}</span>
+                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
+                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalEquity.toLocaleString()} in market equities</p>
+                      </div>
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.zeroLossReality}</span>
+                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} {currentT.downYearsDefended}</div>
+                        <p className="text-xs text-slate-400 mt-0.5">Guaranteed minimum positive floor: +{effectiveGuaranteedFloorPct.toFixed(2)}% / yr</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE: FIXED ANNUITY VS FIA */}
+                {backtestMode === 'fixed_vs_fia' && (
+                  <div className="space-y-4">
+                    <div className="h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={backtest.results}>
+                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                          <Line type="monotone" dataKey="fixedAnnuityBalance" name={`Fixed Annuity / CD (${(fixedRate * 100).toFixed(2)}% Net of Tax)`} stroke="#94a3b8" strokeWidth={3} />
+                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.endingBal}</span>
+                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
+                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalFixed.toLocaleString()} in taxable fixed CDs</p>
+                      </div>
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.zeroLossReality}</span>
+                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} {currentT.downYearsDefended}</div>
+                        <p className="text-xs text-slate-400 mt-0.5">{currentT.zeroLossNote}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+
             {/* TAB: ROTH BLUEPRINT */}
             {activeTab === 'roth' && (
               <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
@@ -1041,7 +1414,7 @@ export default function AdvisorTool() {
                     </span>
                     <div className="text-2xl font-black text-slate-200">{taxAnalysis.grossStatutoryRatePct}%</div>
                     <p className="text-xs text-slate-300">
-                      Fed + {selectedState} ({(stateTaxRate * 100).toFixed(1)}%) effective bracket.
+                      Progressive Fed + {selectedState} ({(stateTaxRate * 100).toFixed(1)}%) rate.
                     </p>
                   </div>
 
@@ -1149,459 +1522,6 @@ export default function AdvisorTool() {
                     </table>
                   </div>
                 </div>
-
-                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT) */}
-                <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Tactical Roth Runway
-                  </div>
-                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                        {lang === 'es'
-                          ? `"${firstName}, al modelar su salario actual de $${currentEarnedIncome.toLocaleString()} antes de la jubilación y su ingreso meta de $${withdrawalNeed.toLocaleString()} al jubilarse, calibramos exactamente cuánto espacio libre queda en el tramo impositivo elegido sin sobrepasar su límite marginal. Con el bono del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es solo del ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido ejecutar esta conversión estratégica?"`
-                          : `"${firstName}, by incorporating your current salary of $${currentEarnedIncome.toLocaleString()} prior to retirement and your target income of $${withdrawalNeed.toLocaleString()} once retired, we identify the exact room remaining in your selected tax bracket without spilling over into higher rates. With the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is just ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this disciplined tax strategy into practice?"`
-                        }
-                      </div>
-                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                        <span className="text-amber-400 font-bold mr-1.5">•</span>
-                        {lang === 'es'
-                          ? `"Pagar impuestos ahora no es un gasto; es comprar un dólar libre de impuestos por un descuento significativo. El bono de la aseguradora absorbe el costo para que sus herederos reciban el 100% libre de impuestos bajo la ley SECURE."`
-                          : `"Paying taxes now isn't an expense; it's buying a future tax-free dollar at a major discount. The carrier's upfront bonus absorbs the friction so your children inherit 100% tax-free wealth under the SECURE Act."`
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* TAB: STORY MODE */}
-            {activeTab === 'story' && (
-              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <h2 className="text-xl font-black text-white flex items-center gap-2.5">
-                    {storyStep === 1 && <span className="text-rose-400 flex items-center gap-2"><ShieldAlert className="w-6 h-6" /> {currentT.act1Title}</span>}
-                    {storyStep === 2 && <span className="text-emerald-400 flex items-center gap-2"><Award className="w-6 h-6" /> {currentT.act2Title}</span>}
-                    {storyStep === 3 && <span className="text-cyan-400 flex items-center gap-2"><ShieldCheck className="w-6 h-6" /> {currentT.act3Title}</span>}
-                  </h2>
-                  <div className="flex gap-2">
-                    <button onClick={() => setStoryStep(1)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 1 ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>{currentT.btnTrap}</button>
-                    <button onClick={() => setStoryStep(2)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 2 ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>{currentT.btnSolution}</button>
-                    <button onClick={() => setStoryStep(3)} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold ${storyStep === 3 ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300'}`}>{currentT.btnShield}</button>
-                  </div>
-                </div>
-
-                {storyStep === 1 && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
-                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">{currentT.estIrsCheck}</span>
-                        <div className="text-3xl font-black text-rose-500">${taxAnalysis.totalBaselineTax.toLocaleString()}</div>
-                        <p className="text-xs text-slate-300">{currentT.estIrsCheckDesc}</p>
-                      </div>
-                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
-                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">{currentT.forcedRmdAge}</span>
-                        <div className="text-3xl font-black text-white">{lang === 'es' ? '73 Años' : 'Age 73'}</div>
-                        <p className="text-xs text-slate-300">{currentT.forcedRmdDesc}</p>
-                      </div>
-                      <div className="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
-                        <span className="text-xs text-slate-400 uppercase font-black tracking-wider">{currentT.ssTorpedo}</span>
-                        <div className="text-3xl font-black text-amber-400">{lang === 'es' ? 'Hasta 85%' : 'Up to 85%'}</div>
-                        <p className="text-xs text-slate-300">{currentT.ssTorpedoDesc}</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-bold text-slate-200 mb-2.5">{currentT.inactionChartTitle}</div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={taxAnalysis.yearlyData}>
-                            <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                            <Bar dataKey="baselineTax" name={lang === 'es' ? 'Impuestos Obligatorios' : 'Forced Tax Liability'} fill="#f43f5e" radius={[3, 3, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setStoryStep(2)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      {currentT.btnGoToAct2} <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-
-                {storyStep === 2 && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-5 bg-emerald-950/30 border border-emerald-500/50 rounded-xl space-y-1.5 shadow-sm">
-                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider">{currentT.lifetimeSavingsLabel}</span>
-                        <div className="text-4xl font-black text-emerald-400">${taxAnalysis.lifetimeTaxSaved.toLocaleString()}</div>
-                        <p className="text-xs text-slate-200 font-medium">{currentT.lifetimeSavingsDesc}</p>
-                      </div>
-                      <div className="p-5 bg-indigo-950/30 border border-indigo-500/50 rounded-xl space-y-1.5 shadow-sm">
-                        <span className="text-xs text-indigo-400 uppercase font-black tracking-wider">{currentT.heirsShield}</span>
-                        <div className="text-4xl font-black text-indigo-400">${taxAnalysis.heirSavings.toLocaleString()}</div>
-                        <p className="text-xs text-slate-200 font-medium">{currentT.heirShieldDesc}</p>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setStoryStep(3)} className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      {currentT.btnGoToAct3} <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                {storyStep === 3 && (
-                  <div className="space-y-6">
-                    <div className="p-6 bg-slate-950 border border-slate-800 rounded-xl space-y-4 shadow-sm">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <div className="text-sm font-bold text-slate-200 uppercase tracking-wide flex items-center gap-2">
-                          <Compass className="w-5 h-5 text-emerald-400" /> Paychecks &amp; Playchecks Framework
-                        </div>
-                        <span className="text-xs bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-full font-mono font-bold">
-                          MATH &amp; SCIENCE DRIVEN
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="p-5 bg-emerald-950/20 border border-emerald-500/40 rounded-xl space-y-2">
-                          <div className="text-xs font-black text-emerald-400 uppercase tracking-wide">Bucket 1: Guaranteed Paychecks (Life Essentials)</div>
-                          <div className="text-3xl font-black text-white">${guaranteedFiaIncome.toLocaleString()} / Year</div>
-                          <div className="text-xs text-slate-300">Funded by: <b className="text-white">${customFiaDeposit.toLocaleString()}</b> FIA Contract</div>
-                          <ul className="text-xs text-slate-200 space-y-2 pt-2">
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Contractually guaranteed for life via Income FIA</li>
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Completely neutralizes Sequence-of-Returns Risk</li>
-                          </ul>
-                        </div>
-
-                        <div className="p-5 bg-sky-950/20 border border-sky-500/40 rounded-xl space-y-2">
-                          <div className="text-xs font-black text-sky-400 uppercase tracking-wide">Bucket 2: Playchecks &amp; Growth (Freedom &amp; Family)</div>
-                          <div className="text-3xl font-black text-white">${playcheckEquitiesRemaining.toLocaleString()} Invested</div>
-                          <div className="text-xs text-slate-300">100% Unencumbered Equities (Growth Engine)</div>
-                          <ul className="text-xs text-slate-200 space-y-2 pt-2">
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-sky-400 shrink-0" /> Invested for upside without crash liquidation pressure</li>
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-sky-400 shrink-0" /> Funds lifestyle, travel, and family inheritance</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setActiveTab('summary')} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm">
-                      {currentT.btnGoToSummary} <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TAB: GFILOGIX BACKTEST STUDIO */}
-            {activeTab === 'backtest' && (
-              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
-                  <div>
-                    <h3 className="font-black text-white text-xl tracking-tight">{currentT.backtestHeading}</h3>
-                    <p className="text-sm text-slate-300 mt-0.5">{currentT.backtestSubheading}</p>
-                  </div>
-
-                  {/* 4 Backtest Modes */}
-                  <div className="flex flex-wrap bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs gap-1">
-                    <button
-                      onClick={() => setBacktestMode('stocks_fia_vs_6040')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'stocks_fia_vs_6040' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {currentT.modeBondReplacement}
-                    </button>
-                    <button
-                      onClick={() => setBacktestMode('income_fia_vs_portfolio')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'income_fia_vs_portfolio' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {currentT.modeIncomeFia}
-                    </button>
-                    <button
-                      onClick={() => setBacktestMode('equity_vs_fia')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'equity_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {currentT.modeEqVsFia}
-                    </button>
-                    <button
-                      onClick={() => setBacktestMode('fixed_vs_fia')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'fixed_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {currentT.modeFixedVsFia}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Historical Scenario Selector Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <button
-                    onClick={() => setBacktestPeriod('2000_2010')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
-                      backtestPeriod === '2000_2010' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
-                  >
-                    <div className="text-sm font-bold">2000–2010</div>
-                    <div className="text-xs font-normal opacity-80 mt-0.5">Dot-Com + 2008</div>
-                  </button>
-                  <button
-                    onClick={() => setBacktestPeriod('2008_2018')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
-                      backtestPeriod === '2008_2018' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
-                  >
-                    <div className="text-sm font-bold">2008–2018</div>
-                    <div className="text-xs font-normal opacity-80 mt-0.5">Great Recession</div>
-                  </button>
-                  <button
-                    onClick={() => setBacktestPeriod('2015_2025')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
-                      backtestPeriod === '2015_2025' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
-                  >
-                    <div className="text-sm font-bold">2015–2024</div>
-                    <div className="text-xs font-normal opacity-80 mt-0.5">Modern Volatility</div>
-                  </button>
-                  <button
-                    onClick={() => setBacktestPeriod('all_25_years')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-bold border transition text-center ${
-                      backtestPeriod === 'all_25_years' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
-                  >
-                    <div className="text-sm font-bold">2000–2024</div>
-                    <div className="text-xs font-normal opacity-80 mt-0.5">Full 25-Year Cycle</div>
-                  </button>
-                </div>
-
-                {/* MODE: BOND REPLACEMENT STRATEGY (WITH CORPORATE VS AGGRESSIVE SELECTOR) */}
-                {backtestMode === 'stocks_fia_vs_6040' && (
-                  <div className="space-y-4">
-                    {/* BOND CATEGORY SELECTOR */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800 gap-3">
-                      <div>
-                        <span className="text-sm font-bold text-white block">Compare FIA 0% Floor Against Bond Type:</span>
-                        <span className="text-xs text-slate-400">Select which conservative sleeve you are replacing with a contract floor</span>
-                      </div>
-                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
-                        <button
-                          onClick={() => setSelectedBondType('corporate_ig')}
-                          className={`px-3 py-1.5 rounded font-bold transition ${
-                            selectedBondType === 'corporate_ig' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          Corporate Bonds (IG)
-                        </button>
-                        <button
-                          onClick={() => setSelectedBondType('high_yield')}
-                          className={`px-3 py-1.5 rounded font-bold transition ${
-                            selectedBondType === 'high_yield' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          Aggressive / Junk Bonds (HY)
-                        </button>
-                        <button
-                          onClick={() => setSelectedBondType('aggregate')}
-                          className={`px-3 py-1.5 rounded font-bold transition ${
-                            selectedBondType === 'aggregate' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          US Aggregate
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/50 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 mb-1.5 uppercase tracking-wide">
-                          <Layers className="w-4 h-4" /> Modernized 60/40 (Stocks + FIA 0% Floor)
-                        </div>
-                        <div className="text-3xl font-black text-white">
-                          ${backtest.finalModernized6040Fia.toLocaleString()}
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1">
-                          Ending balance with ${withdrawalNeed.toLocaleString()}/yr living withdrawals. Conservative 40% sleeve never dropped below 0.0%.
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-950 p-5 rounded-xl border border-rose-500/50 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-rose-400 mb-1.5 uppercase tracking-wide">
-                          <Activity className="w-4 h-4" /> Traditional 60/40 (Stocks + {selectedBondType === 'corporate_ig' ? 'Corporate IG Bonds' : selectedBondType === 'high_yield' ? 'Aggressive Junk Bonds' : 'US Aggregate Bonds'})
-                        </div>
-                        <div className="text-3xl font-black text-rose-400">
-                          ${backtest.finalTraditional6040.toLocaleString()}
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1">
-                          {selectedBondType === 'high_yield' 
-                            ? 'Aggressive bonds crashed by -26.16% in 2008 alongside equities, wiping out conservative ballast.'
-                            : 'Subject to duration losses and interest rate spikes (e.g. -15.76% corporate loss in 2022).'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-bold text-slate-200 mb-2">
-                        Portfolio Wealth Progression ($1.25M with ${withdrawalNeed.toLocaleString()}/yr Retirement Withdrawals):
-                      </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={backtest.results}>
-                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                            <Line type="monotone" dataKey="traditional6040Balance" name={`Traditional 60/40 (Stocks + ${selectedBondType === 'corporate_ig' ? 'Corporate' : selectedBondType === 'high_yield' ? 'Aggressive' : 'Agg'} Bonds)`} stroke="#f43f5e" strokeWidth={3} />
-                            <Line type="monotone" dataKey="modernized6040FiaBalance" name="Modernized 60/40 (Stocks + FIA 0% Floor)" stroke="#10b981" strokeWidth={3} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
-                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Corporate &amp; Aggressive Bond Replacement
-                      </div>
-                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                            {lang === 'es'
-                              ? `"${firstName}, muchos inversionistas usan bonos corporativos o de alto rendimiento buscando más interés, pero en 2008 los bonos agresivos cayeron más del 26% al mismo tiempo que las acciones. Al mover ese 40% a una FIA con piso del 0%, protegemos su capital contra quiebras y tasas de interés mientras sus acciones continúan creciendo. ¿Tiene sentido blindar su porción conservadora?"`
-                              : `"${firstName}, many investors turn to corporate or aggressive high-yield bonds seeking higher coupon payments, but in 2008, aggressive bonds crashed by over 26% right alongside the stock market. By shifting that conservative 40% into an FIA with a 0% floor, we eliminate credit default and interest rate risk completely while leaving your 60% equities unconstrained for growth. Does it make sense to remove market risk from your conservative ballast?"`
-                            }
-                          </div>
-                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                            <span className="text-amber-400 font-bold mr-1.5">•</span>
-                            {lang === 'es'
-                              ? `"Los bonos agresivos tienen una alta correlación con la bolsa de valores; cuando las acciones caen, los bonos chatarra se desploman. Una FIA ofrece una verdadera descorrelación con piso del 0% garantizado."`
-                              : `"High-yield aggressive bonds are heavily correlated with equities; when stocks crash, junk bonds plunge too. An FIA provides true non-correlated defense with a legal 0% floor."`
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE: PAYCHECKS (FIA) VS 60/40 */}
-                {backtestMode === 'income_fia_vs_portfolio' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 uppercase tracking-wide">
-                          <Wallet className="w-4 h-4" /> {currentT.incomeSpreadTitle}
-                        </div>
-                        <div className="text-3xl font-black text-white">
-                          ${guaranteedFiaIncome.toLocaleString()}/yr
-                          <span className="text-sm text-emerald-400 ml-2 font-bold">
-                            (+${annualIncomeAdvantage.toLocaleString()}/yr vs. 4% rule)
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1">
-                          Generated from ${customFiaDeposit.toLocaleString()} allocation at a {(incomePayoutRate * 100).toFixed(1)}% contractual rate.
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-950 p-5 rounded-xl border border-cyan-500/40 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wide">
-                          <Landmark className="w-4 h-4" /> {currentT.capitalEfficiencyTitle}
-                        </div>
-                        <div className="text-3xl font-black text-cyan-300">
-                          +${liberatedCapitalForGrowth.toLocaleString()} Liberated
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1">{currentT.capitalEfficiencyDesc}</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-bold text-slate-200 mb-2">{currentT.paycheckChartTitle}</div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={incomePaycheckComparison}>
-                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                            <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
-                            <Bar dataKey="guaranteedFiaPaycheck" name="Guaranteed Life Paycheck (Contractual Floor)" fill="#10b981" radius={[3, 3, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE: EQUITIES VS FIA ACCUMULATION */}
-                {backtestMode === 'equity_vs_fia' && (
-                  <div className="space-y-4">
-                    <div className="h-72 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={backtest.results}>
-                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                          <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (-1% Fee)" stroke="#f43f5e" strokeWidth={3} />
-                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (0% Floor / ${(fiaCap * 100).toFixed(1)}% Cap)`} stroke="#06b6d4" strokeWidth={3} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.endingBal}</span>
-                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
-                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalEquity.toLocaleString()} in market equities</p>
-                      </div>
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.zeroLossReality}</span>
-                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} {currentT.downYearsDefended}</div>
-                        <p className="text-xs text-slate-400 mt-0.5">{currentT.zeroLossNote}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE: FIXED ANNUITY VS FIA */}
-                {backtestMode === 'fixed_vs_fia' && (
-                  <div className="space-y-4">
-                    <div className="h-72 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={backtest.results}>
-                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                          <Line type="monotone" dataKey="fixedAnnuityBalance" name={`Fixed Annuity / CD (${(fixedRate * 100).toFixed(2)}% Net of Tax)`} stroke="#94a3b8" strokeWidth={3} />
-                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (0% Floor / ${(fiaCap * 100).toFixed(1)}% Cap)`} stroke="#06b6d4" strokeWidth={3} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.endingBal}</span>
-                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
-                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalFixed.toLocaleString()} in taxable fixed CDs</p>
-                      </div>
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">{currentT.zeroLossReality}</span>
-                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} {currentT.downYearsDefended}</div>
-                        <p className="text-xs text-slate-400 mt-0.5">{currentT.zeroLossNote}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
               </div>
             )}
 
@@ -1691,31 +1611,6 @@ export default function AdvisorTool() {
                     </tbody>
                   </table>
                 </div>
-
-                {/* SUMMARY ADVISOR PROMPT CARD */}
-                <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm print:hidden">
-                  <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> {currentT.advisorPromptsHeader} — Closing Recommendation
-                  </div>
-                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                        {lang === 'es'
-                          ? `"${firstName}, cuando combinamos el ahorro impositivo de $${taxAnalysis.lifetimeTaxSaved.toLocaleString()}, la protección de $${taxAnalysis.heirSavings.toLocaleString()} para sus hijos y el cheque vitalicio garantizado de $${guaranteedFiaIncome.toLocaleString()}/año, su ventaja financiera integral neta supera los $${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}. Con estos números en la mano, ¿hay alguna razón por la que no debamos implementar esta estructura?"`
-                          : `"${firstName}, when you combine the $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} in avoided lifetime taxes, the $${taxAnalysis.heirSavings.toLocaleString()} protected for your children, and the guaranteed paycheck floor of $${guaranteedFiaIncome.toLocaleString()}/year, your total comprehensive wealth advantage exceeds $${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}. Based on these numbers, is there any reason we shouldn't put this blueprint into motion?"`
-                        }
-                      </div>
-                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                        <span className="text-amber-400 font-bold mr-1.5">•</span>
-                        {lang === 'es'
-                          ? `"El costo de la inacción es de $${taxAnalysis.totalBaselineTax.toLocaleString()} pagados al IRS. Actuar ahora congela ese costo permanentemente."`
-                          : `"The cost of inaction is $${taxAnalysis.totalBaselineTax.toLocaleString()} surrendered to the IRS. Taking action now locks in a permanent family discount."`
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             )}
 

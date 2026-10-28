@@ -25,6 +25,9 @@ export interface WealthLogixBacktestParams {
   fiaParticipation: number;
   fixedRate: number;
   taxRateOnFixed: number;
+  // Blend Sub-Strategy Parameters
+  fiaIndexedAllocationPct?: number; // e.g. 0.80 (80%)
+  fiaFixedAllocationRate?: number;   // e.g. 0.03 (3.0% yield)
 }
 
 export interface WealthLogixBacktestOutput {
@@ -37,11 +40,6 @@ export interface WealthLogixBacktestOutput {
   zeroLossYearsCount: number;
 }
 
-// Historical Benchmark Annual Returns (%):
-// sp500: S&P 500 Price Return
-// agg: Bloomberg US Aggregate Bond Index
-// corp: Bloomberg US Corporate Investment Grade Index
-// hy: Bloomberg US Corporate High Yield (Aggressive / Junk) Index
 const HISTORICAL_DATA: Record<number, { sp500: number; agg: number; corp: number; hy: number }> = {
   2000: { sp500: -9.10, agg: 11.63, corp: 9.38, hy: -5.86 },
   2001: { sp500: -11.89, agg: 8.44, corp: 10.36, hy: 5.28 },
@@ -51,7 +49,7 @@ const HISTORICAL_DATA: Record<number, { sp500: number; agg: number; corp: number
   2005: { sp500: 4.91, agg: 2.43, corp: 1.68, hy: 2.74 },
   2006: { sp500: 15.79, agg: 4.33, corp: 4.30, hy: 11.85 },
   2007: { sp500: 5.49, agg: 6.97, corp: 4.56, hy: 1.87 },
-  2008: { sp500: -37.00, agg: 5.24, corp: -4.94, hy: -26.16 }, // Aggressive bonds crashed alongside equities
+  2008: { sp500: -37.00, agg: 5.24, corp: -4.94, hy: -26.16 },
   2009: { sp500: 26.46, agg: 5.93, corp: 18.68, hy: 58.21 },
   2010: { sp500: 15.06, agg: 6.54, corp: 9.47, hy: 15.12 },
   2011: { sp500: 2.11, agg: 7.84, corp: 8.15, hy: 4.98 },
@@ -65,7 +63,7 @@ const HISTORICAL_DATA: Record<number, { sp500: number; agg: number; corp: number
   2019: { sp500: 31.49, agg: 8.72, corp: 14.54, hy: 14.32 },
   2020: { sp500: 18.40, agg: 7.51, corp: 9.89, hy: 7.11 },
   2021: { sp500: 28.71, agg: -1.54, corp: -1.04, hy: 5.28 },
-  2022: { sp500: -18.11, agg: -13.01, corp: -15.76, hy: -11.19 }, // Severe interest-rate & credit loss
+  2022: { sp500: -18.11, agg: -13.01, corp: -15.76, hy: -11.19 },
   2023: { sp500: 26.29, agg: 5.53, corp: 8.52, hy: 13.44 },
   2024: { sp500: 25.02, agg: 1.25, corp: 2.13, hy: 8.19 },
 };
@@ -81,7 +79,11 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     fiaParticipation = 1.0,
     fixedRate,
     taxRateOnFixed = 0.24,
+    fiaIndexedAllocationPct = 0.80, // 80% default S&P
+    fiaFixedAllocationRate = 0.03,  // 3.0% fixed yield
   } = params;
+
+  const fiaFixedAllocationPct = 1 - fiaIndexedAllocationPct; // e.g. 20%
 
   let startYear = 2000;
   let endYear = 2010;
@@ -112,41 +114,43 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     const market = HISTORICAL_DATA[y] || { sp500: 6.5, agg: 3.5, corp: 4.0, hy: 6.0 };
     const spRaw = market.sp500;
     
-    // Select specific bond sleeve return
     let bondRaw = market.corp;
     if (bondType === 'high_yield') bondRaw = market.hy;
     if (bondType === 'aggregate') bondRaw = market.agg;
 
-    // Apply living withdrawal
     equityBal = Math.max(0, equityBal - annualWithdrawal);
     fiaBal = Math.max(0, fiaBal - annualWithdrawal);
     fixedBal = Math.max(0, fixedBal - annualWithdrawal);
     trad6040Bal = Math.max(0, trad6040Bal - annualWithdrawal);
     mod6040FiaBal = Math.max(0, mod6040FiaBal - annualWithdrawal);
 
-    // 1. Equities (-1% management fee drag)
+    // 1. S&P 500 Equities (-1% management fee drag)
     const eqNetReturn = (spRaw / 100) - 0.01;
     equityBal = Math.max(0, equityBal * (1 + eqNetReturn));
 
-    // 2. Pure FIA Accumulation (0% Floor / Cap)
-    let fiaCredited = 0;
+    // 2. Dual-Blend FIA Crediting (e.g. 80% S&P / 20% Fixed 3%)
+    let spSleeveReturn = 0;
     if (spRaw > 0) {
-      fiaCredited = Math.min(fiaCap, (spRaw / 100) * fiaParticipation);
+      spSleeveReturn = Math.min(fiaCap, (spRaw / 100) * fiaParticipation);
     } else {
-      fiaCredited = fiaFloor;
+      spSleeveReturn = fiaFloor;
+    }
+
+    const blendedFiaCredit = (fiaIndexedAllocationPct * spSleeveReturn) + (fiaFixedAllocationPct * fiaFixedAllocationRate);
+    if (spRaw <= 0) {
       zeroLossCount++;
     }
-    fiaBal = Math.max(0, fiaBal * (1 + fiaCredited));
+    fiaBal = Math.max(0, fiaBal * (1 + blendedFiaCredit));
 
     // 3. Taxable Fixed Benchmark
     fixedBal = Math.max(0, fixedBal * (1 + afterTaxFixedRate));
 
-    // 4. Traditional 60/40 (60% Equities / 40% Chosen Bond Sleeve)
+    // 4. Traditional 60/40 (60% Equities / 40% Selected Bonds)
     const tradBlend = (0.60 * (spRaw / 100)) + (0.40 * (bondRaw / 100));
     trad6040Bal = Math.max(0, trad6040Bal * (1 + tradBlend));
 
-    // 5. Modernized 60/40 (60% Equities / 40% FIA Buffer with 0% Floor)
-    const modBlend = (0.60 * (spRaw / 100)) + (0.40 * fiaCredited);
+    // 5. Modernized 60/40 (60% Equities / 40% Blended FIA Buffer)
+    const modBlend = (0.60 * (spRaw / 100)) + (0.40 * blendedFiaCredit);
     mod6040FiaBal = Math.max(0, mod6040FiaBal * (1 + modBlend));
 
     results.push({
@@ -159,7 +163,7 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
       fixedAnnuityBalance: Math.round(fixedBal),
       traditional6040Balance: Math.round(trad6040Bal),
       modernized6040FiaBalance: Math.round(mod6040FiaBal),
-      fiaInterestCredited: Number((fiaCredited * 100).toFixed(2)),
+      fiaInterestCredited: Number((blendedFiaCredit * 100).toFixed(2)),
       isFloorProtected: spRaw <= 0,
     });
     idx++;
