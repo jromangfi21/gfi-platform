@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Roth Blueprint | WealthLogix",
+  title: "GFILogix | Roth Guide",
   description:
     "Executive advisory dashboard for Roth conversion taxes and downside buffer longevity.",
 };
