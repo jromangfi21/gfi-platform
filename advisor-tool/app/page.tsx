@@ -70,6 +70,7 @@ export default function AdvisorTool() {
     taxableBrokerage: 0,
     annualFixedIncome: fixedIncome,
     annualSocialSecurity: socialSecurity,
+    annualWithdrawalNeed: withdrawalNeed,
     expectedReturn: 0.065,
     targetBracketCeiling,
     stateCode: selectedState,

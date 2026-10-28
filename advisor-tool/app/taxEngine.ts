@@ -70,6 +70,7 @@ export interface TaxSimulationParams {
   taxableBrokerage: number;
   annualFixedIncome: number;
   annualSocialSecurity: number;
+  annualWithdrawalNeed: number; // Added
   expectedReturn: number;
   targetBracketCeiling: number;
   stateCode: string;
@@ -112,7 +113,6 @@ export interface TaxSimulationOutput {
   terminalWealthBase: number;
 }
 
-// IRS Uniform Lifetime Table (abbreviated age 73 to 95)
 const RMD_DIVISORS: Record<number, number> = {
   73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1,
   80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2,
@@ -130,6 +130,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
     rothBalance,
     annualFixedIncome,
     annualSocialSecurity,
+    annualWithdrawalNeed = 60000,
     expectedReturn,
     targetBracketCeiling,
     stateTaxRate,
@@ -142,11 +143,9 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
   const stdDeduction = filingStatus === 'mfj' ? 29200 : 14600;
   const upfrontBonusDollars = Math.round(traditionalIra * carrierBonusPct);
 
-  // Baseline tracking (Inaction / No conversion)
   let baseIra = traditionalIra;
   let baseRoth = rothBalance;
 
-  // Plan tracking (Active tactical conversion)
   let planIra = traditionalIra + upfrontBonusDollars;
   let planRoth = rothBalance;
 
@@ -161,7 +160,6 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
   for (let age = currentAge; age <= endAge; age++) {
     const contractYear = age - currentAge + 1;
 
-    // Determine contractual free withdrawal rate for current contract year
     let maxFreeWithdrawalRate = 0.10;
     if (freeWithdrawalSchedule === 'tiered_2_12') {
       maxFreeWithdrawalRate = contractYear === 1 ? 0.02 : contractYear <= 10 ? 0.12 : 0.10;
@@ -179,12 +177,14 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       if (age >= 73) {
         const divisor = RMD_DIVISORS[age] || 8.0;
         const rmd = baseIra / divisor;
-        baseTaxableIncome += rmd;
-        baseIra = Math.max(0, baseIra - rmd);
+        // In retirement, distribution is the greater of the required RMD or the client's actual spending need
+        const actualDistribution = Math.max(rmd, annualWithdrawalNeed);
+        baseTaxableIncome += actualDistribution;
+        baseIra = Math.max(0, baseIra - actualDistribution);
       } else {
-        const need = 40000;
-        baseTaxableIncome += need;
-        baseIra = Math.max(0, baseIra - need);
+        // Between retirement age and 73: withdrawals directly match the client's target retirement income need
+        baseTaxableIncome += annualWithdrawalNeed;
+        baseIra = Math.max(0, baseIra - annualWithdrawalNeed);
       }
 
       const taxableBase = Math.max(0, baseTaxableIncome - stdDeduction);
@@ -209,7 +209,6 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       const combinedStatRate = (capacity > 100000 ? 0.22 : 0.12) + stateTaxRate;
       statRatePct = Number((combinedStatRate * 100).toFixed(1));
 
-      // Available penalty-free buffer bounds the maximum conversion tax liability
       const maxConversionPossible = Math.round(maxFreeDollars / combinedStatRate);
       conversionAmount = Math.min(planIra, Math.min(capacity, maxConversionPossible));
 
@@ -217,7 +216,6 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
         taxesPaidFromWithdrawal = Math.round(conversionAmount * combinedStatRate);
         planYearTax = taxesPaidFromWithdrawal;
 
-        // Net effective rate reflects carrier upfront bonus offset
         const netCostFactor = Math.max(0.01, combinedStatRate - carrierBonusPct);
         netRatePct = Number((netCostFactor * 100).toFixed(1));
 
@@ -228,14 +226,12 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
         totalTaxesPaidOnConversions += taxesPaidFromWithdrawal;
       }
     } else if (age >= 73) {
-      // In plan, pre-tax balance was converted; compulsory RMD is avoided
       const divisor = RMD_DIVISORS[age] || 8.0;
       const avoidedRmd = planIra > 0 ? (baseIra - planIra) / divisor : baseIra / divisor;
       totalRmdAvoided += Math.max(0, Math.round(avoidedRmd));
 
-      // Post-73 plan taxes (Roth distributions are 100% tax-free)
-      const nonTaxableRothWithdrawal = 40000;
-      planRoth = Math.max(0, planRoth - nonTaxableRothWithdrawal);
+      // Post-73 living need is drawn from the tax-free Roth account
+      planRoth = Math.max(0, planRoth - annualWithdrawalNeed);
 
       const fixedTaxable = Math.max(0, (annualFixedIncome + (annualSocialSecurity * 0.85)) - stdDeduction);
       planYearTax = Math.round(fixedTaxable * stateTaxRate);
