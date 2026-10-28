@@ -19,7 +19,7 @@ export default function AdvisorTool() {
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
   const [showAdvisorNotes, setShowAdvisorNotes] = useState(true);
 
-  // Section Accordion Navigation for Inputs
+  // Accordion Section State
   const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('tax');
 
   // Client Demographics & Balances
@@ -41,25 +41,23 @@ export default function AdvisorTool() {
   const [heirsTaxRate, setHeirsTaxRate] = useState(0.28);
   const [taxHikeActive, setTaxHikeActive] = useState(false);
 
-  // State tax rate is driven by selected state
   const stateTaxRate = (STATE_TAX_RATES[selectedState]?.rate ?? 0.00);
 
-  // Carrier Bonus & Tiered Free Withdrawal Schedule
+  // Carrier Bonus & Dynamic Schedule
   const [carrierBonusPct, setCarrierBonusPct] = useState(0.12);
   const [freeWithdrawalSchedule, setFreeWithdrawalSchedule] = useState<FreeWithdrawalSchedule>('tiered_2_12');
   const [customFreeWithdrawalPct, setCustomFreeWithdrawalPct] = useState(0.10);
 
-  // Backtest & Income Rider Parameters
+  // Backtest Parameters
   const [backtestPeriod, setBacktestPeriod] = useState<BacktestPeriod>('2000_2010');
   const [fiaCap, setFiaCap] = useState(0.095);
   const [fixedRate, setFixedRate] = useState(0.0475);
   const [incomeAllocationPct, setIncomeAllocationPct] = useState(0.40);
   const [incomePayoutRate, setIncomePayoutRate] = useState(0.065);
 
-  // Personalized Client First Name
   const firstName = clientName.split('&')[0].trim() || (lang === 'es' ? 'Cliente' : 'Client');
 
-  // Run Calculations
+  // Multi-Year Tax Simulation Execution
   const taxAnalysis = runRobustTaxSimulation({
     currentAge,
     retirementAge,
@@ -92,7 +90,7 @@ export default function AdvisorTool() {
     taxRateOnFixed: 0.24,
   });
 
-  // Income FIA vs. Traditional 60/40 Portfolio Calculations
+  // Income Modeling Calculations
   const incomeDedicatedCapital = Math.round(iraBalance * incomeAllocationPct);
   const guaranteedFiaIncome = Math.round(incomeDedicatedCapital * incomePayoutRate);
   const traditional4PctIncome = Math.round(incomeDedicatedCapital * 0.04);
@@ -100,7 +98,6 @@ export default function AdvisorTool() {
   const capitalNeededUnder4Pct = Math.round(guaranteedFiaIncome / 0.04);
   const liberatedCapitalForGrowth = Math.max(0, capitalNeededUnder4Pct - incomeDedicatedCapital);
 
-  // Paycheck Stream Comparison
   let simulated6040Bal = incomeDedicatedCapital;
   const incomePaycheckComparison = backtest.results.map((r) => {
     const stockReturn = r.sp500Return / 100;
@@ -122,7 +119,7 @@ export default function AdvisorTool() {
 
   const t = {
     en: {
-      platformTitle: "The GFI Distribution Blueprint",
+      platformTitle: "The GFI Distribution Blueprint™",
       platformSubtitle: "Tax Optimization & Income Architecture",
       educationalBadge: "EDUCATIONAL & INFORMATIONAL MODEL ONLY",
       preparedFor: "Prepared for:",
@@ -799,7 +796,6 @@ export default function AdvisorTool() {
                     </div>
                   </div>
 
-                  {/* Dynamic Free Withdrawal Schedule Selector */}
                   <div>
                     <label className="text-slate-300 block mb-1 font-semibold flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-emerald-300">
@@ -816,7 +812,7 @@ export default function AdvisorTool() {
                       <option value="flat_10">Flat Allowance (10% Every Year)</option>
                     </select>
                     <span className="text-[10px] text-slate-400 mt-1 block">
-                      {freeWithdrawalSchedule === 'tiered_2_12' && 'Year 1 permits 2% free withdrawal (~$' + Math.round(iraBalance * 0.02).toLocaleString() + ') to begin immediate conversions, expanding to 12% in Year 2+.'}
+                      {freeWithdrawalSchedule === 'tiered_2_12' && 'Year 1 permits 2% free withdrawal (~$' + Math.round(iraBalance * 0.02).toLocaleString() + ') to start immediate conversions, increasing to 12% in Year 2+.'}
                       {freeWithdrawalSchedule === 'standard_10' && 'Conversions begin Year 2 once 10% penalty-free withdrawal becomes active.'}
                       {freeWithdrawalSchedule === 'flat_10' && 'Flat 10% annual free liquidity modeled across all contract durations.'}
                     </span>
@@ -936,7 +932,7 @@ export default function AdvisorTool() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
                     <h3 className="font-bold text-white text-base">
-                      {lang === 'es' ? 'Estrategia Roth con Calendario de Retiros Libres' : 'Roth Blueprint with Tiered Liquidity Calibration'}
+                      {lang === 'es' ? 'Estrategia Roth con Calendario de Retiros Libres' : 'Roth Blueprint with Full Conversion Runway'}
                     </h3>
                     <p className="text-xs text-slate-400">
                       State: <b className="text-cyan-300">{STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}%)</b> • Schedule: <b className="text-emerald-300">{freeWithdrawalSchedule === 'tiered_2_12' ? '2% Yr 1 → 12% Yrs 2–10' : freeWithdrawalSchedule}</b>
@@ -987,7 +983,7 @@ export default function AdvisorTool() {
                     </span>
                     <div className="text-xl font-black text-white">${taxAnalysis.totalConversionsExecuted.toLocaleString()}</div>
                     <p className="text-[10px] text-slate-400">
-                      Permanently sheltered in tax-free Roth status before age 73.
+                      100% sheltered in permanent tax-free Roth status.
                     </p>
                   </div>
                 </div>
@@ -995,7 +991,7 @@ export default function AdvisorTool() {
                 {/* Multi-Year Taxes Graph */}
                 <div>
                   <div className="text-xs font-semibold text-slate-300 mb-2">
-                    Annual Tax Comparison (Taxes start at retirement age {retirementAge} and escalate at 73 under inaction):
+                    Annual Tax Comparison (Reflects living withdrawals from age {retirementAge} and mandatory RMDs at 73):
                   </div>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -1011,15 +1007,15 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* Annual Conversion Schedule Table with Dynamic Schedule Rates */}
+                {/* Full Multi-Year Conversion Runway Table */}
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
                   <div className="text-xs font-bold text-slate-300 uppercase tracking-wide flex justify-between items-center">
-                    <span>Tactical Conversion Runway ({freeWithdrawalSchedule === 'tiered_2_12' ? 'Tiered 2% → 12% Schedule' : 'Standard Schedule'})</span>
+                    <span>Full Tactical Conversion Runway to $0 IRA Balance</span>
                     <span className="text-[11px] text-cyan-400 font-normal">
                       {(carrierBonusPct * 100).toFixed(0)}% Bonus Offset | {selectedState} ({(stateTaxRate * 100).toFixed(1)}%)
                     </span>
                   </div>
-                  <div className="overflow-x-auto max-h-56">
+                  <div className="overflow-x-auto max-h-96">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead className="sticky top-0 bg-slate-950 border-b border-slate-800 text-slate-400">
                         <tr>
@@ -1033,23 +1029,33 @@ export default function AdvisorTool() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                        {taxAnalysis.yearlyData.filter(d => d.age < 73).map(d => (
+                        {taxAnalysis.yearlyData.filter(d => d.conversionAmount > 0).map(d => (
                           <tr key={d.age} className="hover:bg-slate-900/50">
-                            <td className="py-2 font-semibold text-white">Age {d.age} (Yr {d.contractYear})</td>
-                            <td className="py-2 text-emerald-400 font-bold">${d.conversionAmount.toLocaleString()}</td>
-                            <td className="py-2 text-slate-300 font-medium">
+                            <td className="py-2.5 font-semibold text-white">Age {d.age} (Yr {d.contractYear})</td>
+                            <td className="py-2.5 text-emerald-400 font-bold">${d.conversionAmount.toLocaleString()}</td>
+                            <td className="py-2.5 text-slate-300 font-medium">
                               ${d.maxFreeWithdrawal.toLocaleString()}
                               <span className="text-[10px] text-cyan-400 ml-1">({d.maxFreeWithdrawalRatePct}%)</span>
                             </td>
-                            <td className="py-2 text-rose-300 font-medium">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
-                            <td className="py-2 text-slate-400">{d.statutoryRatePct}%</td>
-                            <td className="py-2 text-cyan-300 font-bold">
+                            <td className="py-2.5 text-rose-300 font-medium">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
+                            <td className="py-2.5 text-slate-400">{d.statutoryRatePct}%</td>
+                            <td className="py-2.5 text-cyan-300 font-bold">
                               {d.netEffectiveRatePct}%
                               <span className="text-[10px] text-emerald-400 ml-1 font-normal">(-{(carrierBonusPct * 100).toFixed(0)}% bonus)</span>
                             </td>
-                            <td className="py-2 text-indigo-400 font-bold">${d.planRoth.toLocaleString()}</td>
+                            <td className="py-2.5 text-indigo-400 font-bold">${d.planRoth.toLocaleString()}</td>
                           </tr>
                         ))}
+                        {/* Summary Completion Row */}
+                        <tr className="bg-emerald-950/30 border-t-2 border-emerald-500/50 font-bold">
+                          <td className="py-2.5 text-emerald-300 uppercase tracking-wide">Total Runway Complete</td>
+                          <td className="py-2.5 text-emerald-400">${taxAnalysis.totalConversionsExecuted.toLocaleString()}</td>
+                          <td className="py-2.5 text-slate-400">--</td>
+                          <td className="py-2.5 text-rose-300">${(taxAnalysis.totalConversionsExecuted * (taxAnalysis.overallNetEffectiveTaxRate / 100)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+                          <td className="py-2.5 text-slate-400">{taxAnalysis.grossStatutoryRatePct}% Avg</td>
+                          <td className="py-2.5 text-cyan-300 font-bold">{taxAnalysis.overallNetEffectiveTaxRate}% Net</td>
+                          <td className="py-2.5 text-emerald-300 font-black">100% Tax-Free Roth</td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -1149,28 +1155,6 @@ export default function AdvisorTool() {
                     <button onClick={() => setStoryStep(2)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2">
                       {currentT.btnGoToAct2} <ChevronRight className="w-4 h-4" />
                     </button>
-
-                    {showAdvisorNotes && (
-                      <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-xl space-y-4">
-                        <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                          <div className="p-4 bg-slate-950/70 rounded-lg border border-amber-500/20 shadow-sm space-y-2.5">
-                            <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                              {lang === 'es'
-                                ? `"${firstName}, ¿qué sucedería si sus retiros de jubilación a partir de los ${retirementAge} años lo empujan a un tramo impositivo más alto de lo planeado, seguido por las RMD obligatorias a los 73 años? ¿Cómo impactaría esto su estilo de vida?"`
-                                : `"${firstName}, what would happen if your retirement withdrawals starting at age ${retirementAge} push you into a higher tax bracket than expected, followed by compulsory RMDs at 73—how would that affect your lifestyle?"`
-                              }
-                            </div>
-                            <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                              <span className="text-amber-400 font-bold mr-1">•</span>
-                              {lang === 'es'
-                                ? `"Los jubilados no le temen tanto a las caídas del mercado como a perder el control sobre sus ingresos. Las RMD le otorgan al IRS el control total de su factura fiscal."`
-                                : `"Retirees don't fear market crashes as much as they fear losing control over their income. RMDs give the IRS total control over your tax bill."`
-                              }
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 

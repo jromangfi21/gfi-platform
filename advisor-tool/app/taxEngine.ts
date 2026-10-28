@@ -70,7 +70,7 @@ export interface TaxSimulationParams {
   taxableBrokerage: number;
   annualFixedIncome: number;
   annualSocialSecurity: number;
-  annualWithdrawalNeed: number; // Added
+  annualWithdrawalNeed: number;
   expectedReturn: number;
   targetBracketCeiling: number;
   stateCode: string;
@@ -143,9 +143,11 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
   const stdDeduction = filingStatus === 'mfj' ? 29200 : 14600;
   const upfrontBonusDollars = Math.round(traditionalIra * carrierBonusPct);
 
+  // Inaction Path
   let baseIra = traditionalIra;
   let baseRoth = rothBalance;
 
+  // Optimized Strategic Plan Path
   let planIra = traditionalIra + upfrontBonusDollars;
   let planRoth = rothBalance;
 
@@ -160,6 +162,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
   for (let age = currentAge; age <= endAge; age++) {
     const contractYear = age - currentAge + 1;
 
+    // Determine current year contractual free withdrawal allowance
     let maxFreeWithdrawalRate = 0.10;
     if (freeWithdrawalSchedule === 'tiered_2_12') {
       maxFreeWithdrawalRate = contractYear === 1 ? 0.02 : contractYear <= 10 ? 0.12 : 0.10;
@@ -169,7 +172,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       maxFreeWithdrawalRate = freeWithdrawalPct;
     }
 
-    // Baseline RMDs & Living Withdrawals
+    // 1. Baseline Calculations (Inaction)
     let baseTaxableIncome = annualFixedIncome + (annualSocialSecurity * 0.85);
     let baselineYearTax = 0;
 
@@ -177,12 +180,10 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       if (age >= 73) {
         const divisor = RMD_DIVISORS[age] || 8.0;
         const rmd = baseIra / divisor;
-        // In retirement, distribution is the greater of the required RMD or the client's actual spending need
         const actualDistribution = Math.max(rmd, annualWithdrawalNeed);
         baseTaxableIncome += actualDistribution;
         baseIra = Math.max(0, baseIra - actualDistribution);
       } else {
-        // Between retirement age and 73: withdrawals directly match the client's target retirement income need
         baseTaxableIncome += annualWithdrawalNeed;
         baseIra = Math.max(0, baseIra - annualWithdrawalNeed);
       }
@@ -194,7 +195,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
     totalBaselineTax += baselineYearTax;
     baseIra = Math.round(baseIra * (1 + expectedReturn));
 
-    // Optimized Plan: Conversions before Age 73
+    // 2. Strategic Plan: Conversions until Plan IRA reaches $0
     let conversionAmount = 0;
     let maxFreeDollars = Math.round(planIra * maxFreeWithdrawalRate);
     let taxesPaidFromWithdrawal = 0;
@@ -202,13 +203,14 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
     let statRatePct = 0;
     let netRatePct = 0;
 
-    if (age < 73 && planIra > 0) {
+    if (planIra > 0) {
       const fixedBase = Math.max(0, (annualFixedIncome + (annualSocialSecurity * 0.85)) - stdDeduction);
       const capacity = Math.max(0, targetBracketCeiling - fixedBase);
 
       const combinedStatRate = (capacity > 100000 ? 0.22 : 0.12) + stateTaxRate;
       statRatePct = Number((combinedStatRate * 100).toFixed(1));
 
+      // Calculate conversion capacity strictly within free withdrawal liquidity
       const maxConversionPossible = Math.round(maxFreeDollars / combinedStatRate);
       conversionAmount = Math.min(planIra, Math.min(capacity, maxConversionPossible));
 
@@ -225,16 +227,19 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
         totalConversionsExecuted += conversionAmount;
         totalTaxesPaidOnConversions += taxesPaidFromWithdrawal;
       }
-    } else if (age >= 73) {
+    } else {
+      // 100% Tax-Free Roth distributions during retirement
+      if (age >= retirementAge) {
+        planRoth = Math.max(0, planRoth - annualWithdrawalNeed);
+      }
+      const fixedTaxable = Math.max(0, (annualFixedIncome + (annualSocialSecurity * 0.85)) - stdDeduction);
+      planYearTax = Math.round(fixedTaxable * stateTaxRate);
+    }
+
+    if (age >= 73) {
       const divisor = RMD_DIVISORS[age] || 8.0;
       const avoidedRmd = planIra > 0 ? (baseIra - planIra) / divisor : baseIra / divisor;
       totalRmdAvoided += Math.max(0, Math.round(avoidedRmd));
-
-      // Post-73 living need is drawn from the tax-free Roth account
-      planRoth = Math.max(0, planRoth - annualWithdrawalNeed);
-
-      const fixedTaxable = Math.max(0, (annualFixedIncome + (annualSocialSecurity * 0.85)) - stdDeduction);
-      planYearTax = Math.round(fixedTaxable * stateTaxRate);
     }
 
     totalPlanTax += planYearTax;
