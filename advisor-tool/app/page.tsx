@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { 
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
-  Printer, PlayCircle, Eye, EyeOff, Sparkles, ChevronRight, CheckCircle2, RefreshCw,
+  Printer, PlayCircle, Eye, Sparkles, ChevronRight, CheckCircle2, RefreshCw,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, 
   MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers
 } from 'lucide-react';
@@ -18,7 +18,6 @@ export default function AdvisorTool() {
   const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('roth');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('income_fia_vs_portfolio');
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
-  const [showAdvisorNotes, setShowAdvisorNotes] = useState(true);
 
   // Accordion Navigation
   const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('client');
@@ -50,7 +49,7 @@ export default function AdvisorTool() {
   const [freeWithdrawalSchedule, setFreeWithdrawalSchedule] = useState<FreeWithdrawalSchedule>('tiered_2_12');
   const [customFreeWithdrawalPct, setCustomFreeWithdrawalPct] = useState(0.10);
 
-  // Dynamic Paycheck vs Playchecks Custom Deposit & Payout Rate (No hardcoded 500k)
+  // Dynamic Paycheck vs Playchecks Custom Deposit & Payout Rate
   const [customFiaDeposit, setCustomFiaDeposit] = useState(500000);
   const [incomePayoutRate, setIncomePayoutRate] = useState(0.065);
 
@@ -104,7 +103,7 @@ export default function AdvisorTool() {
     taxRateOnFixed: 0.24,
   });
 
-  // Dynamic Paycheck vs. Playcheck Calculations (Driven by customFiaDeposit)
+  // Dynamic Paycheck vs. Playcheck Calculations
   const guaranteedFiaIncome = Math.round(customFiaDeposit * incomePayoutRate);
   const traditional4PctIncome = Math.round(customFiaDeposit * 0.04);
   const annualIncomeAdvantage = guaranteedFiaIncome - traditional4PctIncome;
@@ -138,8 +137,7 @@ export default function AdvisorTool() {
       educationalBadge: "EDUCATIONAL & INFORMATIONAL MODEL ONLY",
       preparedFor: "Prepared for:",
       targetRetirement: "Target Retirement: Age",
-      showPrompts: "Advisor Prompts Active",
-      hidePrompts: "Show Advisor Prompts",
+      advisorPromptsHeader: "Advisor Discussion & Discovery Track",
       printSummary: "Print Summary",
       storyMode: "Story Mode",
       gfiLogix: "GFILogix Backtest",
@@ -233,8 +231,7 @@ export default function AdvisorTool() {
       educationalBadge: "MODELO EDUCATIVO E INFORMATIVO ÚNICAMENTE",
       preparedFor: "Preparado para:",
       targetRetirement: "Jubilación Meta: Edad",
-      showPrompts: "Preguntas Clave Activas",
-      hidePrompts: "Mostrar Preguntas Clave",
+      advisorPromptsHeader: "Guía de Preguntas Clave para el Asesor",
       printSummary: "Imprimir Resumen",
       storyMode: "Modo Narrativa",
       gfiLogix: "Simulador GFILogix",
@@ -395,18 +392,6 @@ export default function AdvisorTool() {
                 <Globe className="w-3 h-3" /> ES
               </button>
             </div>
-
-            <button
-              onClick={() => setShowAdvisorNotes(!showAdvisorNotes)}
-              className={`px-3 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 font-bold transition ${
-                showAdvisorNotes 
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500/40' 
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {showAdvisorNotes ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5" />}
-              {showAdvisorNotes ? currentT.showPrompts : currentT.hidePrompts}
-            </button>
 
             <button
               onClick={() => window.print()}
@@ -696,7 +681,7 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 2: INCOME & SPENDING (INCLUDES PRE-RETIREMENT W-2 AND POST-RETIREMENT NEED) */}
+            {/* SECTION 2: INCOME & SPENDING */}
             {openSection === 'income' && (
               <div className="space-y-4 pt-1">
                 <div>
@@ -1161,24 +1146,46 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT) */}
-                {showAdvisorNotes && (
-                  <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-xl space-y-4">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
-                      <MessageSquare className="w-4 h-4" /> Strategic Discussion Prompts — Tactical Roth Runway
+                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT - PERMANENTLY VISIBLE) */}
+                <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                    <MessageSquare className="w-4 h-4" /> {currentT.advisorPromptsHeader} — Tactical Roth Runway
+                  </div>
+                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, al modelar su salario actual de $${currentEarnedIncome.toLocaleString()} antes de la jubilación y su ingreso meta de $${withdrawalNeed.toLocaleString()} al jubilarse, calibramos exactamente cuánto espacio libre queda en el tramo impositivo elegido sin sobrepasar su límite marginal. Con el bono del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es solo del ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido ejecutar esta conversión estratégica?"`
+                          : `"${firstName}, by incorporating your current salary of $${currentEarnedIncome.toLocaleString()} prior to retirement and your target income of $${withdrawalNeed.toLocaleString()} once retired, we identify the exact room remaining in your selected tax bracket without spilling over into higher rates. With the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is just ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this disciplined tax strategy into practice?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1">•</span>
+                        {lang === 'es'
+                          ? `"Pagar impuestos ahora no es un gasto; es comprar un dólar libre de impuestos por un descuento significativo. El bono de la aseguradora absorbe el costo para que sus herederos reciban el 100% libre de impuestos bajo la ley SECURE."`
+                          : `"Paying taxes now isn't an expense; it's buying a future tax-free dollar at a major discount. The carrier's upfront bonus absorbs the friction so your children inherit 100% tax-free wealth under the SECURE Act."`
+                        }
+                      </div>
                     </div>
-                    <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                      <div className="p-4 bg-slate-950/70 rounded-lg border border-amber-500/20 shadow-sm space-y-2.5">
-                        <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                          {lang === 'es'
-                            ? `"${firstName}, al modelar su salario actual de $${currentEarnedIncome.toLocaleString()} antes de la jubilación y su ingreso meta de $${withdrawalNeed.toLocaleString()} al jubilarse, calibramos exactamente cuánto espacio libre queda en el tramo impositivo elegido sin sobrepasar su límite marginal. Con el bono del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es solo del ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido ejecutar esta conversión estratégica?"`
-                            : `"${firstName}, by incorporating your current salary of $${currentEarnedIncome.toLocaleString()} prior to retirement and your target income of $${withdrawalNeed.toLocaleString()} once retired, we identify the exact room remaining in your selected tax bracket without spilling over into higher rates. With the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is just ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this disciplined tax strategy into practice?"`
-                          }
-                        </div>
+
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, ya que limitamos la conversión de cada año para que los impuestos queden completamente cubiertos por el retiro libre de penalidades contractuales, ¿qué tranquilidad le da saber que no tendrá que pagarle al IRS de su propio bolsillo?"`
+                          : `"${firstName}, since we calibrate each year's conversion so the taxes are fully covered by your contractual penalty-free withdrawal, how does it feel knowing you won't have to write a check out of pocket to the IRS?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1">•</span>
+                        {lang === 'es'
+                          ? `"Nunca tocamos su liquidez de emergencia. El propio contrato financia la factura del IRS utilizando la provisión de retiro anual libre de penalidades."`
+                          : `"We never compromise your emergency cash reserves. The annuity contract itself finances the tax bill using its penalty-free annual liquidity provision."`
+                        }
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+
               </div>
             )}
 
@@ -1235,6 +1242,45 @@ export default function AdvisorTool() {
                     <button onClick={() => setStoryStep(2)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2">
                       {currentT.btnGoToAct2} <ChevronRight className="w-4 h-4" />
                     </button>
+
+                    {/* ADVISOR PROMPT CARD (ACT 1 - PERMANENTLY VISIBLE) */}
+                    <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-4 h-4" /> {currentT.advisorPromptsHeader} — Act 1: The Trap
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, ¿qué sucedería si sus retiros de jubilación a partir de los ${retirementAge} años lo empujan a un tramo impositivo más alto de lo planeado, seguido por las RMD obligatorias a los 73 años? ¿Cómo impactaría esto su estilo de vida?"`
+                              : `"${firstName}, what would happen if your retirement withdrawals starting at age ${retirementAge} push you into a higher tax bracket than expected, followed by compulsory RMDs at 73—how would that affect your lifestyle?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1">•</span>
+                            {lang === 'es'
+                              ? `"Los jubilados no le temen tanto a las caídas del mercado como a perder el control sobre sus ingresos. Las RMD le otorgan al IRS el control total de su factura fiscal."`
+                              : `"Retirees don't fear market crashes as much as they fear losing control over their income. RMDs give the IRS total control over your tax bill."`
+                            }
+                          </div>
+                        </div>
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si esto no se soluciona antes de que cambien las leyes tributarias, ¿qué cantidad de estos $${taxAnalysis.totalBaselineTax.toLocaleString()} se sentiría cómodo entregando al gobierno en lugar de dejárselo a su familia?"`
+                              : `"${firstName}, if this isn't addressed now before tax laws shift, how much of this $${taxAnalysis.totalBaselineTax.toLocaleString()} do you feel comfortable handing over to the government instead of leaving it to your family?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1">•</span>
+                            {lang === 'es'
+                              ? `"Acumular saldos antes de impuestos sin una planificación proactiva convierte al IRS en su socio mayoritario."`
+                              : `"Compounding pre-tax balances without proactive distribution planning turns the IRS into your majority wealth partner."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1256,6 +1302,45 @@ export default function AdvisorTool() {
                     <button onClick={() => setStoryStep(3)} className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2">
                       {currentT.btnGoToAct3} <ChevronRight className="w-4 h-4" />
                     </button>
+
+                    {/* ADVISOR PROMPT CARD (ACT 2 - PERMANENTLY VISIBLE) */}
+                    <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-4 h-4" /> {currentT.advisorPromptsHeader} — Act 2: The Solution
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si existiera una forma de aprovechar las tasas tributarias actuales para proteger permanentemente $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} de impuestos futuros, ¿le daría eso mayor tranquilidad?"`
+                              : `"${firstName}, if there was a way to take advantage of today's lower tax rates and permanently protect $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} from compulsory IRS taxes, would that give you greater confidence?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1">•</span>
+                            {lang === 'es'
+                              ? `"El mayor regalo que puede dejarle a su familia es una jubilación y un legado 100% libres de impuestos. Los impuestos están con descuento hoy; no lo estarán mañana."`
+                              : `"The single greatest gift you can give your family is a 100% tax-free retirement and legacy. Taxes are on sale today; they won't be tomorrow."`
+                            }
+                          </div>
+                        </div>
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, sabiendo que bajo la ley SECURE sus hijos deben liquidar una cuenta heredada en 10 años, ¿qué tan importante es garantizar que reciban este patrimonio completamente libre de impuestos?"`
+                              : `"${firstName}, knowing that under the SECURE Act your children have to liquidate an inherited IRA within 10 years, how important is it to make sure they inherit this 100% tax-free?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1">•</span>
+                            {lang === 'es'
+                              ? `"Sus hijos se verán obligados a liquidar su IRA tradicional en sus años de mayores ingresos a menos que lo convirtamos proactivamente ahora."`
+                              : `"Your kids will be forced to take your pre-tax IRA distributions in their highest-earning career years unless we convert it now."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1297,6 +1382,46 @@ export default function AdvisorTool() {
                     <button onClick={() => setActiveTab('summary')} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2">
                       {currentT.btnGoToSummary} <ChevronRight className="w-4 h-4" />
                     </button>
+
+                    {/* ADVISOR PROMPT CARD (ACT 3 - PERMANENTLY VISIBLE) */}
+                    <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-4 h-4" /> {currentT.advisorPromptsHeader} — Act 3: Paychecks &amp; Playchecks
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si podemos garantizar que reciba $${guaranteedFiaIncome.toLocaleString()} cada año de por vida—incluso si el mercado cae 30%—¿con cuánta mayor tranquilidad dejaría el resto de su dinero invertido para crecer?"`
+                              : `"${firstName}, if we can guarantee $${guaranteedFiaIncome.toLocaleString()} hits your bank account every single year for life—even if the market drops 30%—how much easier would it be to leave the rest of your portfolio invested for long-term growth?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1">•</span>
+                            {lang === 'es'
+                              ? `"Las anualidades no son buenas ni malas; cumplen una función matemática única: fabricar créditos de mortalidad garantizados. No ponemos todo su dinero en una anualidad; solo lo suficiente para cubrir sus costos de vida básicos de por vida."`
+                              : `"Annuities aren't good or bad; they do a mathematical job no stock, bond, or fund can do: manufacture guaranteed mortality credits. You don't put all your money in an annuity; you only put enough to cover basic living costs for life."`
+                            }
+                          </div>
+                        </div>
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, con un portafolio tradicional 60/40, cuando el mercado cae como en 2008, retirar $32,000 lo obliga a vender acciones en pérdida. ¿Prefiere basar su sustento diario en la volatilidad de la bolsa o en una garantía legal contractual?"`
+                              : `"${firstName}, with a traditional 60/40 portfolio, when the market crashes like in 2008, withdrawing $32,000 forces you to sell stocks at rock bottom. Do you want your grocery and healthcare money dependent on market timing, or backed by a legal contract?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1">•</span>
+                            {lang === 'es'
+                              ? `"Si fallece temprano, sus herederos reciben el saldo restante. Pero los planes de retiro no se diseñan para morir joven, sino para la verdadera catástrofe financiera: vivir hasta los 95 años y quedarse sin dinero."`
+                              : `"If you die early, your heirs receive the remaining balance. But retirement plans aren't designed for dying young—they are built for the catastrophe of living to 95 and running out of money."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 )}
               </div>
@@ -1482,24 +1607,6 @@ export default function AdvisorTool() {
                         </ResponsiveContainer>
                       </div>
                     </div>
-
-                    {showAdvisorNotes && (
-                      <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-xl space-y-4">
-                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
-                          <MessageSquare className="w-4 h-4" /> The Bond Replacement Presentation Dialogue
-                        </div>
-                        <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                          <div className="p-4 bg-slate-950/70 rounded-lg border border-amber-500/20 shadow-sm space-y-2.5">
-                            <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                              {lang === 'es'
-                                ? `"${firstName}, en 2022 los bonos tradicionales cayeron más del 13% junto con las acciones, demostrando que los bonos ya no son un ancla segura. Al reemplazar el 40% de bonos con una FIA, mantenemos el 60% en acciones para crecer, pero aseguramos contractualmente un piso del 0% en la parte conservadora. ¿Prefiere arriesgar su dinero conservador a tasas de interés, o blindarlo legalmente contra pérdidas?"`
-                                : `"${firstName}, in 2022, traditional bonds lost over 13% at the same time equities dropped, proving that bonds no longer guarantee safe ballast. By replacing the 40% bond sleeve with an FIA, we leave your 60% equities 100% invested for growth, while contractually locking in a 0% floor on the conservative portion. Does it make sense to remove interest rate risk from your conservative money?"`
-                              }
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -1564,6 +1671,31 @@ export default function AdvisorTool() {
                     </div>
                   </div>
                 )}
+
+                {/* ADVISOR PROMPT CARD (BACKTEST STUDIO - PERMANENTLY VISIBLE ACROSS ALL 4 MODES) */}
+                <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                    <MessageSquare className="w-4 h-4" /> {currentT.advisorPromptsHeader} — Backtest &amp; Capital Protection
+                  </div>
+                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, en 2022 los bonos tradicionales cayeron más del 13% junto con las acciones, demostrando que los bonos ya no son un ancla segura. Al reemplazar el 40% de bonos con una FIA, mantenemos el 60% en acciones para crecer, pero aseguramos contractualmente un piso del 0% en la parte conservadora. ¿Prefiere arriesgar su dinero conservador a tasas de interés, o blindarlo legalmente contra pérdidas?"`
+                          : `"${firstName}, in 2022, traditional bonds lost over 13% at the same time equities dropped, proving that bonds no longer guarantee safe ballast. By replacing the 40% bond sleeve with an FIA, we leave your 60% equities 100% invested for growth, while contractually locking in a 0% floor on the conservative portion. Does it make sense to remove interest rate risk from your conservative money?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1">•</span>
+                        {lang === 'es'
+                          ? `"Retirar ingresos de un portafolio de acciones desprotegido durante un mercado bajista agota el capital de forma irreversible. Un colchón de ingresos garantizados elimina ese peligro para siempre."`
+                          : `"Taking income from an unprotected equity portfolio during a bear market is financial suicide. A guaranteed income buffer eliminates that danger permanently."`
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 
@@ -1653,6 +1785,31 @@ export default function AdvisorTool() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* ADVISOR PROMPT CARD (SUMMARY - PERMANENTLY VISIBLE) */}
+                <div className="mt-4 p-5 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 print:hidden">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                    <MessageSquare className="w-4 h-4" /> {currentT.advisorPromptsHeader} — Closing Recommendation
+                  </div>
+                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, cuando combinamos el ahorro impositivo de $${taxAnalysis.lifetimeTaxSaved.toLocaleString()}, la protección de $${taxAnalysis.heirSavings.toLocaleString()} para sus hijos y el cheque vitalicio garantizado de $${guaranteedFiaIncome.toLocaleString()}/año, su ventaja financiera integral neta supera los $${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}. Con estos números en la mano, ¿hay alguna razón por la que no debamos implementar esta estructura?"`
+                          : `"${firstName}, when you combine the $${taxAnalysis.lifetimeTaxSaved.toLocaleString()} in avoided lifetime taxes, the $${taxAnalysis.heirSavings.toLocaleString()} protected for your children, and the guaranteed paycheck floor of $${guaranteedFiaIncome.toLocaleString()}/year, your total comprehensive wealth advantage exceeds $${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}. Based on these numbers, is there any reason we shouldn't put this blueprint into motion?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200/90 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1">•</span>
+                        {lang === 'es'
+                          ? `"El costo de la inacción es de $${taxAnalysis.totalBaselineTax.toLocaleString()} pagados al IRS. Actuar ahora congela ese costo permanentemente."`
+                          : `"The cost of inaction is $${taxAnalysis.totalBaselineTax.toLocaleString()} surrendered to the IRS. Taking action now locks in a permanent family discount."`
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 
