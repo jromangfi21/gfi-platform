@@ -9,7 +9,8 @@ import {
 import { 
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, Eye, EyeOff, Sparkles, ChevronRight, CheckCircle2, RefreshCw,
-  Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare
+  Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, X, Gift, Percent, 
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -20,9 +21,9 @@ export default function AdvisorTool() {
   const [showAdvisorNotes, setShowAdvisorNotes] = useState(true);
 
   // Accordion Navigation
-  const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('tax');
+  const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('client');
 
-  // Client Demographics & Balances
+  // Client Demographics & Balances (Cardinal Fields)
   const [clientName, setClientName] = useState('John & Mary Smith');
   const [selectedState, setSelectedState] = useState<string>('FL');
   const [currentAge, setCurrentAge] = useState(61);
@@ -57,6 +58,15 @@ export default function AdvisorTool() {
   const [incomePayoutRate, setIncomePayoutRate] = useState(0.065);
 
   const firstName = clientName.split('&')[0].trim() || (lang === 'es' ? 'Cliente' : 'Client');
+
+  // Validation Check for Cardinal Inputs
+  const isCardinalComplete = Boolean(
+    clientName.trim() && 
+    selectedState && 
+    currentAge > 0 && 
+    retirementAge > currentAge && 
+    iraBalance > 0
+  );
 
   // Multi-Year Tax Simulation Execution
   const taxAnalysis = runRobustTaxSimulation({
@@ -121,7 +131,7 @@ export default function AdvisorTool() {
 
   const t = {
     en: {
-      platformTitle: "The GFI Distribution Blueprint",
+      platformTitle: "The GFI Distribution Blueprint™",
       platformSubtitle: "Tax Optimization & Income Architecture",
       educationalBadge: "EDUCATIONAL & INFORMATIONAL MODEL ONLY",
       preparedFor: "Prepared for:",
@@ -144,7 +154,7 @@ export default function AdvisorTool() {
       clientParams: "Client Parameters",
       mfj: "Married Filing Joint",
       single: "Single Filer",
-      tabProfile: "Profile",
+      tabProfile: "Intake",
       tabIncome: "Income",
       tabTaxes: "Taxes & Bonus",
       tabCarrier: "Carrier",
@@ -215,7 +225,7 @@ export default function AdvisorTool() {
       rowTotal: "Total Comprehensive Wealth Advantage",
     },
     es: {
-      platformTitle: "The GFI Distribution Blueprint",
+      platformTitle: "The GFI Distribution Blueprint™",
       platformSubtitle: "Optimización Fiscal y Arquitectura de Ingresos",
       educationalBadge: "MODELO EDUCATIVO E INFORMATIVO ÚNICAMENTE",
       preparedFor: "Preparado para:",
@@ -238,7 +248,7 @@ export default function AdvisorTool() {
       clientParams: "Parámetros del Cliente",
       mfj: "Casados Declarando Conjunto",
       single: "Declaración Individual",
-      tabProfile: "Perfil",
+      tabProfile: "Datos",
       tabIncome: "Ingresos",
       tabTaxes: "Impuestos y Bono",
       tabCarrier: "Aseguradora",
@@ -353,7 +363,7 @@ export default function AdvisorTool() {
               </div>
               <div className="text-xs text-slate-400 mt-1 space-y-0.5">
                 <div>
-                  {currentT.preparedFor} <b className="text-slate-200">{clientName}</b> ({STATE_TAX_RATES[selectedState]?.name} • {(stateTaxRate * 100).toFixed(1)}% Tax)
+                  {currentT.preparedFor} <b className="text-slate-200">{clientName || 'Unnamed Client'}</b> ({STATE_TAX_RATES[selectedState]?.name} • {(stateTaxRate * 100).toFixed(1)}% Tax)
                 </div>
                 <div>
                   {currentT.targetRetirement} <b className="text-sky-300">{retirementAge}</b> • <span className="text-emerald-400 font-semibold">{lang === 'es' ? 'Proyectado hasta los 95 años' : 'Projected to Age 95'}</span>
@@ -492,6 +502,27 @@ export default function AdvisorTool() {
           {/* Left Controls (4 Cols) */}
           <div className="lg:col-span-4 bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 h-fit text-xs print:hidden">
             
+            {/* CARDINAL INTAKE HEADER & STATUS */}
+            <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5 text-[11px]">
+                  <ClipboardList className="w-4 h-4 text-emerald-400" /> Client Intake (Cardinal)
+                </span>
+                {isCardinalComplete ? (
+                  <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Complete
+                  </span>
+                ) : (
+                  <span className="text-[10px] bg-rose-500/10 border border-rose-500/30 text-rose-300 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-rose-400" /> Incomplete
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 leading-normal">
+                Fields marked with <span className="text-rose-400 font-bold">*</span> are cardinal parameters required to generate the multi-year Blueprint.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                 <Sliders className="w-4 h-4 text-cyan-400" /> {currentT.clientParams}
@@ -499,7 +530,7 @@ export default function AdvisorTool() {
               <select 
                 value={filingStatus} 
                 onChange={(e) => setFilingStatus(e.target.value as FilingStatus)}
-                className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs"
+                className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs font-semibold"
               >
                 <option value="mfj">{currentT.mfj}</option>
                 <option value="single">{currentT.single}</option>
@@ -541,23 +572,29 @@ export default function AdvisorTool() {
               </button>
             </div>
 
-            {/* SECTION 1: PROFILE & BALANCES */}
+            {/* SECTION 1: PROFILE & CARDINAL BALANCES */}
             {openSection === 'client' && (
               <div className="space-y-4 pt-1">
                 <div>
-                  <label className="text-slate-400 block mb-1">{currentT.clientNameLabel}</label>
+                  <label className="text-slate-300 block mb-1 font-semibold flex items-center justify-between">
+                    <span>{currentT.clientNameLabel} <span className="text-rose-400 font-bold">*</span></span>
+                    {!clientName.trim() && <span className="text-[10px] text-rose-400">Required</span>}
+                  </label>
                   <input
                     type="text"
                     value={clientName}
+                    placeholder="e.g. John & Mary Smith"
                     onChange={(e) => setClientName(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white font-medium"
+                    className={`w-full bg-slate-800 border rounded p-2 text-white font-medium ${
+                      !clientName.trim() ? 'border-rose-500/80 focus:border-rose-400' : 'border-slate-700'
+                    }`}
                   />
                 </div>
 
                 <div>
                   <label className="text-slate-300 block mb-1 font-semibold flex items-center justify-between">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-cyan-400" /> {currentT.stateResidenceLabel}
+                      <MapPin className="w-3.5 h-3.5 text-cyan-400" /> {currentT.stateResidenceLabel} <span className="text-rose-400 font-bold">*</span>
                     </span>
                     <span className="text-cyan-400 font-bold">{(stateTaxRate * 100).toFixed(1)}% Tax</span>
                   </label>
@@ -576,7 +613,9 @@ export default function AdvisorTool() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-slate-400 block mb-1">{currentT.currentAgeLabel}</label>
+                    <label className="text-slate-300 block mb-1 font-semibold">
+                      {currentT.currentAgeLabel} <span className="text-rose-400 font-bold">*</span>
+                    </label>
                     <input
                       type="number"
                       min={45}
@@ -587,7 +626,9 @@ export default function AdvisorTool() {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">{currentT.targetRetirementLabel}</label>
+                    <label className="text-slate-300 block mb-1 font-semibold">
+                      {currentT.targetRetirementLabel} <span className="text-rose-400 font-bold">*</span>
+                    </label>
                     <input
                       type="number"
                       min={50}
@@ -600,13 +641,13 @@ export default function AdvisorTool() {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center text-slate-300 mb-1">
-                    <span>{currentT.preTaxIra}</span>
+                  <div className="flex justify-between items-center text-slate-300 mb-1 font-semibold">
+                    <span>{currentT.preTaxIra} <span className="text-rose-400 font-bold">*</span></span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-500">$</span>
                       <input
                         type="number"
-                        step={1000}
+                        step={5000}
                         value={iraBalance}
                         onChange={(e) => setIraBalance(Number(e.target.value))}
                         className="w-28 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-white font-bold text-right"
@@ -651,13 +692,13 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 2: INCOME & SPENDING */}
+            {/* SECTION 2: INCOME & SPENDING (INCLUDES PRE-RETIREMENT SALARY) */}
             {openSection === 'income' && (
               <div className="space-y-4 pt-1">
                 <div>
                   <div className="flex justify-between items-center text-slate-300 mb-1">
                     <span className="flex items-center gap-1 font-semibold text-sky-300">
-                      <Briefcase className="w-3.5 h-3.5" /> {currentT.earnedIncomeLabel}
+                      <Briefcase className="w-3.5 h-3.5" /> {currentT.earnedIncomeLabel} <span className="text-rose-400 font-bold">*</span>
                     </span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-500">$</span>
@@ -1423,7 +1464,7 @@ export default function AdvisorTool() {
                 </div>
               </div>
 
-              {/* Scenario Buttons */}
+              {/* Historical Scenario Buttons */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   onClick={() => setBacktestPeriod('2000_2010')}
