@@ -25,9 +25,9 @@ export interface WealthLogixBacktestParams {
   fiaParticipation: number;
   fixedRate: number;
   taxRateOnFixed: number;
-  // Blend Sub-Strategy Parameters
-  fiaIndexedAllocationPct?: number; // e.g. 0.80 (80%)
-  fiaFixedAllocationRate?: number;   // e.g. 0.03 (3.0% yield)
+  fiaIndexedAllocationPct?: number;
+  fiaFixedAllocationRate?: number;
+  applySequenceShock?: boolean;
 }
 
 export interface WealthLogixBacktestOutput {
@@ -38,6 +38,8 @@ export interface WealthLogixBacktestOutput {
   finalTraditional6040: number;
   finalModernized6040Fia: number;
   zeroLossYearsCount: number;
+  maxDrawdownTrad6040Pct: number;
+  maxDrawdownModernFiaPct: number;
 }
 
 const HISTORICAL_DATA: Record<number, { sp500: number; agg: number; corp: number; hy: number }> = {
@@ -79,11 +81,12 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     fiaParticipation = 1.0,
     fixedRate,
     taxRateOnFixed = 0.24,
-    fiaIndexedAllocationPct = 0.80, // 80% default S&P
-    fiaFixedAllocationRate = 0.03,  // 3.0% fixed yield
+    fiaIndexedAllocationPct = 0.80,
+    fiaFixedAllocationRate = 0.03,
+    applySequenceShock = false,
   } = params;
 
-  const fiaFixedAllocationPct = 1 - fiaIndexedAllocationPct; // e.g. 20%
+  const fiaFixedAllocationPct = 1 - fiaIndexedAllocationPct;
 
   let startYear = 2000;
   let endYear = 2010;
@@ -105,6 +108,11 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
   let trad6040Bal = initialDeposit;
   let mod6040FiaBal = initialDeposit;
 
+  let peakTrad = initialDeposit;
+  let peakMod = initialDeposit;
+  let maxDrawTrad = 0;
+  let maxDrawMod = 0;
+
   const afterTaxFixedRate = fixedRate * (1 - taxRateOnFixed);
   let zeroLossCount = 0;
   const results: BacktestYearData[] = [];
@@ -112,11 +120,17 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
   let idx = 1;
   for (let y = startYear; y <= endYear; y++) {
     const market = HISTORICAL_DATA[y] || { sp500: 6.5, agg: 3.5, corp: 4.0, hy: 6.0 };
-    const spRaw = market.sp500;
-    
+    let spRaw = market.sp500;
     let bondRaw = market.corp;
     if (bondType === 'high_yield') bondRaw = market.hy;
     if (bondType === 'aggregate') bondRaw = market.agg;
+
+    // Optional Sequence of Returns Shock (First 3 Years)
+    if (applySequenceShock) {
+      if (idx === 1) { spRaw = -18.5; bondRaw = -12.5; }
+      else if (idx === 2) { spRaw = -12.0; bondRaw = -4.0; }
+      else if (idx === 3) { spRaw = 16.5; bondRaw = 3.5; }
+    }
 
     equityBal = Math.max(0, equityBal - annualWithdrawal);
     fiaBal = Math.max(0, fiaBal - annualWithdrawal);
@@ -128,7 +142,7 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     const eqNetReturn = (spRaw / 100) - 0.01;
     equityBal = Math.max(0, equityBal * (1 + eqNetReturn));
 
-    // 2. Dual-Blend FIA Crediting (e.g. 80% S&P / 20% Fixed 3%)
+    // 2. Dual-Blend FIA Crediting
     let spSleeveReturn = 0;
     if (spRaw > 0) {
       spSleeveReturn = Math.min(fiaCap, (spRaw / 100) * fiaParticipation);
@@ -145,13 +159,23 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     // 3. Taxable Fixed Benchmark
     fixedBal = Math.max(0, fixedBal * (1 + afterTaxFixedRate));
 
-    // 4. Traditional 60/40 (60% Equities / 40% Selected Bonds)
+    // 4. Traditional 60/40
     const tradBlend = (0.60 * (spRaw / 100)) + (0.40 * (bondRaw / 100));
     trad6040Bal = Math.max(0, trad6040Bal * (1 + tradBlend));
 
-    // 5. Modernized 60/40 (60% Equities / 40% Blended FIA Buffer)
+    // 5. Modernized 60/40
     const modBlend = (0.60 * (spRaw / 100)) + (0.40 * blendedFiaCredit);
     mod6040FiaBal = Math.max(0, mod6040FiaBal * (1 + modBlend));
+
+    // Drawdown Tracking
+    if (trad6040Bal > peakTrad) peakTrad = trad6040Bal;
+    if (mod6040FiaBal > peakMod) peakMod = mod6040FiaBal;
+
+    const currentTradDraw = ((peakTrad - trad6040Bal) / peakTrad) * 100;
+    const currentModDraw = ((peakMod - mod6040FiaBal) / peakMod) * 100;
+
+    if (currentTradDraw > maxDrawTrad) maxDrawTrad = currentTradDraw;
+    if (currentModDraw > maxDrawMod) maxDrawMod = currentModDraw;
 
     results.push({
       year: idx,
@@ -177,5 +201,7 @@ export function runWealthLogixBacktest(params: WealthLogixBacktestParams): Wealt
     finalTraditional6040: Math.round(trad6040Bal),
     finalModernized6040Fia: Math.round(mod6040FiaBal),
     zeroLossYearsCount: zeroLossCount,
+    maxDrawdownTrad6040Pct: Number(maxDrawTrad.toFixed(1)),
+    maxDrawdownModernFiaPct: Number(maxDrawMod.toFixed(1)),
   };
 }
