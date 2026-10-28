@@ -121,7 +121,7 @@ export default function AdvisorTool() {
 
   const t = {
     en: {
-      platformTitle: "The GFI Distribution Blueprint™",
+      platformTitle: "The GFI Distribution Blueprint",
       platformSubtitle: "Tax Optimization & Income Architecture",
       educationalBadge: "EDUCATIONAL & INFORMATIONAL MODEL ONLY",
       preparedFor: "Prepared for:",
