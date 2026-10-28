@@ -85,6 +85,8 @@ export interface TaxSimulationParams {
 export interface YearlySimulationResult {
   age: number;
   contractYear: number;
+  isWorking: boolean;
+  baselineGrossIncome: number;
   baselineIra: number;
   baselineRoth: number;
   baselineTax: number;
@@ -122,8 +124,45 @@ const RMD_DIVISORS: Record<number, number> = {
   94: 9.5, 95: 8.9,
 };
 
-// Federal Bracket marginal rate evaluator
-function getMarginalFedRate(taxableIncome: number, filingStatus: FilingStatus): number {
+// Full Federal Progressive Bracket Tax Computation
+export function calculateProgressiveFedTax(taxableIncome: number, filingStatus: FilingStatus): number {
+  if (taxableIncome <= 0) return 0;
+
+  const brackets = filingStatus === 'mfj' ? [
+    { cap: 24800, rate: 0.10 },
+    { cap: 100800, rate: 0.12 },
+    { cap: 211400, rate: 0.22 },
+    { cap: 403550, rate: 0.24 },
+    { cap: 512450, rate: 0.32 },
+    { cap: 768700, rate: 0.35 },
+    { cap: Infinity, rate: 0.37 },
+  ] : [
+    { cap: 12400, rate: 0.10 },
+    { cap: 50400, rate: 0.12 },
+    { cap: 105700, rate: 0.22 },
+    { cap: 201775, rate: 0.24 },
+    { cap: 256225, rate: 0.32 },
+    { cap: 640600, rate: 0.35 },
+    { cap: Infinity, rate: 0.37 },
+  ];
+
+  let tax = 0;
+  let previousCap = 0;
+
+  for (const b of brackets) {
+    if (taxableIncome > previousCap) {
+      const taxableSlice = Math.min(taxableIncome, b.cap) - previousCap;
+      tax += taxableSlice * b.rate;
+      previousCap = b.cap;
+    } else {
+      break;
+    }
+  }
+
+  return Math.round(tax);
+}
+
+export function getMarginalFedRate(taxableIncome: number, filingStatus: FilingStatus): number {
   if (filingStatus === 'mfj') {
     if (taxableIncome > 768700) return 0.37;
     if (taxableIncome > 512450) return 0.35;
@@ -133,7 +172,7 @@ function getMarginalFedRate(taxableIncome: number, filingStatus: FilingStatus): 
     if (taxableIncome > 24800) return 0.12;
     return 0.10;
   } else {
-    if (taxableIncome > 640000) return 0.37;
+    if (taxableIncome > 640600) return 0.37;
     if (taxableIncome > 256225) return 0.35;
     if (taxableIncome > 201775) return 0.32;
     if (taxableIncome > 105700) return 0.24;
@@ -183,6 +222,7 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
 
   for (let age = currentAge; age <= endAge; age++) {
     const contractYear = age - currentAge + 1;
+    const isWorking = age < retirementAge;
 
     // After Year 10 (Year 11+), surrender charges expire -> 100% full liquidity
     let maxFreeWithdrawalRate = 0.10;
@@ -198,35 +238,35 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
       maxFreeWithdrawalRate = freeWithdrawalPct;
     }
 
-    // 1. Baseline Calculations (Inaction)
-    // Pre-retirement has earned salary; post-retirement has pensions and SS
-    const activeSalary = age < retirementAge ? currentEarnedIncome : 0;
-    const activeSs = age >= retirementAge ? (annualSocialSecurity * 0.85) : 0;
-    const activePension = age >= retirementAge ? annualFixedIncome : 0;
-
-    let baseTaxableIncome = activeSalary + activePension + activeSs;
+    // 1. Baseline Cash Flow & Taxes (Inaction Path)
+    let baselineGross = 0;
+    let baseTaxableIncome = 0;
     let baselineYearTax = 0;
 
-    if (age >= retirementAge) {
+    if (isWorking) {
+      // Pre-retirement: tax liability matches active employment salary
+      baselineGross = currentEarnedIncome;
+      baseTaxableIncome = Math.max(0, baselineGross - stdDeduction);
+      const fedTax = calculateProgressiveFedTax(baseTaxableIncome, filingStatus);
+      const stateTax = Math.round(baseTaxableIncome * stateTaxRate);
+      baselineYearTax = fedTax + stateTax;
+    } else {
+      // Post-retirement: tax liability matches desired spending need, pensions, SS, & RMDs
+      let distributionTaken = annualWithdrawalNeed;
       if (age >= 73) {
         const divisor = RMD_DIVISORS[age] || 8.0;
         const rmd = baseIra / divisor;
-        const actualDistribution = Math.max(rmd, annualWithdrawalNeed);
-        baseTaxableIncome += actualDistribution;
-        baseIra = Math.max(0, baseIra - actualDistribution);
+        distributionTaken = Math.max(rmd, annualWithdrawalNeed);
+        baseIra = Math.max(0, baseIra - distributionTaken);
       } else {
-        baseTaxableIncome += annualWithdrawalNeed;
-        baseIra = Math.max(0, baseIra - annualWithdrawalNeed);
+        baseIra = Math.max(0, baseIra - distributionTaken);
       }
 
-      const taxableBase = Math.max(0, baseTaxableIncome - stdDeduction);
-      const fedRate = getMarginalFedRate(taxableBase, filingStatus);
-      baselineYearTax = Math.round(taxableBase * (fedRate + stateTaxRate));
-    } else {
-      // Working years baseline tax
-      const workingTaxable = Math.max(0, baseTaxableIncome - stdDeduction);
-      const workingFedRate = getMarginalFedRate(workingTaxable, filingStatus);
-      baselineYearTax = Math.round(workingTaxable * (workingFedRate + stateTaxRate));
+      baselineGross = distributionTaken + annualFixedIncome + (annualSocialSecurity * 0.85);
+      baseTaxableIncome = Math.max(0, baselineGross - stdDeduction);
+      const fedTax = calculateProgressiveFedTax(baseTaxableIncome, filingStatus);
+      const stateTax = Math.round(baseTaxableIncome * stateTaxRate);
+      baselineYearTax = fedTax + stateTax;
     }
 
     totalBaselineTax += baselineYearTax;
@@ -240,25 +280,35 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
     let statRatePct = 0;
     let netRatePct = 0;
 
+    // Current fixed non-conversion taxable income
+    const fixedTaxableBase = isWorking
+      ? Math.max(0, currentEarnedIncome - stdDeduction)
+      : Math.max(0, (annualFixedIncome + (annualSocialSecurity * 0.85)) - stdDeduction);
+
     if (planIra > 0) {
-      // Calculate remaining room in target bracket above current baseline income
-      const baselineGross = activeSalary + activePension + activeSs;
-      const fixedBase = Math.max(0, baselineGross - stdDeduction);
-      const capacity = Math.max(0, targetBracketCeiling - fixedBase);
+      // Remaining room up to target ceiling
+      const availableCapacity = Math.max(0, targetBracketCeiling - fixedTaxableBase);
 
-      const marginalFedRate = getMarginalFedRate(fixedBase + Math.min(capacity, 50000), filingStatus);
-      const combinedStatRate = marginalFedRate + stateTaxRate;
-      statRatePct = Number((combinedStatRate * 100).toFixed(1));
+      const marginalFed = getMarginalFedRate(fixedTaxableBase + Math.min(availableCapacity, 50000), filingStatus);
+      const combinedRate = marginalFed + stateTaxRate;
+      statRatePct = Number((combinedRate * 100).toFixed(1));
 
-      // Conversion amount is bounded by target bracket ceiling AND available free withdrawal liquidity
-      const maxConversionPossible = Math.round(maxFreeDollars / combinedStatRate);
-      conversionAmount = Math.min(planIra, Math.min(capacity, maxConversionPossible));
+      // Conversion amount bounded by available bracket room AND free withdrawal liquidity
+      const maxConversionPossible = Math.round(maxFreeDollars / combinedRate);
+      conversionAmount = Math.min(planIra, Math.min(availableCapacity, maxConversionPossible));
 
       if (conversionAmount > 0) {
-        taxesPaidFromWithdrawal = Math.round(conversionAmount * combinedStatRate);
-        planYearTax = taxesPaidFromWithdrawal;
+        // Compute exact incremental tax triggered by conversion
+        const baseFed = calculateProgressiveFedTax(fixedTaxableBase, filingStatus);
+        const totalFed = calculateProgressiveFedTax(fixedTaxableBase + conversionAmount, filingStatus);
+        const conversionFedTax = totalFed - baseFed;
+        const conversionStateTax = Math.round(conversionAmount * stateTaxRate);
 
-        const netCostFactor = Math.max(0.01, combinedStatRate - carrierBonusPct);
+        taxesPaidFromWithdrawal = conversionFedTax + conversionStateTax;
+        planYearTax = baselineYearTax + taxesPaidFromWithdrawal;
+
+        const effectiveConversionRate = taxesPaidFromWithdrawal / conversionAmount;
+        const netCostFactor = Math.max(0.01, effectiveConversionRate - carrierBonusPct);
         netRatePct = Number((netCostFactor * 100).toFixed(1));
 
         planIra = Math.max(0, planIra - conversionAmount - taxesPaidFromWithdrawal);
@@ -266,14 +316,21 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
 
         totalConversionsExecuted += conversionAmount;
         totalTaxesPaidOnConversions += taxesPaidFromWithdrawal;
+      } else {
+        planYearTax = isWorking 
+          ? baselineYearTax 
+          : calculateProgressiveFedTax(fixedTaxableBase, filingStatus) + Math.round(fixedTaxableBase * stateTaxRate);
       }
     } else {
       // 100% Tax-Free Roth distributions during retirement
-      if (age >= retirementAge) {
+      if (!isWorking) {
         planRoth = Math.max(0, planRoth - annualWithdrawalNeed);
+        const fedTax = calculateProgressiveFedTax(fixedTaxableBase, filingStatus);
+        const stateTax = Math.round(fixedTaxableBase * stateTaxRate);
+        planYearTax = fedTax + stateTax;
+      } else {
+        planYearTax = baselineYearTax;
       }
-      const fixedTaxable = Math.max(0, (activeSalary + activePension + activeSs) - stdDeduction);
-      planYearTax = Math.round(fixedTaxable * stateTaxRate);
     }
 
     if (age >= 73) {
@@ -289,6 +346,8 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
     yearlyData.push({
       age,
       contractYear,
+      isWorking,
+      baselineGrossIncome: baselineGross,
       baselineIra: Math.round(baseIra),
       baselineRoth: Math.round(baseRoth),
       baselineTax: baselineYearTax,
