@@ -17,11 +17,11 @@ export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
   const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('story');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('income_fia_vs_portfolio');
-  const [storyStep, setStoryStep] = useState<1 | 2 | 3>(2);
+  const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
   const [rothChartMode, setRothChartMode] = useState<'wealth' | 'tax'>('wealth');
 
-  // Accordion Navigation
-  const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('carrier');
+  // Accordion Navigation — Defaults directly to 'client' (Intake)
+  const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('client');
 
   // Client Demographics & Balances (Cardinal Fields)
   const [clientName, setClientName] = useState('John & Mary Smith');
@@ -407,7 +407,7 @@ export default function AdvisorTool() {
               </button>
             </div>
 
-            {/* SECTION 1: PROFILE */}
+            {/* SECTION 1: INTAKE */}
             {openSection === 'client' && (
               <div className="space-y-4 pt-1">
                 <div>
@@ -582,6 +582,58 @@ export default function AdvisorTool() {
                     value={withdrawalNeed}
                     onChange={(e) => setWithdrawalNeed(Number(e.target.value))}
                     className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
+                    <span>Social Security (Combined):</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={1000}
+                        value={socialSecurity}
+                        onChange={(e) => setSocialSecurity(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
+                      />
+                      <span className="text-slate-400">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="10000"
+                    max="80000"
+                    step="1000"
+                    value={socialSecurity}
+                    onChange={(e) => setSocialSecurity(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
+                    <span>Pension / Other Annuities:</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={1000}
+                        value={fixedIncome}
+                        onChange={(e) => setFixedIncome(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
+                      />
+                      <span className="text-slate-400">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80000"
+                    step="2000"
+                    value={fixedIncome}
+                    onChange={(e) => setFixedIncome(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
                 </div>
               </div>
@@ -896,7 +948,7 @@ export default function AdvisorTool() {
                           <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
                           <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
                           <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '4px' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
                           <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#f43f5e" radius={[3, 3, 0, 0]} />
                           <Bar dataKey="planTax" name="Plan Tax (Covered by Free Withdrawal)" fill="#10b981" radius={[3, 3, 0, 0]} />
                         </BarChart>
