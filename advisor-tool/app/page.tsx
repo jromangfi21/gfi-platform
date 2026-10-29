@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -38,10 +38,14 @@ export default function AdvisorTool() {
   const [socialSecurity, setSocialSecurity] = useState(48000);
   const [fixedIncome, setFixedIncome] = useState(20000);
 
-  // Target Bracket Ceiling
+  // Target Bracket Ceiling & Stress Toggles
   const [targetBracketCeiling, setTargetBracketCeiling] = useState(403550);
   const [heirsTaxRate, setHeirsTaxRate] = useState(0.28);
   const [taxHikeActive, setTaxHikeActive] = useState(false);
+  const [applySequenceShock, setApplySequenceShock] = useState(false);
+
+  // Annual Management Fee Drag Slider
+  const [annualPortfolioFeePct, setAnnualPortfolioFeePct] = useState(0.0125);
 
   const stateTaxRate = (STATE_TAX_RATES[selectedState]?.rate ?? 0.00);
 
@@ -56,13 +60,12 @@ export default function AdvisorTool() {
 
   // Bond Replacement Strategy Category
   const [selectedBondType, setSelectedBondType] = useState<BondType>('corporate_ig');
-  const [applySequenceShock, setApplySequenceShock] = useState(false);
 
   // FIA Sub-Allocation: 80% S&P 500 / 20% Fixed 3%
   const [fiaIndexedAllocationPct, setFiaIndexedAllocationPct] = useState(0.80);
   const [fiaFixedYieldRate, setFiaFixedYieldRate] = useState(0.03);
 
-  // Backtest Parameters
+  // Backtest Parameters & Cap Rate Adjuster
   const [backtestPeriod, setBacktestPeriod] = useState<BacktestPeriod>('2008_2018');
   const [fiaCap, setFiaCap] = useState(0.095);
   const [fixedRate, setFixedRate] = useState(0.0475);
@@ -90,7 +93,7 @@ export default function AdvisorTool() {
     annualFixedIncome: fixedIncome,
     annualSocialSecurity: socialSecurity,
     annualWithdrawalNeed: withdrawalNeed,
-    expectedReturn: 0.065,
+    expectedReturn: Math.max(0.02, 0.065 - annualPortfolioFeePct),
     targetBracketCeiling,
     stateCode: selectedState,
     stateTaxRate: stateTaxRate + (taxHikeActive ? 0.04 : 0),
@@ -135,7 +138,7 @@ export default function AdvisorTool() {
   const incomePaycheckComparison = backtest.results.map((r) => {
     const stockReturn = r.sp500Return / 100;
     const bondReturn = r.selectedBondReturn / 100;
-    const blendedReturn = (stockReturn * 0.60) + (bondReturn * 0.40);
+    const blendedReturn = (stockReturn * 0.60) + (bondReturn * 0.40) - annualPortfolioFeePct;
 
     simulated6040Bal = Math.max(0, (simulated6040Bal - guaranteedFiaIncome) * (1 + blendedReturn));
     const dynamic4PctPaycheck = Math.round(Math.max(10000, simulated6040Bal * 0.04));
@@ -156,110 +159,142 @@ export default function AdvisorTool() {
       {/* =========================================================================
           PRINT-ONLY EXECUTIVE DOSSIER (Rendered on white paper / PDF exports)
           ========================================================================= */}
-      <div className="hidden print:block w-full max-w-4xl mx-auto space-y-8 font-sans">
+      <div className="hidden print:block w-full max-w-4xl mx-auto space-y-6 font-sans">
         
-        {/* PRINT PAGE 1: EXECUTIVE BRIEFING */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center border-b-2 border-slate-900 pb-4">
+        {/* PRINT PAGE 1: EXECUTIVE BRIEFING, NARRATIVE & ACCOMPLISHMENTS */}
+        <div className="space-y-5">
+          <div className="flex justify-between items-center border-b-2 border-slate-900 pb-3">
             <div className="flex items-center gap-3">
               <img src="/logo.png" alt="Global Financial Impact" className="h-12 w-auto object-contain" />
               <div>
                 <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">The GFI Distribution Blueprint™</h1>
-                <p className="text-xs text-slate-600 font-semibold uppercase tracking-wider">Strategic Wealth Architecture & Tax Optimization</p>
+                <p className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">Strategic Wealth Architecture & Tax Optimization</p>
               </div>
             </div>
             <div className="text-right text-xs text-slate-700 space-y-0.5">
-              <div><b className="text-slate-900">Client:</b> {clientName}</div>
+              <div><b className="text-slate-900">Prepared For:</b> {clientName}</div>
               <div><b className="text-slate-900">Jurisdiction:</b> {STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}% Tax)</div>
-              <div><b className="text-slate-900">Retirement Horizon:</b> Age {retirementAge} (Modeled to Age 95)</div>
+              <div><b className="text-slate-900">Retirement Horizon:</b> Age {retirementAge} (Modeled through Age 95)</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
-            <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Wealth Preserved</div>
-              <div className="text-xl font-black text-emerald-700 mt-1">
-                ${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings).toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">Kept in family pocket vs IRS</div>
-            </div>
-
-            <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Avoided Tax Friction</div>
-              <div className="text-xl font-black text-slate-900 mt-1">
-                ${taxAnalysis.lifetimeTaxSaved.toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">Avoided RMD tax avalanche</div>
-            </div>
-
-            <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Heir SECURE 2.0 Shield</div>
-              <div className="text-xl font-black text-indigo-700 mt-1">
-                ${taxAnalysis.heirSavings.toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">10-year inherited tax relief</div>
-            </div>
-
-            <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Guaranteed Paycheck Floor</div>
-              <div className="text-xl font-black text-emerald-700 mt-1">
-                ${guaranteedFiaIncome.toLocaleString()}/yr
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">Backed by legal 0% floor</div>
-            </div>
+          {/* Executive Summary Narrative */}
+          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-2">
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">Executive Briefing & Strategic Narrative</h2>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              This customized blueprint establishes a bifurcated <b>Paychecks & Playchecks</b> architecture designed to resolve the two greatest hazards facing your retirement: <i>Sequence-of-Returns risk</i> during market decumulation, and the <i>compulsory IRS tax trap</i> triggered by mandatory RMDs and the SECURE Act 2.0. By strategically isolating guaranteed living requirements into contractual income instruments and converting pre-tax liabilities into compounding tax-free Roth reserves, your family eliminates liquidation panic while locking in an unencumbered equity growth engine.
+            </p>
           </div>
 
+          {/* Checklist of What Was Accomplished */}
           <div className="border border-slate-300 rounded-lg overflow-hidden">
-            <div className="bg-slate-100 px-4 py-2.5 border-b border-slate-300">
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                Strategic Comparison: Traditional Inaction vs. Integrated GFI Plan
+            <div className="bg-slate-100 px-4 py-2 border-b border-slate-300">
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-emerald-700" /> Key Strategic Accomplishments
               </h2>
             </div>
+            <div className="p-3.5 bg-white grid grid-cols-2 gap-2.5 text-xs text-slate-800">
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
+                <span><b>Sequence-of-Returns Immunity:</b> Essential annual lifestyle cash flow is legally defended by a contractual 0% floor and guaranteed income rider.</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
+                <span><b>RMD Tax Avalanche Neutralized:</b> Pre-tax IRA balance systematically reduced to $0, preventing compulsory peak bracket distributions at age 73+.</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
+                <span><b>Heir SECURE Act 2.0 Protection:</b> Liquidated inherited account drag eliminated, leaving beneficiaries with 100% tax-exempt legacy transfers.</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
+                <span><b>Capital Efficiency Maximized:</b> Achieved target annual income using ${customFiaDeposit.toLocaleString()} instead of tying up ${capitalNeededUnder4Pct.toLocaleString()} under standard 4% rules.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Stat Highlights */}
+          <div className="grid grid-cols-4 gap-3">
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Wealth Saved</div>
+              <div className="text-lg font-black text-emerald-700 mt-0.5">
+                ${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings).toLocaleString()}
+              </div>
+              <div className="text-[10px] text-slate-600 mt-0.5">Retained in family control</div>
+            </div>
+
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Avoided Tax Friction</div>
+              <div className="text-lg font-black text-slate-900 mt-0.5">
+                ${taxAnalysis.lifetimeTaxSaved.toLocaleString()}
+              </div>
+              <div className="text-[10px] text-slate-600 mt-0.5">Averted RMD surtaxes</div>
+            </div>
+
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Heir Tax Shield</div>
+              <div className="text-lg font-black text-indigo-700 mt-0.5">
+                ${taxAnalysis.heirSavings.toLocaleString()}
+              </div>
+              <div className="text-[10px] text-slate-600 mt-0.5">SECURE 2.0 sheltered</div>
+            </div>
+
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Guaranteed Paycheck</div>
+              <div className="text-lg font-black text-emerald-700 mt-0.5">
+                ${guaranteedFiaIncome.toLocaleString()}/yr
+              </div>
+              <div className="text-[10px] text-slate-600 mt-0.5">Contractual life floor</div>
+            </div>
+          </div>
+
+          {/* Executive Summary Matrix */}
+          <div className="border border-slate-300 rounded-lg overflow-hidden">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-300 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-2.5 px-3">Dimension</th>
-                  <th className="py-2.5 px-3">Current Path (Traditional 60/40)</th>
-                  <th className="py-2.5 px-3">Integrated GFI Plan</th>
-                  <th className="py-2.5 px-3 text-right">Net Client Advantage</th>
+                <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="py-2 px-3">Strategic Dimension</th>
+                  <th className="py-2 px-3">Current Path (Traditional 60/40)</th>
+                  <th className="py-2 px-3">Integrated GFI Plan</th>
+                  <th className="py-2 px-3 text-right">Net Client Advantage</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Lifetime Federal & State Taxes (to Age 95)</td>
-                  <td className="py-2.5 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">Lifetime Federal & State Taxes (to Age 95)</td>
+                  <td className="py-2 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
+                  <td className="py-2 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
+                  <td className="py-2 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Net Effective Conversion Tax Rate</td>
-                  <td className="py-2.5 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
-                  <td className="py-2.5 px-3 font-bold text-emerald-800">{taxAnalysis.overallNetEffectiveTaxRate}%</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">Net Effective Conversion Tax Rate</td>
+                  <td className="py-2 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
+                  <td className="py-2 px-3 font-bold text-emerald-800">{taxAnalysis.overallNetEffectiveTaxRate}%</td>
                   <td className="py-2.5 px-3 text-right font-bold text-slate-900">-{(carrierBonusPct * 100).toFixed(0)}% Bonus Offset</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Compulsory Mandatory RMDs (Age 73+)</td>
-                  <td className="py-2.5 px-3">Subject to peak tax brackets</td>
-                  <td className="py-2.5 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
-                  <td className="py-2.5 px-3 text-right font-bold text-indigo-700">Protected</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">Compulsory Mandatory RMDs (Age 73+)</td>
+                  <td className="py-2 px-3">Subject to peak tax brackets</td>
+                  <td className="py-2 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
+                  <td className="py-2 px-3 text-right font-bold text-indigo-700">Protected</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Heir SECURE Act 10-Yr Tax Drag</td>
-                  <td className="py-2.5 px-3">${(taxAnalysis.terminalWealthBase * heirsTaxRate).toLocaleString()} (Forced Liquidation)</td>
-                  <td className="py-2.5 px-3 font-bold text-indigo-900">$0 Tax-Free Inherited Base</td>
-                  <td className="py-2.5 px-3 text-right font-black text-indigo-700">+${taxAnalysis.heirSavings.toLocaleString()} Sheltered</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">Heir SECURE Act 10-Yr Tax Drag</td>
+                  <td className="py-2 px-3">${(taxAnalysis.terminalWealthBase * heirsTaxRate).toLocaleString()}</td>
+                  <td className="py-2 px-3 font-bold text-indigo-900">$0 Tax-Free Inherited Base</td>
+                  <td className="py-2 px-3 text-right font-black text-indigo-700">+${taxAnalysis.heirSavings.toLocaleString()} Sheltered</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Retirement Cash Flow Guarantee</td>
-                  <td className="py-2.5 px-3">${traditional4PctIncome.toLocaleString()}/yr (Subject to market drawdowns)</td>
-                  <td className="py-2.5 px-3 font-bold text-emerald-800">${guaranteedFiaIncome.toLocaleString()}/yr (Contractual Floor)</td>
-                  <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">Retirement Cash Flow Guarantee</td>
+                  <td className="py-2 px-3">${traditional4PctIncome.toLocaleString()}/yr</td>
+                  <td className="py-2 px-3 font-bold text-emerald-800">${guaranteedFiaIncome.toLocaleString()}/yr</td>
+                  <td className="py-2 px-3 text-right font-black text-emerald-700">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
                 </tr>
                 <tr className="bg-slate-100 font-black border-t-2 border-slate-900">
-                  <td className="py-3 px-3 uppercase tracking-wider text-slate-900">Comprehensive Family Wealth Advantage</td>
-                  <td className="py-3 px-3">--</td>
-                  <td className="py-3 px-3">--</td>
-                  <td className="py-3 px-3 text-right text-emerald-800 text-sm">
+                  <td className="py-2.5 px-3 uppercase tracking-wider text-slate-900">Comprehensive Family Advantage</td>
+                  <td className="py-2.5 px-3">--</td>
+                  <td className="py-2.5 px-3">--</td>
+                  <td className="py-2.5 px-3 text-right text-emerald-800 text-sm">
                     +${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}
                   </td>
                 </tr>
@@ -268,11 +303,11 @@ export default function AdvisorTool() {
           </div>
         </div>
 
-        {/* PRINT PAGE 2: CHARTS & SCHEDULES (Using Fixed SVG Dimensions) */}
-        <div className="space-y-6 page-break-before">
+        {/* PRINT PAGE 2: CHARTS, CONVERSION RUNWAY & SIGNATURES */}
+        <div className="space-y-5 page-break-before">
           <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
             <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">Visual Stress Testing & Wealth Projections</h2>
-            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Client Strategic Report</span>
+            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Strategic Client Dossier</span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 avoid-break">
@@ -316,50 +351,50 @@ export default function AdvisorTool() {
           </div>
 
           <div className="border border-slate-300 rounded-lg overflow-hidden avoid-break">
-            <div className="bg-slate-100 px-3 py-2 border-b border-slate-300 flex justify-between items-center">
-              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">Tactical Roth Conversion Schedule ($0 Pre-Tax IRA Target)</span>
+            <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 flex justify-between items-center">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">Tactical Roth Conversion Schedule ($0 Pre-Tax Target)</span>
               <span className="text-[10px] text-slate-600">{(carrierBonusPct * 100).toFixed(0)}% Carrier Bonus Offset Applied</span>
             </div>
             <table className="w-full text-left text-[11px] border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-300 font-bold text-slate-700">
-                  <th className="py-2 px-2.5">Age</th>
-                  <th className="py-2 px-2.5">Conversion</th>
-                  <th className="py-2 px-2.5">Free Allowance</th>
-                  <th className="py-2 px-2.5">Taxes Paid</th>
-                  <th className="py-2 px-2.5">Gross Rate</th>
-                  <th className="py-2 px-2.5 text-emerald-800">Net Rate</th>
-                  <th className="py-2 px-2.5">Tax-Free Roth Balance</th>
+                  <th className="py-1.5 px-2.5">Age</th>
+                  <th className="py-1.5 px-2.5">Conversion</th>
+                  <th className="py-1.5 px-2.5">Free Allowance</th>
+                  <th className="py-1.5 px-2.5">Taxes Paid</th>
+                  <th className="py-1.5 px-2.5">Gross Rate</th>
+                  <th className="py-1.5 px-2.5 text-emerald-800">Net Rate</th>
+                  <th className="py-1.5 px-2.5">Tax-Free Roth Balance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {taxAnalysis.yearlyData.filter(d => d.conversionAmount > 0).slice(0, 8).map(d => (
                   <tr key={d.age}>
-                    <td className="py-1.5 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
-                    <td className="py-1.5 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
-                    <td className="py-1.5 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
-                    <td className="py-1.5 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
-                    <td className="py-1.5 px-2.5 text-slate-700">{d.statutoryRatePct}%</td>
-                    <td className="py-1.5 px-2.5 font-bold text-emerald-800">{d.netEffectiveRatePct}%</td>
-                    <td className="py-1.5 px-2.5 font-bold text-slate-900">${d.planRoth.toLocaleString()}</td>
+                    <td className="py-1 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
+                    <td className="py-1 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
+                    <td className="py-1 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
+                    <td className="py-1 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
+                    <td className="py-1 px-2.5 text-slate-700">{d.statutoryRatePct}%</td>
+                    <td className="py-1 px-2.5 font-bold text-emerald-800">{d.netEffectiveRatePct}%</td>
+                    <td className="py-1 px-2.5 font-bold text-slate-900">${d.planRoth.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-4 avoid-break">
-            <div className="text-[10px] text-slate-600 leading-relaxed space-y-1.5">
-              <p><b>Important Professional & Legal Disclosures:</b> This presentation is prepared strictly for educational and comparative illustration purposes. Global Financial Impact and its appointed agents are not Certified Public Accountants, tax attorneys, or registered investment advisors. Tax codes, sunset provisions, and statutory exemptions are subject to state and federal legislative change. Clients must review proposed conversion schedules and asset reallocations with their licensed CPA or estate attorney.</p>
-              <p>Fixed Indexed Annuities (FIAs) and GLWB income riders are long-term insurance contracts subject to surrender charges, carrier solvency, index participation limits, and contract rules. Past performance of benchmark indices is not a guarantee of future crediting.</p>
+          <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50 space-y-3 avoid-break">
+            <div className="text-[10px] text-slate-600 leading-relaxed space-y-1">
+              <p><b>Important Professional & Legal Disclosures:</b> This presentation is prepared strictly for educational and comparative illustration purposes. Global Financial Impact and its appointed agents are not CPAs, tax attorneys, or registered investment advisors. Tax codes, sunset provisions, and statutory exemptions are subject to state and federal legislative change. Clients must review proposed conversion schedules and asset reallocations with their licensed CPA or estate attorney.</p>
+              <p>Fixed Indexed Annuities (FIAs) and GLWB income riders are long-term insurance contracts subject to surrender charges, carrier solvency, index participation limits, and contract rules. Past benchmark performance does not guarantee future results.</p>
             </div>
 
-            <div className="pt-4 border-t border-slate-300 grid grid-cols-2 gap-8 text-xs text-slate-800">
-              <div className="space-y-6">
+            <div className="pt-3 border-t border-slate-300 grid grid-cols-2 gap-8 text-xs text-slate-800">
+              <div className="space-y-5">
                 <div>Client Signature: _________________________________________</div>
                 <div>Date: ________________________</div>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div>Licensed Advisor Signature: _______________________________</div>
                 <div>License / National Producer #: _____________________________</div>
               </div>
@@ -558,25 +593,50 @@ export default function AdvisorTool() {
               </p>
             </div>
 
-            {/* ALWAYS-VISIBLE FUTURE TAX HIKE TOGGLE */}
-            <button
-              onClick={() => setTaxHikeActive(!taxHikeActive)}
-              className={`w-full py-2.5 px-3 rounded-lg border text-left text-xs transition flex items-center justify-between shadow-sm ${
-                taxHikeActive
-                  ? 'bg-rose-500/20 border-rose-500 text-rose-300 font-bold'
-                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
-              }`}
-            >
-              <span className="flex items-center gap-2 font-semibold">
-                <Flame className={`w-4 h-4 ${taxHikeActive ? 'text-rose-400 animate-pulse' : 'text-slate-400'}`} />
-                <span>Simulate Future Tax Hike (+4% TCJA Sunset)</span>
-              </span>
-              <span className={`text-xs px-2 py-0.5 rounded font-bold border ${
-                taxHikeActive ? 'bg-rose-950 border-rose-700 text-rose-200' : 'bg-slate-900 border-slate-700 text-slate-400'
-              }`}>
-                {taxHikeActive ? 'ACTIVE' : 'TEST'}
-              </span>
-            </button>
+            {/* DUAL SCENARIO QUICK-TOGGLE BAR: TAXES & SEQUENCE RISK */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* TOGGLE 1: FUTURE TAX HIKE */}
+              <button
+                type="button"
+                onClick={() => setTaxHikeActive(!taxHikeActive)}
+                className={`py-2 px-2.5 rounded-lg border text-left text-xs transition flex items-center justify-between shadow-sm ${
+                  taxHikeActive
+                    ? 'bg-rose-500/20 border-rose-500 text-rose-300 font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                }`}
+              >
+                <span className="flex items-center gap-1.5 font-semibold truncate">
+                  <Flame className={`w-3.5 h-3.5 shrink-0 ${taxHikeActive ? 'text-rose-400 animate-pulse' : 'text-slate-400'}`} />
+                  <span>+4% Tax Hike</span>
+                </span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border shrink-0 ${
+                  taxHikeActive ? 'bg-rose-950 border-rose-700 text-rose-200' : 'bg-slate-900 border-slate-700 text-slate-400'
+                }`}>
+                  {taxHikeActive ? 'ON' : 'OFF'}
+                </span>
+              </button>
+
+              {/* TOGGLE 2: SEQUENCE OF RETURNS CRASH SHOCK */}
+              <button
+                type="button"
+                onClick={() => setApplySequenceShock(!applySequenceShock)}
+                className={`py-2 px-2.5 rounded-lg border text-left text-xs transition flex items-center justify-between shadow-sm ${
+                  applySequenceShock
+                    ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                }`}
+              >
+                <span className="flex items-center gap-1.5 font-semibold truncate">
+                  <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${applySequenceShock ? 'text-amber-400 animate-pulse' : 'text-slate-400'}`} />
+                  <span>Crash Shock</span>
+                </span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border shrink-0 ${
+                  applySequenceShock ? 'bg-amber-950 border-amber-700 text-amber-200' : 'bg-slate-900 border-slate-700 text-slate-400'
+                }`}>
+                  {applySequenceShock ? 'ON' : 'OFF'}
+                </span>
+              </button>
+            </div>
 
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
               <span className="font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2 text-xs">
@@ -916,9 +976,10 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 4: CARRIER */}
+            {/* SECTION 4: CARRIER, FEES & CAP RATE ADJUSTER */}
             {openSection === 'carrier' && (
               <div className="space-y-4 pt-1">
+                {/* DUAL-STRATEGY FIA ALLOCATION SLIDER */}
                 <div className="p-4 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 border border-indigo-500/40 rounded-xl space-y-3 shadow-sm">
                   <div className="flex items-center justify-between text-xs font-bold text-white">
                     <span className="flex items-center gap-1.5 text-indigo-300">
@@ -971,6 +1032,43 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
+                {/* S&P 500 CAP RATE ADJUSTER */}
+                <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
+                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
+                    <span className="font-semibold text-cyan-300">S&P 500 Annual Cap Rate:</span>
+                    <span className="font-black text-cyan-400 text-sm">{(fiaCap * 100).toFixed(1)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.06"
+                    max="0.14"
+                    step="0.005"
+                    value={fiaCap}
+                    onChange={(e) => setFiaCap(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                  <span className="text-[11px] text-slate-400 block">Maximum crediting rate per contract year (backed by 0% legal floor).</span>
+                </div>
+
+                {/* ANNUAL ADVISORY / AUM FEE DRAG SLIDER */}
+                <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
+                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
+                    <span className="font-semibold text-rose-300">Traditional AUM Fee Drag:</span>
+                    <span className="font-black text-rose-400 text-sm">{(annualPortfolioFeePct * 100).toFixed(2)}% / yr</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.0"
+                    max="0.025"
+                    step="0.0025"
+                    value={annualPortfolioFeePct}
+                    onChange={(e) => setAnnualPortfolioFeePct(Number(e.target.value))}
+                    className="w-full accent-rose-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                  <span className="text-[11px] text-slate-400 block">Annual management drag applied to the market/60-40 comparison portfolio.</span>
+                </div>
+
+                {/* FREE WITHDRAWAL LIQUIDITY SCHEDULE */}
                 <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
                   <label className="text-slate-200 block font-semibold flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1.5 text-emerald-300">
@@ -994,6 +1092,7 @@ export default function AdvisorTool() {
                   </select>
                 </div>
 
+                {/* PAYCHECK CUSTOM DEPOSIT */}
                 <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2.5">
                   <div className="flex justify-between items-center text-slate-200 text-xs">
                     <span className="font-bold text-emerald-300 flex items-center gap-1.5">
@@ -1039,6 +1138,20 @@ export default function AdvisorTool() {
                     onChange={(e) => setIncomePayoutRate(Number(e.target.value))}
                     className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
+                </div>
+
+                <div className="pt-2 border-t border-slate-800">
+                  <label className="text-slate-300 block mb-1 text-xs font-semibold">Stress Backtest Period:</label>
+                  <select
+                    value={backtestPeriod}
+                    onChange={(e) => setBacktestPeriod(e.target.value as BacktestPeriod)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs font-bold"
+                  >
+                    <option value="2000_2010">2000–2010 (Dot-Com + 2008 Crash)</option>
+                    <option value="2008_2018">2008–2018 (Great Recession Recovery)</option>
+                    <option value="2015_2025">2015–2024 (Modern Volatility & Tech Rally)</option>
+                    <option value="all_25_years">Full 25-Year Cycle (2000–2024)</option>
+                  </select>
                 </div>
               </div>
             )}
@@ -1105,10 +1218,10 @@ export default function AdvisorTool() {
                       Step 2: See How We Dismantle This With Roth Conversions <ChevronRight className="w-5 h-5" />
                     </button>
 
-                    {/* ADVISOR PROMPT CARD (ACT 1) */}
+                    {/* FOOD FOR THOUGHT CARD (ACT 1) */}
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Act 1: The Trap
+                        <MessageSquare className="w-5 h-5" /> Food for Thought — Act 1: The Trap
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1186,10 +1299,10 @@ export default function AdvisorTool() {
                       Step 3: Secure Your Guaranteed Paychecks &amp; Playchecks <ChevronRight className="w-5 h-5" />
                     </button>
 
-                    {/* ADVISOR PROMPT CARD (ACT 2) */}
+                    {/* FOOD FOR THOUGHT CARD (ACT 2) */}
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Act 2: The Solution
+                        <MessageSquare className="w-5 h-5" /> Food for Thought — Act 2: The Solution
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1287,10 +1400,10 @@ export default function AdvisorTool() {
                       View Executive Takeaway Proposal <ChevronRight className="w-5 h-5" />
                     </button>
 
-                    {/* ADVISOR PROMPT CARD (ACT 3) */}
+                    {/* FOOD FOR THOUGHT CARD (ACT 3) */}
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Act 3: Paychecks &amp; Playchecks
+                        <MessageSquare className="w-5 h-5" /> Food for Thought — Act 3: Paychecks &amp; Playchecks
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1429,10 +1542,10 @@ export default function AdvisorTool() {
                       </div>
                     </div>
 
-                    {/* ADVISOR PROMPT CARD (PAYCHECKS VS 60/40) */}
+                    {/* FOOD FOR THOUGHT CARD (PAYCHECKS VS 60/40) */}
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Paychecks vs. 60/40 Portfolio
+                        <MessageSquare className="w-5 h-5" /> Food for Thought — Paychecks vs. 60/40 Portfolio
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1561,10 +1674,10 @@ export default function AdvisorTool() {
                       </div>
                     </div>
 
-                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
+                    {/* FOOD FOR THOUGHT CARD (BOND REPLACEMENT SPECIFIC) */}
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — The Decumulation Defense
+                        <MessageSquare className="w-5 h-5" /> Food for Thought — The Decumulation Defense
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1597,7 +1710,7 @@ export default function AdvisorTool() {
                           <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
                           <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
                           <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                          <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (-1% Fee)" stroke="#f43f5e" strokeWidth={3} />
+                          <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (Net of Fee)" stroke="#f43f5e" strokeWidth={3} />
                           <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
                         </LineChart>
                       </ResponsiveContainer>
@@ -1832,10 +1945,10 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* ADVISOR PROMPT CARD (ROTH BLUEPRINT) */}
+                {/* FOOD FOR THOUGHT CARD (ROTH BLUEPRINT) */}
                 <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                   <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — Tactical Roth Runway
+                    <MessageSquare className="w-5 h-5" /> Food for Thought — Tactical Roth Runway
                   </div>
                   <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                     <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1914,7 +2027,7 @@ export default function AdvisorTool() {
                       </tr>
                       <tr>
                         <td className="py-3.5 px-3 font-semibold text-white">Guaranteed Annual Paycheck Floor</td>
-                        <td className="py-3.5 px-3">${traditional4PctIncome.toLocaleString()}/yr (Subject to market swings)</td>
+                        <td className="py-3.5 px-3">${traditional4PctIncome.toLocaleString()}/yr</td>
                         <td className="py-3.5 px-3 text-emerald-400 font-bold">${guaranteedFiaIncome.toLocaleString()}/yr</td>
                         <td className="py-3.5 px-3 text-right text-emerald-400 font-bold">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
                       </tr>
@@ -1930,10 +2043,10 @@ export default function AdvisorTool() {
                   </table>
                 </div>
 
-                {/* SUMMARY ADVISOR PROMPT CARD */}
+                {/* FOOD FOR THOUGHT CARD (SUMMARY) */}
                 <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                   <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — Closing Recommendation
+                    <MessageSquare className="w-5 h-5" /> Food for Thought — Closing Recommendation
                   </div>
                   <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                     <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
