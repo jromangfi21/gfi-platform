@@ -268,28 +268,46 @@ export default function AdvisorTool() {
           </div>
         </div>
 
-        {/* PRINT PAGE 2: CHARTS & SCHEDULES */}
-        <div className="space-y-6 page-break-before">
-          <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">Visual Stress Testing & Wealth Projections</h2>
-            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Client Strategic Report</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50 avoid-break">
+ {/* Print Comparison Charts - Fixed Width/Height to bypass ResponsiveContainer collapse */}
+ <div className="grid grid-cols-2 gap-4 avoid-break">
+            {/* Chart 1: Lifetime Tax Burden */}
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
               <h3 className="text-xs font-bold text-slate-900 mb-2">Lifetime Tax Burden: Inaction vs. Plan</h3>
-              <div style={{ height: 220, width: '100%' }}>
-                <ResponsiveContainer width="100%" height={210}>
-                  <BarChart data={taxAnalysis.yearlyData}>
-                    <XAxis dataKey="age" stroke="#64748b" tick={{ fontSize: 10, fill: '#1e293b' }} />
-                    <YAxis stroke="#64748b" tick={{ fontSize: 10, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
-                    <Legend wrapperStyle={{ fontSize: '10px' }} />
-                    <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#dc2626" />
-                    <Bar dataKey="planTax" name="Taxes Under Plan" fill="#16a34a" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="flex justify-center">
+                <BarChart 
+                  width={380} 
+                  height={210} 
+                  data={taxAnalysis.yearlyData}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                >
+                  <XAxis dataKey="age" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
+                  <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
+                  <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
+                  <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#dc2626" isAnimationActive={false} />
+                  <Bar dataKey="planTax" name="Taxes Under Plan" fill="#16a34a" isAnimationActive={false} />
+                </BarChart>
               </div>
             </div>
+
+            {/* Chart 2: Paychecks vs 60/40 */}
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <h3 className="text-xs font-bold text-slate-900 mb-2">Paychecks vs. 60/40 Market Volatility</h3>
+              <div className="flex justify-center">
+                <BarChart 
+                  width={380} 
+                  height={210} 
+                  data={incomePaycheckComparison}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                >
+                  <XAxis dataKey="calendarYear" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
+                  <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
+                  <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
+                  <Bar dataKey="traditional6040Paycheck" name="4% Rule (Bear Drawdowns)" fill="#dc2626" isAnimationActive={false} />
+                  <Bar dataKey="guaranteedFiaPaycheck" name="Contractual Paycheck Floor" fill="#16a34a" isAnimationActive={false} />
+                </BarChart>
+              </div>
+            </div>
+          </div>
 
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50 avoid-break">
               <h3 className="text-xs font-bold text-slate-900 mb-2">Paychecks vs. 60/40 Market Volatility</h3>
