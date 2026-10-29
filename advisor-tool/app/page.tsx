@@ -141,7 +141,7 @@ export default function AdvisorTool() {
   const liberatedCapitalForGrowth = Math.max(0, capitalNeededUnder4Pct - customFiaDeposit);
   const playcheckEquitiesRemaining = Math.max(0, iraBalance - customFiaDeposit);
 
-  // Recalculate backtest balances with fee logic
+  // Recalculate backtest balances with both AUM fee & FIA rider fee
   let netTrad6040Bal = iraBalance;
   let netModernFiaBal = iraBalance;
   let netEquityBal = iraBalance;
@@ -159,7 +159,7 @@ export default function AdvisorTool() {
     // 2. Pure Equities Return: Net of AUM Fee
     const netEquityReturn = (r.sp500Return / 100) - aumFeePct;
 
-    // 3. FIA Return: Calculated directly from S&P return & fixed sleeve, net of FIA fee
+    // 3. FIA Return: S&P indexed (capped/floored) + Fixed sleeve, net of FIA fee
     const indexedPortion = Math.max(0, Math.min(fiaCap, r.sp500Return / 100));
     const fixedPortion = fiaFixedYieldRate;
     const fiaGrossReturn = (indexedPortion * fiaIndexedAllocationPct) + (fixedPortion * (1 - fiaIndexedAllocationPct));
@@ -192,6 +192,23 @@ export default function AdvisorTool() {
       appliedAumFeePct: Number((aumFeePct * 100).toFixed(2)),
     };
   });
+
+  // Hoisted explicitly into component scope to guarantee availability everywhere
+  const finalModern6040 = feeAdjustedBacktestResults.length > 0
+    ? feeAdjustedBacktestResults[feeAdjustedBacktestResults.length - 1].modernized6040FiaBalance
+    : 0;
+
+  const finalTrad6040 = feeAdjustedBacktestResults.length > 0
+    ? feeAdjustedBacktestResults[feeAdjustedBacktestResults.length - 1].traditional6040Balance
+    : 0;
+
+  const finalFiaOnly = feeAdjustedBacktestResults.length > 0
+    ? feeAdjustedBacktestResults[feeAdjustedBacktestResults.length - 1].fiaBalance
+    : 0;
+
+  const finalEquityOnly = feeAdjustedBacktestResults.length > 0
+    ? feeAdjustedBacktestResults[feeAdjustedBacktestResults.length - 1].equityBalance
+    : 0;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans print:p-0 print:bg-white print:text-slate-900">
@@ -1328,15 +1345,15 @@ export default function AdvisorTool() {
                               {lang === 'es'
                                 ? `"Los jubilados no le temen tanto a las caídas del mercado como a perder el control sobre sus ingresos. Las RMD le otorgan al IRS el control total de su factura fiscal."`
                                 : `"Retirees don't fear market crashes as much as they fear losing control over their income. RMDs give the IRS total control over your tax bill."`
-                            }
+                              }
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                            {lang === 'es'
-                              ? `"${firstName}, si esto no se soluciona antes de que cambien las leyes tributarias, ¿qué cantidad de estos $${taxAnalysis.totalBaselineTax.toLocaleString()} se sentiría cómodo entregando al gobierno en lugar de dejárselo a su familia?"`
-                              : `"${firstName}, if this isn't addressed now before tax laws shift, how much of this $${taxAnalysis.totalBaselineTax.toLocaleString()} do you feel comfortable handing over to the government instead of leaving it to your family?"`
+                          <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                            <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                              {lang === 'es'
+                                ? `"${firstName}, si esto no se soluciona antes de que cambien las leyes tributarias, ¿qué cantidad de estos $${taxAnalysis.totalBaselineTax.toLocaleString()} se sentiría cómodo entregando al gobierno en lugar de dejárselo a su familia?"`
+                                : `"${firstName}, if this isn't addressed now before tax laws shift, how much of this $${taxAnalysis.totalBaselineTax.toLocaleString()} do you feel comfortable handing over to the government instead of leaving it to your family?"`
                             }
                           </div>
                           <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
@@ -1861,6 +1878,214 @@ export default function AdvisorTool() {
                 </div>
               )}
 
+            </div>
+          )}
+
+          {/* TAB: ROTH BLUEPRINT */}
+          {activeTab === 'roth' && (
+            <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h3 className="font-black text-white text-xl tracking-tight">
+                    Roth Blueprint with Full Conversion Runway
+                  </h3>
+                  <p className="text-sm text-slate-300 mt-0.5">
+                    State: <b className="text-cyan-300 font-bold">{STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}%)</b> • Schedule: <b className="text-emerald-300 font-bold">{freeWithdrawalSchedule === 'tiered_2_12' ? '2% Yr 1 → 12% Yrs 2–10 → 100% Yr 11+' : freeWithdrawalSchedule === 'standard_10' ? '0% Yr 1 → 10% Yrs 2–10 → 100% Yr 11+' : '10% Flat Annual'}</b>
+                  </p>
+                </div>
+                <span className="text-sm font-black text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-4 py-1.5 rounded-full shadow-sm">
+                  Total Lifetime Savings: ${taxAnalysis.lifetimeTaxSaved.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+                <div className="p-4 bg-cyan-950/20 border border-cyan-500/30 rounded-xl space-y-1">
+                  <span className="text-xs text-cyan-400 uppercase font-black tracking-wider flex items-center gap-1.5">
+                    <Gift className="w-4 h-4" /> Carrier Bonus
+                  </span>
+                  <div className="text-2xl font-black text-white">+${taxAnalysis.upfrontBonusDollars.toLocaleString()}</div>
+                  <p className="text-xs text-slate-300">
+                    {(carrierBonusPct * 100).toFixed(0)}% upfront carrier credit absorbs friction.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-1">
+                  <span className="text-xs text-emerald-400 uppercase font-black tracking-wider flex items-center gap-1.5">
+                    <Percent className="w-4 h-4" /> Effective Rate
+                  </span>
+                  <div className="text-2xl font-black text-slate-200">{taxAnalysis.grossStatutoryRatePct}%</div>
+                  <p className="text-xs text-slate-300">
+                    Progressive Fed + {selectedState} ({(stateTaxRate * 100).toFixed(1)}%) rate.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-gradient-to-br from-emerald-950/50 via-cyan-950/50 to-slate-900 border border-emerald-500/60 rounded-xl space-y-1 shadow-sm">
+                  <span className="text-xs text-emerald-300 uppercase font-black tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Net Rate
+                  </span>
+                  <div className="text-3xl font-black text-emerald-400">
+                    {taxAnalysis.overallNetEffectiveTaxRate}%
+                  </div>
+                  <p className="text-xs text-emerald-200 font-semibold">
+                    Out-of-pocket rate after bonus offset.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-indigo-950/20 border border-indigo-500/30 rounded-xl space-y-1">
+                  <span className="text-xs text-indigo-400 uppercase font-black tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4" /> Converted
+                  </span>
+                  <div className="text-2xl font-black text-white">${taxAnalysis.totalConversionsExecuted.toLocaleString()}</div>
+                  <p className="text-xs text-slate-300">
+                    Sheltered in permanent tax-free Roth status.
+                  </p>
+                </div>
+              </div>
+
+              {/* GRAPH SELECTOR TOGGLE & FIXED CONTAINER */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div className="text-sm font-bold text-slate-200">
+                    {rothChartMode === 'wealth'
+                      ? 'Tactical Wealth Transformation (Pre-Tax IRA vs. Tax-Free Roth Growth):'
+                      : 'Annual Tax Comparison (Inaction Liability vs. Tax Covered by Contract Free Withdrawals):'
+                    }
+                  </div>
+                  <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-xs">
+                    <button
+                      onClick={() => setRothChartMode('wealth')}
+                      className={`px-3 py-1 rounded font-bold transition ${
+                        rothChartMode === 'wealth' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Wealth Progression
+                    </button>
+                    <button
+                      onClick={() => setRothChartMode('tax')}
+                      className={`px-3 py-1 rounded font-bold transition ${
+                        rothChartMode === 'tax' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Annual Tax Savings
+                    </button>
+                  </div>
+                </div>
+
+                <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 310, minHeight: 310 }}>
+                  {rothChartMode === 'wealth' ? (
+                    <ResponsiveContainer width="100%" height={290} minWidth={0}>
+                      <LineChart data={taxAnalysis.yearlyData}>
+                        <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                        <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                        <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '4px' }} />
+                        <Line type="monotone" dataKey="planIra" name="Pre-Tax IRA Balance (Target: $0)" stroke="#f43f5e" strokeWidth={3} strokeDasharray="4 4" />
+                        <Line type="monotone" dataKey="planRoth" name="Tax-Free Roth Balance (Zero RMDs)" stroke="#10b981" strokeWidth={3} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={290} minWidth={0}>
+                      <BarChart data={taxAnalysis.yearlyData}>
+                        <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                        <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                        <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '4px' }} />
+                        <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="planTax" name="Plan Tax (Covered by Free Withdrawal)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
+
+              {/* Conversion Runway Table */}
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div className="text-xs font-bold text-slate-300 uppercase tracking-wide flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold text-white">Full Tactical Conversion Runway to $0 IRA Balance</span>
+                  <span className="text-xs text-cyan-300 font-semibold">
+                    {(carrierBonusPct * 100).toFixed(0)}% Bonus Offset | {selectedState} ({(stateTaxRate * 100).toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="overflow-x-auto max-h-96">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead className="sticky top-0 bg-slate-950 border-b-2 border-slate-800 text-slate-300 text-xs uppercase tracking-wider font-bold">
+                      <tr>
+                        <th className="py-3 px-2">Age (Status)</th>
+                        <th className="py-3 px-2">Conversion Amount</th>
+                        <th className="py-3 px-2">Free Withdrawal Limit</th>
+                        <th className="py-3 px-2">Taxes Paid from Contract</th>
+                        <th className="py-3 px-2">Gross Tax Rate</th>
+                        <th className="py-3 px-2 text-emerald-400">Net Tax Rate</th>
+                        <th className="py-3 px-2">Tax-Free Roth Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80 text-slate-200">
+                      {taxAnalysis.yearlyData.filter(d => d.conversionAmount > 0).map(d => (
+                        <tr key={d.age} className="hover:bg-slate-900/60 transition">
+                          <td className="py-3 px-2 font-bold text-white whitespace-nowrap">
+                            Age {d.age} {d.isWorking ? <span className="text-sky-400 text-xs font-semibold ml-1">(Working)</span> : <span className="text-emerald-400 text-xs font-semibold ml-1">(Retired)</span>}
+                          </td>
+                          <td className="py-3 px-2 text-emerald-400 font-bold whitespace-nowrap">${d.conversionAmount.toLocaleString()}</td>
+                          <td className="py-3 px-2 text-slate-300 font-semibold whitespace-nowrap">
+                            ${d.maxFreeWithdrawal.toLocaleString()}
+                            <span className="text-xs text-cyan-300 ml-1.5 font-bold">
+                              {d.isSurrenderExpired ? (
+                                <span className="text-emerald-400 inline-flex items-center gap-0.5">
+                                  <Unlock className="w-3.5 h-3.5 inline" /> 100% Free
+                                </span>
+                              ) : (
+                                `(${d.maxFreeWithdrawalRatePct}%)`
+                              )}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-rose-300 font-semibold whitespace-nowrap">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
+                          <td className="py-3 px-2 text-slate-300 whitespace-nowrap">{d.statutoryRatePct}%</td>
+                          <td className="py-3 px-2 text-cyan-300 font-black whitespace-nowrap">
+                            {d.netEffectiveRatePct}%
+                            <span className="text-xs text-emerald-400 ml-1.5 font-medium">(-{(carrierBonusPct * 100).toFixed(0)}% bonus)</span>
+                          </td>
+                          <td className="py-3 px-2 text-indigo-300 font-bold whitespace-nowrap">${d.planRoth.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-emerald-950/40 border-t-2 border-emerald-500/70 font-black text-sm">
+                        <td className="py-3.5 px-2 text-emerald-300 uppercase tracking-wide">Total Runway Complete</td>
+                        <td className="py-3.5 px-2 text-emerald-400">${taxAnalysis.totalConversionsExecuted.toLocaleString()}</td>
+                        <td className="py-3.5 px-2 text-slate-400">--</td>
+                        <td className="py-3.5 px-2 text-rose-300">${(taxAnalysis.totalConversionsExecuted * (taxAnalysis.overallNetEffectiveTaxRate / 100)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+                        <td className="py-3.5 px-2 text-slate-300">{taxAnalysis.grossStatutoryRatePct}% Avg</td>
+                        <td className="py-3.5 px-2 text-cyan-300">{taxAnalysis.overallNetEffectiveTaxRate}% Net</td>
+                        <td className="py-3.5 px-2 text-emerald-300 text-base">100% Tax-Free Roth</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* FOOD FOR THOUGHT CARD (ROTH BLUEPRINT) */}
+              {showAdvisorNotes && (
+                <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                    <MessageSquare className="w-5 h-5" /> Food for Thought — Tactical Roth Runway
+                  </div>
+                  <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                    <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                      <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                        {lang === 'es'
+                          ? `"${firstName}, al modelar su salario actual de $${currentEarnedIncome.toLocaleString()} antes de la jubilación y su ingreso meta de $${withdrawalNeed.toLocaleString()} al jubilarse, calibramos exactamente cuánto espacio libre queda en el tramo impositivo elegido sin sobrepasar su límite marginal. Con el bono del ${(carrierBonusPct * 100).toFixed(0)}%, su tasa neta efectiva es solo del ${taxAnalysis.overallNetEffectiveTaxRate}%. ¿Tiene sentido ejecutar esta conversión estratégica?"`
+                          : `"${firstName}, by incorporating your current salary of $${currentEarnedIncome.toLocaleString()} prior to retirement and your target income of $${withdrawalNeed.toLocaleString()} once retired, we identify the exact room remaining in your selected tax bracket without spilling over into higher rates. With the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, your net effective tax rate is just ${taxAnalysis.overallNetEffectiveTaxRate}%. Does it make sense to put this disciplined tax strategy into practice?"`
+                        }
+                      </div>
+                      <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                        <span className="text-amber-400 font-bold mr-1.5">•</span>
+                        {lang === 'es'
+                          ? `"Pagar impuestos ahora no es un gasto; es comprar un dólar libre de impuestos por un descuento significativo. El bono de la aseguradora absorbe el costo para que sus herederos reciban el 100% libre de impuestos bajo la ley SECURE."`
+                          : `"Paying taxes now isn't an expense; it's buying a future tax-free dollar at a major discount. The carrier's upfront bonus absorbs the friction so your children inherit 100% tax-free wealth under the SECURE Act."`
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
