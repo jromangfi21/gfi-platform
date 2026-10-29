@@ -15,9 +15,10 @@ import {
 
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
-  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('backtest');
+  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('roth');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('income_fia_vs_portfolio');
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
+  const [rothChartMode, setRothChartMode] = useState<'wealth' | 'tax'>('wealth');
 
   // Accordion Navigation
   const [openSection, setOpenSection] = useState<'client' | 'income' | 'tax' | 'carrier'>('carrier');
@@ -115,6 +116,13 @@ export default function AdvisorTool() {
   });
 
   const effectiveGuaranteedFloorPct = ((1 - fiaIndexedAllocationPct) * fiaFixedYieldRate * 100);
+
+  // Clean, professional currency formatter that prevents $8000k issues
+  const formatCurrencyAxis = (v: number) => {
+    if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+    if (v >= 1000) return `$${Math.round(v / 1000)}k`;
+    return `$${v}`;
+  };
 
   // Dynamic Paycheck vs. Playcheck Calculations
   const guaranteedFiaIncome = Math.round(customFiaDeposit * incomePayoutRate);
@@ -557,6 +565,58 @@ export default function AdvisorTool() {
                     className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
                 </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
+                    <span>Social Security (Combined):</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={1000}
+                        value={socialSecurity}
+                        onChange={(e) => setSocialSecurity(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
+                      />
+                      <span className="text-slate-400">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="10000"
+                    max="80000"
+                    step="1000"
+                    value={socialSecurity}
+                    onChange={(e) => setSocialSecurity(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
+                    <span>Pension / Other Annuities:</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step={1000}
+                        value={fixedIncome}
+                        onChange={(e) => setFixedIncome(Number(e.target.value))}
+                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
+                      />
+                      <span className="text-slate-400">/yr</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80000"
+                    step="2000"
+                    value={fixedIncome}
+                    onChange={(e) => setFixedIncome(Number(e.target.value))}
+                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
               </div>
             )}
 
@@ -760,329 +820,6 @@ export default function AdvisorTool() {
           {/* Right Presentation Dashboard */}
           <div className="lg:col-span-8 space-y-6">
 
-            {/* TAB: GFILOGIX BACKTEST STUDIO */}
-            {activeTab === 'backtest' && (
-              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
-                  <div>
-                    <h3 className="font-black text-white text-xl tracking-tight">Paychecks &amp; Playchecks Studio</h3>
-                    <p className="text-sm text-slate-300 mt-0.5">Comparing contractual buffer security vs. standard market withdrawal rules</p>
-                  </div>
-
-                  <div className="flex flex-wrap bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs gap-1">
-                    <button
-                      onClick={() => setBacktestMode('stocks_fia_vs_6040')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'stocks_fia_vs_6040' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      Bond Replacement (60/40 FIA vs 60/40 Bonds)
-                    </button>
-                    <button
-                      onClick={() => setBacktestMode('income_fia_vs_portfolio')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'income_fia_vs_portfolio' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      Paychecks (FIA) vs 60/40
-                    </button>
-                    <button
-                      onClick={() => setBacktestMode('equity_vs_fia')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'equity_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      Equities vs. FIA
-                    </button>
-                    <button
-                      onClick={() => setBacktestMode('fixed_vs_fia')}
-                      className={`px-3 py-1.5 rounded font-bold transition ${
-                        backtestMode === 'fixed_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      Fixed Annuity vs. FIA
-                    </button>
-                  </div>
-                </div>
-
-                {/* MODE 1: PAYCHECKS (FIA) VS 60/40 */}
-                {backtestMode === 'income_fia_vs_portfolio' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* CARD 1: PAYCHECK ADVANTAGE */}
-                      <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 uppercase tracking-wide">
-                          <Wallet className="w-4 h-4" /> GUARANTEED PAYCHECK ADVANTAGE
-                        </div>
-                        <div className="text-3xl font-black text-white">
-                          ${guaranteedFiaIncome.toLocaleString()}/yr
-                          <span className="text-sm text-emerald-400 ml-2 font-bold">
-                            (+${annualIncomeAdvantage.toLocaleString()}/yr vs. 4% rule)
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                          Generated from ${customFiaDeposit.toLocaleString()} allocation at a {(incomePayoutRate * 100).toFixed(1)}% contractual rate.
-                        </p>
-                      </div>
-
-                      {/* CARD 2: CAPITAL EFFICIENCY */}
-                      <div className="bg-slate-950 p-5 rounded-xl border border-cyan-500/40 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wide">
-                          <Landmark className="w-4 h-4" /> CAPITAL EFFICIENCY (LIBERATED CAPITAL)
-                        </div>
-                        <div className="text-3xl font-black text-cyan-300">
-                          +${liberatedCapitalForGrowth.toLocaleString()} Liberated
-                        </div>
-                        <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                          To generate <b className="text-white">${guaranteedFiaIncome.toLocaleString()}/yr</b> from a conventional 60/40 portfolio safely under the 4% rule, you would have to lock up <b className="text-white">${capitalNeededUnder4Pct.toLocaleString()}</b>. The FIA achieves this with only <b className="text-emerald-400">${customFiaDeposit.toLocaleString()}</b>, leaving <b className="text-cyan-300 font-bold">${liberatedCapitalForGrowth.toLocaleString()}</b> unencumbered to remain 100% invested in equities for family legacy and inflation growth.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* CHART */}
-                    <div>
-                      <div className="text-sm font-bold text-slate-200 mb-2">
-                        Annual Cash Flow: Guaranteed Paychecks vs. Fluctuating 60/40 Market Risk:
-                      </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={incomePaycheckComparison}>
-                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                            <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
-                            <Bar dataKey="guaranteedFiaPaycheck" name="Guaranteed Life Paycheck (Contractual Floor)" fill="#10b981" radius={[3, 3, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    {/* ADVISOR PROMPT CARD */}
-                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Paychecks vs. 60/40 Portfolio
-                      </div>
-                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                            {lang === 'es'
-                              ? `"${firstName}, con un portafolio tradicional 60/40, cuando el mercado cayó en 2008, un retiro del 4% se redujo drásticamente o forzó a los inversionistas a liquidar acciones con una pérdida del 37%. Con una FIA de ingreso, sus $${guaranteedFiaIncome.toLocaleString()} anuales están respaldados legalmente por contrato de por vida. ¿Prefiere que sus gastos esenciales dependan del humor de Wall Street o de una garantía legal?"`
-                              : `"${firstName}, with a traditional 60/40 portfolio, when the market crashed in 2008, taking a standard 4% withdrawal either forced retirees to take a massive pay cut or liquidate equities down 37%. With an Income FIA, your $${guaranteedFiaIncome.toLocaleString()} annual paycheck is legally guaranteed for life. Do you want your grocery and healthcare money dependent on market timing, or backed by a legal contract?"`
-                            }
-                          </div>
-                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                            <span className="text-amber-400 font-bold mr-1.5">•</span>
-                            {lang === 'es'
-                              ? `"Eficiencia de Capital: En lugar de inmovilizar $${capitalNeededUnder4Pct.toLocaleString()} en bonos y acciones conservadoras para generar $${guaranteedFiaIncome.toLocaleString()}, la FIA lo logra con solo $${customFiaDeposit.toLocaleString()}, liberando $${liberatedCapitalForGrowth.toLocaleString()} para que continúen invertidos agresivamente para crecimiento familiar."`
-                              : `"Capital Efficiency: Instead of tying up $${capitalNeededUnder4Pct.toLocaleString()} under traditional safe withdrawal rules to produce $${guaranteedFiaIncome.toLocaleString()}, the FIA accomplishes the same income with only $${customFiaDeposit.toLocaleString()}, liberating $${liberatedCapitalForGrowth.toLocaleString()} to remain 100% invested in equities for family legacy and inflation protection."`
-                            }
-                          </div>
-                        </div>
-
-                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                            {lang === 'es'
-                              ? `"${firstName}, si sus necesidades esenciales ya están 100% cubiertas por estos cheques garantizados, ¿con cuánta mayor tranquilidad dejaría el resto de sus $${playcheckEquitiesRemaining.toLocaleString()} invertidos en la bolsa para crecer a largo plazo sin miedo a las caídas?"`
-                              : `"${firstName}, knowing your baseline lifestyle is 100% defended by guaranteed lifetime paychecks, how much easier will it be to leave your remaining $${playcheckEquitiesRemaining.toLocaleString()} invested in equities for long-term growth without panic-selling during a crash?"`
-                            }
-                          </div>
-                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                            <span className="text-amber-400 font-bold mr-1.5">•</span>
-                            {lang === 'es'
-                              ? `"Dividir el patrimonio entre 'Paychecks' (garantizados para lo esencial) y 'Playchecks' (renta variable para crecimiento y diversión) elimina por completo el pánico financiero en la jubilación."`
-                              : `"Separating wealth into 'Paychecks' (contractual certainty for essentials) and 'Playchecks' (unencumbered equities for fun, travel, and legacy) permanently cures financial anxiety in retirement."`
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE 2: BOND REPLACEMENT STRATEGY */}
-                {backtestMode === 'stocks_fia_vs_6040' && (
-                  <div className="space-y-4">
-                    {/* BOND CATEGORY SELECTOR */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800 gap-3">
-                      <div>
-                        <span className="text-sm font-bold text-white block">Compare FIA Split Against:</span>
-                        <span className="text-xs text-emerald-400 font-semibold">
-                          Current FIA Blend: {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P 500 ({(fiaCap * 100).toFixed(1)}% Cap) + {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed ({(fiaFixedYieldRate * 100).toFixed(1)}%)
-                        </span>
-                      </div>
-                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
-                        <button
-                          onClick={() => setSelectedBondType('corporate_ig')}
-                          className={`px-3 py-1.5 rounded font-bold transition ${
-                            selectedBondType === 'corporate_ig' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          Corporate Bonds (IG)
-                        </button>
-                        <button
-                          onClick={() => setSelectedBondType('high_yield')}
-                          className={`px-3 py-1.5 rounded font-bold transition ${
-                            selectedBondType === 'high_yield' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          Aggressive / Junk Bonds (HY)
-                        </button>
-                        <button
-                          onClick={() => setSelectedBondType('aggregate')}
-                          className={`px-3 py-1.5 rounded font-bold transition ${
-                            selectedBondType === 'aggregate' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          US Aggregate
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* REALITY CHECK STAT CARDS */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                      <div className="p-4 bg-slate-950 border border-indigo-500/40 rounded-xl space-y-1">
-                        <span className="text-xs text-indigo-400 uppercase font-black tracking-wider flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4" /> Ending Capital
-                        </span>
-                        <div className="text-2xl font-black text-white">${backtest.finalModernized6040Fia.toLocaleString()}</div>
-                        <p className="text-xs text-emerald-300 font-medium">
-                          +${(backtest.finalModernized6040Fia - backtest.finalTraditional6040).toLocaleString()} net wealth advantage
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-slate-950 border border-rose-500/40 rounded-xl space-y-1">
-                        <span className="text-xs text-rose-400 uppercase font-black tracking-wider flex items-center gap-1.5">
-                          <TrendingDown className="w-4 h-4" /> Max Drawdown
-                        </span>
-                        <div className="text-2xl font-black text-emerald-400">
-                          -{backtest.maxDrawdownModernFiaPct}% <span className="text-sm font-normal text-slate-400">vs -{backtest.maxDrawdownTrad6040Pct}% (Bonds)</span>
-                        </div>
-                        <p className="text-xs text-slate-300">
-                          Peak-to-trough loss cushioned by 0% legal floor
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-slate-950 border border-emerald-500/40 rounded-xl space-y-1">
-                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4" /> Guaranteed Floor
-                        </span>
-                        <div className="text-2xl font-black text-emerald-400">+{effectiveGuaranteedFloorPct.toFixed(2)}% / yr</div>
-                        <p className="text-xs text-slate-300">
-                          {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% fixed sleeve ensures positive interest in all crash years
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-bold text-slate-200 mb-2">
-                        Portfolio Wealth Progression ($1.25M with ${withdrawalNeed.toLocaleString()}/yr Living Withdrawals):
-                      </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={backtest.results}>
-                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                            <Line type="monotone" dataKey="traditional6040Balance" name={`Traditional 60/40 (Stocks + ${selectedBondType === 'corporate_ig' ? 'Corporate' : selectedBondType === 'high_yield' ? 'Aggressive' : 'Agg'} Bonds)`} stroke="#f43f5e" strokeWidth={3} />
-                            <Line type="monotone" dataKey="modernized6040FiaBalance" name={`Modernized 60/40 (Stocks + ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed / ${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P FIA)`} stroke="#10b981" strokeWidth={3} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
-                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — The Decumulation Defense
-                      </div>
-                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
-                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
-                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
-                            {lang === 'es'
-                              ? `"${firstName}, el mayor peligro en la jubilación no es que las acciones caigan; es verse forzado a liquidar bonos o acciones a la baja para cubrir sus $${withdrawalNeed.toLocaleString()} anuales. Al mover su porción conservadora a una FIA con piso del 0% y tasa fija positiva de +${effectiveGuaranteedFloorPct.toFixed(2)}%, sus cheques de vida provienen de un bolsillo protegido, dando a sus acciones el tiempo necesario para rebotar sin pérdidas forzadas. ¿Tiene sentido eliminar el riesgo de liquidación en su plan?"`
-                              : `"${firstName}, the single greatest threat in retirement is not that equities drop—it's being forced to sell bonds or stocks at a loss to fund your $${withdrawalNeed.toLocaleString()} in annual living expenses. By shifting your conservative 40% into an FIA with a contractual floor and a +${effectiveGuaranteedFloorPct.toFixed(2)}% guaranteed baseline, your living paychecks are drawn from an insulated bucket, giving your equities the runway they need to recover. Does it make sense to remove liquidation risk from your plan?"`
-                            }
-                          </div>
-                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
-                            <span className="text-amber-400 font-bold mr-1.5">•</span>
-                            {lang === 'es'
-                              ? `"Los bonos agresivos tienen una alta correlación con la bolsa de valores; cuando las acciones caen, los bonos chatarra se desploman. Una FIA ofrece una verdadera descorrelación con piso del 0% garantizado."`
-                              : `"High-yield aggressive bonds are heavily correlated with equities; when stocks crash, junk bonds plunge too. An FIA provides true non-correlated defense with a legal 0% floor."`
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE 3: EQUITIES VS FIA ACCUMULATION */}
-                {backtestMode === 'equity_vs_fia' && (
-                  <div className="space-y-4">
-                    <div className="h-72 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={backtest.results}>
-                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                          <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (-1% Fee)" stroke="#f43f5e" strokeWidth={3} />
-                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">Ending Accumulated Balance</span>
-                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
-                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalEquity.toLocaleString()} in market equities</p>
-                      </div>
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">Contractual Floor Defense</span>
-                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} Down Years Defended</div>
-                        <p className="text-xs text-slate-400 mt-0.5">Guaranteed minimum positive floor: +{effectiveGuaranteedFloorPct.toFixed(2)}% / yr</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE 4: FIXED ANNUITY VS FIA */}
-                {backtestMode === 'fixed_vs_fia' && (
-                  <div className="space-y-4">
-                    <div className="h-72 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={backtest.results}>
-                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
-                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
-                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                          <Line type="monotone" dataKey="fixedAnnuityBalance" name={`Fixed Annuity / CD (${(fixedRate * 100).toFixed(2)}% Net of Tax)`} stroke="#94a3b8" strokeWidth={3} />
-                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">Ending Accumulated Balance</span>
-                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
-                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalFixed.toLocaleString()} in taxable fixed CDs</p>
-                      </div>
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span className="text-xs text-slate-300 font-bold uppercase">Contractual Floor Defense</span>
-                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} Down Years Defended</div>
-                        <p className="text-xs text-slate-400 mt-0.5">Principal preserved in crash cycles</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            )}
-
             {/* TAB: ROTH BLUEPRINT */}
             {activeTab === 'roth' && (
               <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
@@ -1142,6 +879,63 @@ export default function AdvisorTool() {
                     <p className="text-xs text-slate-300">
                       Sheltered in permanent tax-free Roth status.
                     </p>
+                  </div>
+                </div>
+
+                {/* GRAPH SELECTOR TOGGLE & CONTAINER (EXPLICIT HEIGHT FIXED) */}
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div className="text-sm font-bold text-slate-200">
+                      {rothChartMode === 'wealth'
+                        ? 'Tactical Wealth Transformation (Pre-Tax IRA vs. Tax-Free Roth Growth):'
+                        : 'Annual Tax Comparison (Inaction Liability vs. Tax Covered by Contract Free Withdrawals):'
+                      }
+                    </div>
+                    <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-xs">
+                      <button
+                        onClick={() => setRothChartMode('wealth')}
+                        className={`px-3 py-1 rounded font-bold transition ${
+                          rothChartMode === 'wealth' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Wealth Progression
+                      </button>
+                      <button
+                        onClick={() => setRothChartMode('tax')}
+                        className={`px-3 py-1 rounded font-bold transition ${
+                          rothChartMode === 'tax' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Annual Tax Savings
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* FIXED HEIGHT CONTAINER TO PREVENT COLLAPSE */}
+                  <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 310, minHeight: 310 }}>
+                    {rothChartMode === 'wealth' ? (
+                      <ResponsiveContainer width="100%" height={290} minWidth={0}>
+                        <LineChart data={taxAnalysis.yearlyData}>
+                          <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '4px' }} />
+                          <Line type="monotone" dataKey="planIra" name="Pre-Tax IRA Balance (Target: $0)" stroke="#f43f5e" strokeWidth={3} strokeDasharray="4 4" />
+                          <Line type="monotone" dataKey="planRoth" name="Tax-Free Roth Balance (Zero RMDs)" stroke="#10b981" strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={290} minWidth={0}>
+                        <BarChart data={taxAnalysis.yearlyData}>
+                          <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '4px' }} />
+                          <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                          <Bar dataKey="planTax" name="Plan Tax (Covered by Free Withdrawal)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </div>
 
@@ -1275,11 +1069,11 @@ export default function AdvisorTool() {
                       <div className="text-sm font-bold text-slate-200 mb-2.5">
                         Annual Tax Burden Under Inaction (Reflects salary, retirement spending, and age 73 RMDs):
                       </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                      <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                        <ResponsiveContainer width="100%" height={280} minWidth={0}>
                           <BarChart data={taxAnalysis.yearlyData}>
                             <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
                             <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
                             <Bar dataKey="baselineTax" name="Forced Tax Liability Under Inaction" fill="#f43f5e" radius={[3, 3, 0, 0]} />
                           </BarChart>
@@ -1338,7 +1132,7 @@ export default function AdvisorTool() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-5 bg-emerald-950/30 border border-emerald-500/50 rounded-xl space-y-1.5 shadow-sm">
-                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider">Your Lifetime Tax Savings</span>
+                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider">YOUR LIFETIME TAX SAVINGS</span>
                         <div className="text-4xl font-black text-emerald-400">${taxAnalysis.lifetimeTaxSaved.toLocaleString()}</div>
                         <p className="text-xs text-slate-200 font-medium">Front-loading conversions into current lower tax brackets before age 73.</p>
                       </div>
@@ -1354,11 +1148,11 @@ export default function AdvisorTool() {
                       <div className="text-sm font-bold text-slate-200 mb-2.5">
                         Tactical Wealth Transformation (Pre-Tax IRA Shrinks to $0 while Tax-Free Roth Compounds):
                       </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                      <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                        <ResponsiveContainer width="100%" height={280} minWidth={0}>
                           <LineChart data={taxAnalysis.yearlyData}>
                             <XAxis dataKey="age" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
                             <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
                             <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
                             <Line type="monotone" dataKey="planIra" name="Pre-Tax IRA Balance (Target: $0)" stroke="#f43f5e" strokeWidth={3} strokeDasharray="4 4" />
@@ -1455,11 +1249,11 @@ export default function AdvisorTool() {
                       <div className="text-sm font-bold text-slate-200 mb-2">
                         Guaranteed Life Paycheck Floor vs. Fluctuating 60/40 Portfolio Cash Flow:
                       </div>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                      <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                        <ResponsiveContainer width="100%" height={280} minWidth={0}>
                           <BarChart data={incomePaycheckComparison}>
                             <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={(v: number) => `$${v / 1000}k`} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
                             <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
                             <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
                             <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
@@ -1514,6 +1308,329 @@ export default function AdvisorTool() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* TAB: GFILOGIX BACKTEST STUDIO */}
+            {activeTab === 'backtest' && (
+              <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
+                  <div>
+                    <h3 className="font-black text-white text-xl tracking-tight">Paychecks &amp; Playchecks Studio</h3>
+                    <p className="text-sm text-slate-300 mt-0.5">Comparing contractual buffer security vs. standard market withdrawal rules</p>
+                  </div>
+
+                  <div className="flex flex-wrap bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs gap-1">
+                    <button
+                      onClick={() => setBacktestMode('stocks_fia_vs_6040')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'stocks_fia_vs_6040' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Bond Replacement (60/40 FIA vs 60/40 Bonds)
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('income_fia_vs_portfolio')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'income_fia_vs_portfolio' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Paychecks (FIA) vs 60/40
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('equity_vs_fia')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'equity_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Equities vs. FIA
+                    </button>
+                    <button
+                      onClick={() => setBacktestMode('fixed_vs_fia')}
+                      className={`px-3 py-1.5 rounded font-bold transition ${
+                        backtestMode === 'fixed_vs_fia' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Fixed Annuity vs. FIA
+                    </button>
+                  </div>
+                </div>
+
+                {/* MODE 1: PAYCHECKS (FIA) VS 60/40 */}
+                {backtestMode === 'income_fia_vs_portfolio' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* CARD 1: PAYCHECK ADVANTAGE */}
+                      <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 uppercase tracking-wide">
+                          <Wallet className="w-4 h-4" /> GUARANTEED PAYCHECK ADVANTAGE
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          ${guaranteedFiaIncome.toLocaleString()}/yr
+                          <span className="text-sm text-emerald-400 ml-2 font-bold">
+                            (+${annualIncomeAdvantage.toLocaleString()}/yr vs. 4% rule)
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                          Generated from ${customFiaDeposit.toLocaleString()} allocation at a {(incomePayoutRate * 100).toFixed(1)}% contractual rate.
+                        </p>
+                      </div>
+
+                      {/* CARD 2: CAPITAL EFFICIENCY */}
+                      <div className="bg-slate-950 p-5 rounded-xl border border-cyan-500/40 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wide">
+                          <Landmark className="w-4 h-4" /> CAPITAL EFFICIENCY (LIBERATED CAPITAL)
+                        </div>
+                        <div className="text-3xl font-black text-cyan-300">
+                          +${liberatedCapitalForGrowth.toLocaleString()} Liberated
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                          To generate <b className="text-white">${guaranteedFiaIncome.toLocaleString()}/yr</b> from a conventional 60/40 portfolio safely under the 4% rule, you would have to lock up <b className="text-white">${capitalNeededUnder4Pct.toLocaleString()}</b>. The FIA achieves this with only <b className="text-emerald-400">${customFiaDeposit.toLocaleString()}</b>, leaving <b className="text-cyan-300 font-bold">${liberatedCapitalForGrowth.toLocaleString()}</b> unencumbered to remain 100% invested in equities for family legacy and inflation growth.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* CHART */}
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">
+                        Annual Cash Flow: Guaranteed Paychecks vs. Fluctuating 60/40 Market Risk:
+                      </div>
+                      <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                        <ResponsiveContainer width="100%" height={280} minWidth={0}>
+                          <BarChart data={incomePaycheckComparison}>
+                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Bar dataKey="traditional6040Paycheck" name="Traditional 4% Paycheck (Drops in Bear Markets)" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                            <Bar dataKey="guaranteedFiaPaycheck" name="Guaranteed Life Paycheck (Contractual Floor)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* ADVISOR PROMPT CARD */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> Advisor Discussion Track — Paychecks vs. 60/40 Portfolio
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, con un portafolio tradicional 60/40, cuando el mercado cayó en 2008, un retiro del 4% se redujo drásticamente o forzó a los inversionistas a liquidar acciones con una pérdida del 37%. Con una FIA de ingreso, sus $${guaranteedFiaIncome.toLocaleString()} anuales están respaldados legalmente por contrato de por vida. ¿Prefiere que sus gastos esenciales dependan del humor de Wall Street o de una garantía legal?"`
+                              : `"${firstName}, with a traditional 60/40 portfolio, when the market crashed in 2008, taking a standard 4% withdrawal either forced retirees to take a massive pay cut or liquidate equities down 37%. With an Income FIA, your $${guaranteedFiaIncome.toLocaleString()} annual paycheck is legally guaranteed for life. Do you want your grocery and healthcare money dependent on market timing, or backed by a legal contract?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Eficiencia de Capital: En lugar de inmovilizar $${capitalNeededUnder4Pct.toLocaleString()} en bonos y acciones conservadoras para generar $${guaranteedFiaIncome.toLocaleString()}, la FIA lo logra con solo $${customFiaDeposit.toLocaleString()}, liberando $${liberatedCapitalForGrowth.toLocaleString()} para que continúen invertidos agresivamente para crecimiento familiar."`
+                              : `"Capital Efficiency: Instead of tying up $${capitalNeededUnder4Pct.toLocaleString()} under traditional safe withdrawal rules to produce $${guaranteedFiaIncome.toLocaleString()}, the FIA accomplishes the same income with only $${customFiaDeposit.toLocaleString()}, liberating $${liberatedCapitalForGrowth.toLocaleString()} to remain 100% invested in equities for family legacy and inflation protection."`
+                            }
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, si sus necesidades esenciales ya están 100% cubiertas por estos cheques garantizados, ¿con cuánta mayor tranquilidad dejaría el resto de sus $${playcheckEquitiesRemaining.toLocaleString()} invertidos en la bolsa para crecer a largo plazo sin miedo a las caídas?"`
+                              : `"${firstName}, knowing your baseline lifestyle is 100% defended by guaranteed lifetime paychecks, how much easier will it be to leave your remaining $${playcheckEquitiesRemaining.toLocaleString()} invested in equities for long-term growth without panic-selling during a crash?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Dividir el patrimonio entre 'Paychecks' (garantizados para lo esencial) y 'Playchecks' (renta variable para crecimiento y diversión) elimina por completo el pánico financiero en la jubilación."`
+                              : `"Separating wealth into 'Paychecks' (contractual certainty for essentials) and 'Playchecks' (unencumbered equities for fun, travel, and legacy) permanently cures financial anxiety in retirement."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE 2: BOND REPLACEMENT STRATEGY */}
+                {backtestMode === 'stocks_fia_vs_6040' && (
+                  <div className="space-y-4">
+                    {/* BOND CATEGORY SELECTOR */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800 gap-3">
+                      <div>
+                        <span className="text-sm font-bold text-white block">Compare FIA Split Against:</span>
+                        <span className="text-xs text-emerald-400 font-semibold">
+                          Current FIA Blend: {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P 500 ({(fiaCap * 100).toFixed(1)}% Cap) + {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed ({(fiaFixedYieldRate * 100).toFixed(1)}%)
+                        </span>
+                      </div>
+                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
+                        <button
+                          onClick={() => setSelectedBondType('corporate_ig')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'corporate_ig' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          Corporate Bonds (IG)
+                        </button>
+                        <button
+                          onClick={() => setSelectedBondType('high_yield')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'high_yield' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          Aggressive / Junk Bonds (HY)
+                        </button>
+                        <button
+                          onClick={() => setSelectedBondType('aggregate')}
+                          className={`px-3 py-1.5 rounded font-bold transition ${
+                            selectedBondType === 'aggregate' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          US Aggregate
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* REALITY CHECK STAT CARDS */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                      <div className="p-4 bg-slate-950 border border-indigo-500/40 rounded-xl space-y-1">
+                        <span className="text-xs text-indigo-400 uppercase font-black tracking-wider flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4" /> Ending Capital
+                        </span>
+                        <div className="text-2xl font-black text-white">${backtest.finalModernized6040Fia.toLocaleString()}</div>
+                        <p className="text-xs text-emerald-300 font-medium">
+                          +${(backtest.finalModernized6040Fia - backtest.finalTraditional6040).toLocaleString()} net wealth advantage
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-slate-950 border border-rose-500/40 rounded-xl space-y-1">
+                        <span className="text-xs text-rose-400 uppercase font-black tracking-wider flex items-center gap-1.5">
+                          <TrendingDown className="w-4 h-4" /> Max Drawdown
+                        </span>
+                        <div className="text-2xl font-black text-emerald-400">
+                          -{backtest.maxDrawdownModernFiaPct}% <span className="text-sm font-normal text-slate-400">vs -{backtest.maxDrawdownTrad6040Pct}% (Bonds)</span>
+                        </div>
+                        <p className="text-xs text-slate-300">
+                          Peak-to-trough loss cushioned by 0% legal floor
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-slate-950 border border-emerald-500/40 rounded-xl space-y-1">
+                        <span className="text-xs text-emerald-400 uppercase font-black tracking-wider flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" /> Guaranteed Floor
+                        </span>
+                        <div className="text-2xl font-black text-emerald-400">+{effectiveGuaranteedFloorPct.toFixed(2)}% / yr</div>
+                        <p className="text-xs text-slate-300">
+                          {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% fixed sleeve ensures positive interest in all crash years
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">
+                        Portfolio Wealth Progression ($1.25M with ${withdrawalNeed.toLocaleString()}/yr Living Withdrawals):
+                      </div>
+                      <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                        <ResponsiveContainer width="100%" height={280} minWidth={0}>
+                          <LineChart data={backtest.results}>
+                            <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                            <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                            <Line type="monotone" dataKey="traditional6040Balance" name={`Traditional 60/40 (Stocks + ${selectedBondType === 'corporate_ig' ? 'Corporate' : selectedBondType === 'high_yield' ? 'Aggressive' : 'Agg'} Bonds)`} stroke="#f43f5e" strokeWidth={3} />
+                            <Line type="monotone" dataKey="modernized6040FiaBalance" name={`Modernized 60/40 (Stocks + ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed / ${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P FIA)`} stroke="#10b981" strokeWidth={3} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* ADVISOR PROMPT CARD (BOND REPLACEMENT SPECIFIC) */}
+                    <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
+                        <MessageSquare className="w-5 h-5" /> Advisor Presentation Track — The Decumulation Defense
+                      </div>
+                      <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
+                        <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
+                          <div className="text-base md:text-lg text-amber-100 font-semibold leading-relaxed">
+                            {lang === 'es'
+                              ? `"${firstName}, el mayor peligro en la jubilación no es que las acciones caigan; es verse forzado a liquidar bonos o acciones a la baja para cubrir sus $${withdrawalNeed.toLocaleString()} anuales. Al mover su porción conservadora a una FIA con piso del 0% y tasa fija positiva de +${effectiveGuaranteedFloorPct.toFixed(2)}%, sus cheques de vida provienen de un bolsillo protegido, dando a sus acciones el tiempo necesario para rebotar sin pérdidas forzadas. ¿Tiene sentido eliminar el riesgo de liquidación en su plan?"`
+                              : `"${firstName}, the single greatest threat in retirement is not that equities drop—it's being forced to sell bonds or stocks at a loss to fund your $${withdrawalNeed.toLocaleString()} in annual living expenses. By shifting your conservative 40% into an FIA with a contractual floor and a +${effectiveGuaranteedFloorPct.toFixed(2)}% guaranteed baseline, your living paychecks are drawn from an insulated bucket, giving your equities the runway they need to recover. Does it make sense to remove liquidation risk from your plan?"`
+                            }
+                          </div>
+                          <div className="text-sm md:text-base text-amber-200 border-t border-slate-800 pt-2 font-normal leading-relaxed">
+                            <span className="text-amber-400 font-bold mr-1.5">•</span>
+                            {lang === 'es'
+                              ? `"Los bonos agresivos tienen una alta correlación con la bolsa de valores; cuando las acciones caen, los bonos chatarra se desploman. Una FIA ofrece una verdadera descorrelación con piso del 0% garantizado."`
+                              : `"High-yield aggressive bonds are heavily correlated with equities; when stocks crash, junk bonds plunge too. An FIA provides true non-correlated defense with a legal 0% floor."`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE 3: EQUITIES VS FIA ACCUMULATION */}
+                {backtestMode === 'equity_vs_fia' && (
+                  <div className="space-y-4">
+                    <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                      <ResponsiveContainer width="100%" height={280} minWidth={0}>
+                        <LineChart data={backtest.results}>
+                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                          <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (-1% Fee)" stroke="#f43f5e" strokeWidth={3} />
+                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">Ending Accumulated Balance</span>
+                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
+                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalEquity.toLocaleString()} in market equities</p>
+                      </div>
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">Contractual Floor Defense</span>
+                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} Down Years Defended</div>
+                        <p className="text-xs text-slate-400 mt-0.5">Guaranteed minimum positive floor: +{effectiveGuaranteedFloorPct.toFixed(2)}% / yr</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE 4: FIXED ANNUITY VS FIA */}
+                {backtestMode === 'fixed_vs_fia' && (
+                  <div className="space-y-4">
+                    <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 300, minHeight: 300 }}>
+                      <ResponsiveContainer width="100%" height={280} minWidth={0}>
+                        <LineChart data={backtest.results}>
+                          <XAxis dataKey="calendarYear" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                          <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
+                          <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
+                          <Line type="monotone" dataKey="fixedAnnuityBalance" name={`Fixed Annuity / CD (${(fixedRate * 100).toFixed(2)}% Net of Tax)`} stroke="#94a3b8" strokeWidth={3} />
+                          <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">Ending Accumulated Balance</span>
+                        <div className="text-2xl font-black text-cyan-400 mt-1">${backtest.finalFia.toLocaleString()}</div>
+                        <p className="text-xs text-slate-400 mt-0.5">vs. ${backtest.finalFixed.toLocaleString()} in taxable fixed CDs</p>
+                      </div>
+                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <span className="text-xs text-slate-300 font-bold uppercase">Contractual Floor Defense</span>
+                        <div className="text-2xl font-black text-emerald-400 mt-1">{backtest.zeroLossYearsCount} Down Years Defended</div>
+                        <p className="text-xs text-slate-400 mt-0.5">Principal preserved in crash cycles</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
