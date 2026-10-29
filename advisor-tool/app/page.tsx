@@ -677,10 +677,26 @@ export default function AdvisorTool() {
                     className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
                 </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
+                    <span>Heirs Marginal Tax Bracket:</span>
+                    <span className="font-black text-slate-200 text-sm">{(heirsTaxRate * 100).toFixed(0)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.12"
+                    max="0.37"
+                    step="0.02"
+                    value={heirsTaxRate}
+                    onChange={(e) => setHeirsTaxRate(Number(e.target.value))}
+                    className="w-full accent-indigo-500 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                  />
+                </div>
               </div>
             )}
 
-            {/* SECTION 4: CARRIER */}
+            {/* SECTION 4: CARRIER (WITH FREE WITHDRAWAL SCHEDULE RESTORED) */}
             {openSection === 'carrier' && (
               <div className="space-y-4 pt-1">
                 {/* DUAL-STRATEGY FIA ALLOCATION SLIDER */}
@@ -734,6 +750,33 @@ export default function AdvisorTool() {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* RESTORED FREE WITHDRAWAL LIQUIDITY SCHEDULE SELECTOR */}
+                <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
+                  <label className="text-slate-200 block font-semibold flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-emerald-300">
+                      <Wallet className="w-3.5 h-3.5" /> Free Withdrawal Liquidity Schedule:
+                    </span>
+                  </label>
+                  <select
+                    value={freeWithdrawalSchedule}
+                    onChange={(e) => setFreeWithdrawalSchedule(e.target.value as FreeWithdrawalSchedule)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white font-medium text-xs focus:border-emerald-500 focus:outline-none"
+                  >
+                    <option value="tiered_2_12">
+                      American Equity Tiered (2% Yr 1 → 12% Yrs 2–10 → 100% Yr 11+)
+                    </option>
+                    <option value="standard_10">
+                      Standard Industry (0% Yr 1 → 10% Yrs 2–10 → 100% Yr 11+)
+                    </option>
+                    <option value="flat_10">
+                      Flat Allowance (10% Annual Flat)
+                    </option>
+                  </select>
+                  <p className="text-[11px] text-slate-400 leading-tight">
+                    Dictates annual penalty-free cash liquidity used to pay taxes from contract funds.
+                  </p>
                 </div>
 
                 {/* Sequence Shock Button */}
@@ -848,7 +891,7 @@ export default function AdvisorTool() {
                       Roth Blueprint with Full Conversion Runway
                     </h3>
                     <p className="text-sm text-slate-300 mt-0.5">
-                      State: <b className="text-cyan-300 font-bold">{STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}%)</b> • Schedule: <b className="text-emerald-300 font-bold">{freeWithdrawalSchedule === 'tiered_2_12' ? '2% Yr 1 → 12% Yrs 2–10 → 100% Yr 11+' : freeWithdrawalSchedule}</b>
+                      State: <b className="text-cyan-300 font-bold">{STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}%)</b> • Schedule: <b className="text-emerald-300 font-bold">{freeWithdrawalSchedule === 'tiered_2_12' ? '2% Yr 1 → 12% Yrs 2–10 → 100% Yr 11+' : freeWithdrawalSchedule === 'standard_10' ? '0% Yr 1 → 10% Yrs 2–10 → 100% Yr 11+' : '10% Flat Annual'}</b>
                     </p>
                   </div>
                   <span className="text-sm font-black text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-4 py-1.5 rounded-full shadow-sm">
