@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -47,8 +47,9 @@ export default function AdvisorTool() {
   const [taxHikeActive, setTaxHikeActive] = useState(false);
   const [applySequenceShock, setApplySequenceShock] = useState(false);
 
-  // Annual Management Fee Drag Slider
-  const [annualPortfolioFeePct, setAnnualPortfolioFeePct] = useState(0.0125);
+  // Annuity Contract / Rider Fee & Duration Controls
+  const [annuityFeePct, setAnnuityFeePct] = useState(0.010);
+  const [feeDuration, setFeeDuration] = useState<'ten_years' | 'life'>('life');
 
   const stateTaxRate = (STATE_TAX_RATES[selectedState]?.rate ?? 0.00);
 
@@ -95,7 +96,7 @@ export default function AdvisorTool() {
     annualFixedIncome: fixedIncome,
     annualSocialSecurity: socialSecurity,
     annualWithdrawalNeed: withdrawalNeed,
-    expectedReturn: Math.max(0.02, 0.065 - annualPortfolioFeePct),
+    expectedReturn: 0.065,
     targetBracketCeiling,
     stateCode: selectedState,
     stateTaxRate: stateTaxRate + (taxHikeActive ? 0.04 : 0),
@@ -136,10 +137,14 @@ export default function AdvisorTool() {
   const playcheckEquitiesRemaining = Math.max(0, iraBalance - customFiaDeposit);
 
   let simulated6040Bal = customFiaDeposit;
-  const incomePaycheckComparison = backtest.results.map((r) => {
+  const incomePaycheckComparison = backtest.results.map((r, index) => {
     const stockReturn = r.sp500Return / 100;
     const bondReturn = r.selectedBondReturn / 100;
-    const blendedReturn = (stockReturn * 0.60) + (bondReturn * 0.40) - annualPortfolioFeePct;
+    const blendedReturn = (stockReturn * 0.60) + (bondReturn * 0.40);
+
+    // Apply fee depending on duration selection
+    const isFeeApplicable = feeDuration === 'life' || index < 10;
+    const effectiveFee = isFeeApplicable ? annuityFeePct : 0.0;
 
     simulated6040Bal = Math.max(0, (simulated6040Bal - guaranteedFiaIncome) * (1 + blendedReturn));
     const dynamic4PctPaycheck = Math.round(Math.max(10000, simulated6040Bal * 0.04));
@@ -151,6 +156,7 @@ export default function AdvisorTool() {
       guaranteedFiaPaycheck: guaranteedFiaIncome,
       traditional6040Paycheck: dynamic4PctPaycheck,
       simulated6040Bal: Math.round(simulated6040Bal),
+      appliedAnnuityFeePct: Number((effectiveFee * 100).toFixed(2)),
     };
   });
 
@@ -205,7 +211,7 @@ export default function AdvisorTool() {
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
-                <span><b>Capital Efficiency Maximized:</b> Achieved target annual income using ${customFiaDeposit.toLocaleString()} instead of tying up ${capitalNeededUnder4Pct.toLocaleString()} under standard 4% rules.</span>
+                <span><b>Contract Fee Transparency:</b> Accounted for {(annuityFeePct * 100).toFixed(2)}% annual contract fee ({feeDuration === 'ten_years' ? 'First 10 Years' : 'Life of Contract'}) while preserving total positive floor defense.</span>
               </div>
             </div>
           </div>
@@ -368,7 +374,7 @@ export default function AdvisorTool() {
           <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50 space-y-3 avoid-break">
             <div className="text-[10px] text-slate-600 leading-relaxed space-y-1">
               <p><b>Important Professional & Legal Disclosures:</b> This presentation is prepared strictly for educational and comparative illustration purposes. Global Financial Impact and its appointed agents are not CPAs, tax attorneys, or registered investment advisors. Tax codes, sunset provisions, and statutory exemptions are subject to state and federal legislative change.</p>
-              <p>Fixed Indexed Annuities (FIAs) and GLWB income riders are long-term insurance contracts subject to surrender charges, carrier solvency, index participation limits, and contract rules. Past benchmark performance does not guarantee future results.</p>
+              <p>Fixed Indexed Annuities (FIAs) and GLWB income riders are long-term insurance contracts subject to surrender charges, carrier solvency, index participation limits, and contract rules. Contract fee: {(annuityFeePct * 100).toFixed(2)}% ({feeDuration === 'ten_years' ? 'First 10 Years' : 'Life of Contract'}). Past benchmark performance does not guarantee future results.</p>
             </div>
 
             <div className="pt-3 border-t border-slate-300 grid grid-cols-2 gap-8 text-xs text-slate-800">
@@ -969,7 +975,7 @@ export default function AdvisorTool() {
               </div>
             )}
 
-            {/* SECTION 4: CARRIER, FEES, CAP RATE & STRESS CYCLES */}
+            {/* SECTION 4: CARRIER, ANNUITY FEE CONTROLS & CAP RATE */}
             {openSection === 'carrier' && (
               <div className="space-y-4 pt-1">
                 {/* DUAL-STRATEGY FIA ALLOCATION SLIDER */}
@@ -1043,22 +1049,54 @@ export default function AdvisorTool() {
                   <span className="text-[11px] text-slate-400 block">Maximum crediting rate per contract year (backed by 0% legal floor).</span>
                 </div>
 
-                {/* ANNUAL ADVISORY / AUM FEE DRAG SLIDER */}
-                <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
-                  <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span className="font-semibold text-rose-300">Traditional AUM Fee Drag:</span>
-                    <span className="font-black text-rose-400 text-sm">{(annualPortfolioFeePct * 100).toFixed(2)}% / yr</span>
+                {/* ANNUITY RIDER / CONTRACT FEE CONTROLS (FEE + DURATION TOGGLE) */}
+                <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-3">
+                  <div className="flex justify-between items-center text-slate-200 text-xs">
+                    <span className="font-semibold text-amber-300 flex items-center gap-1.5">
+                      <Percent className="w-3.5 h-3.5 text-amber-400" /> Annuity Contract / Rider Fee:
+                    </span>
+                    <span className="font-black text-amber-400 text-sm">{(annuityFeePct * 100).toFixed(2)}% / yr</span>
                   </div>
                   <input
                     type="range"
                     min="0.0"
                     max="0.025"
-                    step="0.0025"
-                    value={annualPortfolioFeePct}
-                    onChange={(e) => setAnnualPortfolioFeePct(Number(e.target.value))}
-                    className="w-full accent-rose-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
+                    step="0.0005"
+                    value={annuityFeePct}
+                    onChange={(e) => setAnnuityFeePct(Number(e.target.value))}
+                    className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
-                  <span className="text-[11px] text-slate-400 block">Annual management drag applied to the market/60-40 comparison portfolio.</span>
+                  
+                  {/* Fee Duration Option: First 10 Years vs Life of Contract */}
+                  <div className="pt-2 border-t border-slate-800/80">
+                    <span className="text-[11px] text-slate-300 font-bold block mb-1.5 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" /> Fee Duration Schedule:
+                    </span>
+                    <div className="grid grid-cols-2 gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setFeeDuration('ten_years')}
+                        className={`py-1.5 px-2 rounded font-bold text-center transition ${
+                          feeDuration === 'ten_years'
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        First 10 Yrs Only
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeeDuration('life')}
+                        className={`py-1.5 px-2 rounded font-bold text-center transition ${
+                          feeDuration === 'life'
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Life of Annuity
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* FREE WITHDRAWAL LIQUIDITY SCHEDULE */}
@@ -1452,7 +1490,7 @@ export default function AdvisorTool() {
             </div>
           )}
 
-          {/* TAB: GFILOGIX BACKTEST STUDIO (WITH ALL 4 MODES & FOOD FOR THOUGHT) */}
+          {/* TAB: GFILOGIX BACKTEST STUDIO */}
           {activeTab === 'backtest' && (
             <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
@@ -1461,7 +1499,6 @@ export default function AdvisorTool() {
                   <p className="text-sm text-slate-300 mt-0.5">Comparing contractual buffer security vs. standard market withdrawal rules</p>
                 </div>
 
-                {/* ASSET COMPARISON TABS (MODE OPTIONS) */}
                 <div className="flex flex-wrap bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs gap-1">
                   <button
                     onClick={() => setBacktestMode('stocks_fia_vs_6040')}
@@ -1621,6 +1658,7 @@ export default function AdvisorTool() {
               {backtestMode === 'income_fia_vs_portfolio' && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* CARD 1: PAYCHECK ADVANTAGE */}
                     <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 shadow-sm">
                       <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 uppercase tracking-wide">
                         <Wallet className="w-4 h-4" /> GUARANTEED PAYCHECK ADVANTAGE
@@ -1636,6 +1674,7 @@ export default function AdvisorTool() {
                       </p>
                     </div>
 
+                    {/* CARD 2: CAPITAL EFFICIENCY */}
                     <div className="bg-slate-950 p-5 rounded-xl border border-cyan-500/40 shadow-sm">
                       <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wide">
                         <Landmark className="w-4 h-4" /> CAPITAL EFFICIENCY (LIBERATED CAPITAL)
@@ -1649,6 +1688,7 @@ export default function AdvisorTool() {
                     </div>
                   </div>
 
+                  {/* CHART */}
                   <div>
                     <div className="text-sm font-bold text-slate-200 mb-2">
                       Annual Cash Flow: Guaranteed Paychecks vs. Fluctuating 60/40 Market Risk:
@@ -1721,7 +1761,7 @@ export default function AdvisorTool() {
                         <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} tickFormatter={formatCurrencyAxis} />
                         <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '13px', fontWeight: 'bold' }} />
                         <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
-                        <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (Net of Fee)" stroke="#f43f5e" strokeWidth={3} />
+                        <Line type="monotone" dataKey="equityBalance" name="S&P 500 Equities (Unhedged)" stroke="#f43f5e" strokeWidth={3} />
                         <Line type="monotone" dataKey="fiaBalance" name={`FIA (${(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / ${((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed)`} stroke="#06b6d4" strokeWidth={3} />
                       </LineChart>
                     </ResponsiveContainer>
