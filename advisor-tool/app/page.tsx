@@ -154,7 +154,7 @@ export default function AdvisorTool() {
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans print:p-0 print:bg-white print:text-slate-900">
       
       {/* =========================================================================
-          PRINT-ONLY EXECUTIVE DOSSIER (Visible only during window.print())
+          PRINT-ONLY EXECUTIVE DOSSIER (Rendered on white paper / PDF exports)
           ========================================================================= */}
       <div className="hidden print:block w-full max-w-4xl mx-auto space-y-8 font-sans">
         
@@ -268,8 +268,14 @@ export default function AdvisorTool() {
           </div>
         </div>
 
- {/* Print Comparison Charts - Fixed Width/Height to bypass ResponsiveContainer collapse */}
- <div className="grid grid-cols-2 gap-4 avoid-break">
+        {/* PRINT PAGE 2: CHARTS & SCHEDULES (Using Fixed SVG Dimensions) */}
+        <div className="space-y-6 page-break-before">
+          <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
+            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">Visual Stress Testing & Wealth Projections</h2>
+            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Client Strategic Report</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 avoid-break">
             {/* Chart 1: Lifetime Tax Burden */}
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
               <h3 className="text-xs font-bold text-slate-900 mb-2">Lifetime Tax Burden: Inaction vs. Plan</h3>
@@ -305,22 +311,6 @@ export default function AdvisorTool() {
                   <Bar dataKey="traditional6040Paycheck" name="4% Rule (Bear Drawdowns)" fill="#dc2626" isAnimationActive={false} />
                   <Bar dataKey="guaranteedFiaPaycheck" name="Contractual Paycheck Floor" fill="#16a34a" isAnimationActive={false} />
                 </BarChart>
-              </div>
-            </div>
-          </div>
-
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50 avoid-break">
-              <h3 className="text-xs font-bold text-slate-900 mb-2">Paychecks vs. 60/40 Market Volatility</h3>
-              <div style={{ height: 220, width: '100%' }}>
-                <ResponsiveContainer width="100%" height={210}>
-                  <BarChart data={incomePaycheckComparison}>
-                    <XAxis dataKey="calendarYear" stroke="#64748b" tick={{ fontSize: 10, fill: '#1e293b' }} />
-                    <YAxis stroke="#64748b" tick={{ fontSize: 10, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
-                    <Legend wrapperStyle={{ fontSize: '10px' }} />
-                    <Bar dataKey="traditional6040Paycheck" name="4% Rule (Bear Drawdowns)" fill="#dc2626" />
-                    <Bar dataKey="guaranteedFiaPaycheck" name="Contractual Paycheck Floor" fill="#16a34a" />
-                  </BarChart>
-                </ResponsiveContainer>
               </div>
             </div>
           </div>
@@ -1390,6 +1380,7 @@ export default function AdvisorTool() {
                 {backtestMode === 'income_fia_vs_portfolio' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* CARD 1: PAYCHECK ADVANTAGE */}
                       <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 shadow-sm">
                         <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 uppercase tracking-wide">
                           <Wallet className="w-4 h-4" /> GUARANTEED PAYCHECK ADVANTAGE
@@ -1405,6 +1396,7 @@ export default function AdvisorTool() {
                         </p>
                       </div>
 
+                      {/* CARD 2: CAPITAL EFFICIENCY */}
                       <div className="bg-slate-950 p-5 rounded-xl border border-cyan-500/40 shadow-sm">
                         <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wide">
                           <Landmark className="w-4 h-4" /> CAPITAL EFFICIENCY (LIBERATED CAPITAL)
@@ -1418,6 +1410,7 @@ export default function AdvisorTool() {
                       </div>
                     </div>
 
+                    {/* CHART */}
                     <div>
                       <div className="text-sm font-bold text-slate-200 mb-2">
                         Annual Cash Flow: Guaranteed Paychecks vs. Fluctuating 60/40 Market Risk:
