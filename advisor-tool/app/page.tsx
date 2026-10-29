@@ -15,9 +15,9 @@ import {
 
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
-  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('roth');
+  const [activeTab, setActiveTab] = useState<'story' | 'backtest' | 'roth' | 'summary'>('story');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('income_fia_vs_portfolio');
-  const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
+  const [storyStep, setStoryStep] = useState<1 | 2 | 3>(2);
   const [rothChartMode, setRothChartMode] = useState<'wealth' | 'tax'>('wealth');
 
   // Accordion Navigation
@@ -117,7 +117,6 @@ export default function AdvisorTool() {
 
   const effectiveGuaranteedFloorPct = ((1 - fiaIndexedAllocationPct) * fiaFixedYieldRate * 100);
 
-  // Clean, professional currency formatter that prevents $8000k issues
   const formatCurrencyAxis = (v: number) => {
     if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
     if (v >= 1000) return `$${Math.round(v / 1000)}k`;
@@ -338,6 +337,26 @@ export default function AdvisorTool() {
                 Fields marked with <span className="text-rose-400 font-bold">*</span> directly calculate living taxes and conversion runways.
               </p>
             </div>
+
+            {/* ALWAYS-VISIBLE FUTURE TAX HIKE TOGGLE */}
+            <button
+              onClick={() => setTaxHikeActive(!taxHikeActive)}
+              className={`w-full py-2.5 px-3 rounded-lg border text-left text-xs transition flex items-center justify-between shadow-sm ${
+                taxHikeActive
+                  ? 'bg-rose-500/20 border-rose-500 text-rose-300 font-bold'
+                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+              }`}
+            >
+              <span className="flex items-center gap-2 font-semibold">
+                <Flame className={`w-4 h-4 ${taxHikeActive ? 'text-rose-400 animate-pulse' : 'text-slate-400'}`} />
+                <span>Simulate Future Tax Hike (+4% TCJA Sunset)</span>
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded font-bold border ${
+                taxHikeActive ? 'bg-rose-950 border-rose-700 text-rose-200' : 'bg-slate-900 border-slate-700 text-slate-400'
+              }`}>
+                {taxHikeActive ? 'ACTIVE' : 'TEST'}
+              </span>
+            </button>
 
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
               <span className="font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2 text-xs">
@@ -563,58 +582,6 @@ export default function AdvisorTool() {
                     value={withdrawalNeed}
                     onChange={(e) => setWithdrawalNeed(Number(e.target.value))}
                     className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
-                    <span>Social Security (Combined):</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400">$</span>
-                      <input
-                        type="number"
-                        step={1000}
-                        value={socialSecurity}
-                        onChange={(e) => setSocialSecurity(Number(e.target.value))}
-                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
-                      />
-                      <span className="text-slate-400">/yr</span>
-                    </div>
-                  </div>
-                  <input
-                    type="range"
-                    min="10000"
-                    max="80000"
-                    step="1000"
-                    value={socialSecurity}
-                    onChange={(e) => setSocialSecurity(Number(e.target.value))}
-                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
-                    <span>Pension / Other Annuities:</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400">$</span>
-                      <input
-                        type="number"
-                        step={1000}
-                        value={fixedIncome}
-                        onChange={(e) => setFixedIncome(Number(e.target.value))}
-                        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-white font-black text-right text-sm"
-                      />
-                      <span className="text-slate-400">/yr</span>
-                    </div>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="80000"
-                    step="2000"
-                    value={fixedIncome}
-                    onChange={(e) => setFixedIncome(Number(e.target.value))}
-                    className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
                 </div>
               </div>
@@ -882,7 +849,7 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
-                {/* GRAPH SELECTOR TOGGLE & CONTAINER (EXPLICIT HEIGHT FIXED) */}
+                {/* GRAPH SELECTOR TOGGLE & FIXED CONTAINER */}
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div className="text-sm font-bold text-slate-200">
@@ -911,7 +878,6 @@ export default function AdvisorTool() {
                     </div>
                   </div>
 
-                  {/* FIXED HEIGHT CONTAINER TO PREVENT COLLAPSE */}
                   <div className="w-full bg-slate-950/40 p-2 rounded-xl border border-slate-800" style={{ height: 310, minHeight: 310 }}>
                     {rothChartMode === 'wealth' ? (
                       <ResponsiveContainer width="100%" height={290} minWidth={0}>
