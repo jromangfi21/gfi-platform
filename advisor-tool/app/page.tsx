@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, ArrowRight, BookOpen, Compass as CompassIcon
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, BookOpen, Compass as CompassIcon
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -209,10 +209,10 @@ export default function AdvisorTool() {
   // Dynamic Spending Guardrails Bounds Calculations
   const monthlyNeed = Math.round(withdrawalNeed / 12);
   const fiaMonthlyIncome = Math.round(guaranteedFiaIncome / 12);
-  const lowerGuardrailPortfolio = Math.round(iraBalance * 0.76); // -24% market contraction trigger
-  const upperGuardrailPortfolio = Math.round(iraBalance * 1.28); // +28% market expansion trigger
-  const reducedMonthlyPaycheck = Math.round(monthlyNeed * 0.90); // -10% belt-tightening
-  const raisedMonthlyPaycheck = Math.round(monthlyNeed * 1.10);  // +10% lifestyle raise
+  const lowerGuardrailPortfolio = Math.round(iraBalance * 0.76);
+  const upperGuardrailPortfolio = Math.round(iraBalance * 1.28);
+  const reducedMonthlyPaycheck = Math.round(monthlyNeed * 0.90);
+  const raisedMonthlyPaycheck = Math.round(monthlyNeed * 1.10);
 
   // Recalculate backtest balances with fee logic
   let netTrad6040Bal = iraBalance;
@@ -286,11 +286,11 @@ export default function AdvisorTool() {
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans print:p-0 print:bg-white print:text-slate-900">
       
       {/* =========================================================================
-          PRINT-ONLY EXECUTIVE DOSSIER (3-PAGE STRUCTURAL ARCHITECTURE)
+          PRINT-ONLY EXECUTIVE DOSSIER (ENFORCED 3-PAGE SPECIFICATION)
           ========================================================================= */}
       <div className="hidden print:block w-full max-w-4xl mx-auto font-sans text-slate-900">
         
-        {/* ==================== PRINT PAGE 1: EXECUTIVE BRIEFING, STORY & ACCOMPLISHMENTS ==================== */}
+        {/* ==================== PRINT PAGE 1: STORY, GUARDRAILS & ACCOMPLISHMENTS ==================== */}
         <div className="space-y-4">
           <div className="flex justify-between items-center border-b-2 border-slate-900 pb-2.5">
             <div className="flex items-center gap-3">
@@ -419,7 +419,7 @@ export default function AdvisorTool() {
         </div>
 
         {/* ==================== PRINT PAGE 2: COMPARATIVE MATRIX & VISUAL STRESS TESTING ==================== */}
-        <div className="space-y-5 page-break-before pt-2">
+        <div style={{ breakBefore: 'page', pageBreakBefore: 'always' }} className="space-y-4 pt-1">
           <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-center">
             <div>
               <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">
@@ -445,25 +445,25 @@ export default function AdvisorTool() {
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
-                  <td className="py-2.5 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
+                  <td className="py-2 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
+                  <td className="py-2 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
+                  <td className="py-2 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
-                  <td className="py-2.5 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
+                  <td className="py-2 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
                   <td className="py-2.5 px-3 font-bold text-emerald-800">{taxAnalysis.overallNetEffectiveTaxRate}%</td>
                   <td className="py-2.5 px-3 text-right font-bold text-slate-900">-{(carrierBonusPct * 100).toFixed(0)}% Bonus Offset</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Retiros Forzosos RMD Obligatorios (Edad 73+)' : 'Compulsory Mandatory RMDs (Age 73+)'}</td>
-                  <td className="py-2.5 px-3">Subject to peak tax brackets</td>
-                  <td className="py-2.5 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Retiros Forzosos RMD Obligatorios (Edad 73+)' : 'Compulsory Mandatory RMDs (Age 73+)'}</td>
+                  <td className="py-2 px-3">Subject to peak tax brackets</td>
+                  <td className="py-2 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
                   <td className="py-2.5 px-3 text-right font-bold text-indigo-700">Protected</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Penalidad de 10 Años a Herederos (SECURE 2.0)' : 'Heir SECURE Act 10-Yr Tax Drag'}</td>
+                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Penalidad de 10 Años a Herederos (SECURE 2.0)' : 'Heir SECURE Act 10-Yr Tax Drag'}</td>
                   <td className="py-2.5 px-3">${(taxAnalysis.terminalWealthBase * heirsTaxRate).toLocaleString()}</td>
                   <td className="py-2.5 px-3 font-bold text-indigo-900">$0 Tax-Free Inherited Base</td>
                   <td className="py-2.5 px-3 text-right font-black text-indigo-700">+${taxAnalysis.heirSavings.toLocaleString()} Sheltered</td>
@@ -475,10 +475,10 @@ export default function AdvisorTool() {
                   <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
                 </tr>
                 <tr className="bg-slate-100 font-black border-t-2 border-slate-900">
-                  <td className="py-3 px-3 uppercase tracking-wider text-slate-900">{lang === 'es' ? 'Ventaja Familiar Integral' : 'Comprehensive Family Advantage'}</td>
-                  <td className="py-3 px-3">--</td>
-                  <td className="py-3 px-3">--</td>
-                  <td className="py-3 px-3 text-right text-emerald-800 text-sm">
+                  <td className="py-2.5 px-3 uppercase tracking-wider text-slate-900">{lang === 'es' ? 'Ventaja Familiar Integral' : 'Comprehensive Family Advantage'}</td>
+                  <td className="py-2.5 px-3">--</td>
+                  <td className="py-2.5 px-3">--</td>
+                  <td className="py-2.5 px-3 text-right text-emerald-800 text-sm">
                     +${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}
                   </td>
                 </tr>
@@ -487,11 +487,11 @@ export default function AdvisorTool() {
           </div>
 
           {/* Visual Stress Comparison Charts */}
-          <div className="grid grid-cols-2 gap-4 avoid-break">
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <h3 className="text-xs font-bold text-slate-900 mb-2">{lang === 'es' ? 'Carga Fiscal de por Vida: Inacción vs. Plan' : 'Lifetime Tax Burden: Inaction vs. Plan'}</h3>
+          <div className="grid grid-cols-2 gap-3.5 avoid-break">
+            <div className="border border-slate-300 p-2.5 rounded-lg bg-slate-50">
+              <h3 className="text-xs font-bold text-slate-900 mb-1.5">{lang === 'es' ? 'Carga Fiscal de por Vida: Inacción vs. Plan' : 'Lifetime Tax Burden: Inaction vs. Plan'}</h3>
               <div className="flex justify-center">
-                <BarChart width={380} height={205} data={taxAnalysis.yearlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <BarChart width={370} height={190} data={taxAnalysis.yearlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <XAxis dataKey="age" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
                   <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
                   <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
@@ -501,10 +501,10 @@ export default function AdvisorTool() {
               </div>
             </div>
 
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <h3 className="text-xs font-bold text-slate-900 mb-2">{lang === 'es' ? 'Cheques vs. Volatilidad de Mercado 60/40' : 'Paychecks vs. 60/40 Market Volatility'}</h3>
+            <div className="border border-slate-300 p-2.5 rounded-lg bg-slate-50">
+              <h3 className="text-xs font-bold text-slate-900 mb-1.5">{lang === 'es' ? 'Cheques vs. Volatilidad de Mercado 60/40' : 'Paychecks vs. 60/40 Market Volatility'}</h3>
               <div className="flex justify-center">
-                <BarChart width={380} height={205} data={feeAdjustedBacktestResults} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <BarChart width={370} height={190} data={feeAdjustedBacktestResults} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <XAxis dataKey="calendarYear" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
                   <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
                   <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
@@ -521,7 +521,7 @@ export default function AdvisorTool() {
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">{lang === 'es' ? 'Calendario de Conversión Táctica Roth (Meta: $0 en IRA)' : 'Tactical Roth Conversion Schedule ($0 Pre-Tax Target)'}</span>
               <span className="text-[10px] text-slate-600 font-semibold">{(carrierBonusPct * 100).toFixed(0)}% Carrier Bonus Offset Applied</span>
             </div>
-            <table className="w-full text-left text-[11px] border-collapse">
+            <table className="w-full text-left text-[10.5px] border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-300 font-bold text-slate-700">
                   <th className="py-1.5 px-2.5">{lang === 'es' ? 'Edad' : 'Age'}</th>
@@ -536,11 +536,11 @@ export default function AdvisorTool() {
               <tbody className="divide-y divide-slate-200">
                 {taxAnalysis.yearlyData.filter(d => d.conversionAmount > 0).slice(0, 8).map(d => (
                   <tr key={d.age}>
-                    <td className="py-1.5 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
-                    <td className="py-1.5 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
-                    <td className="py-1.5 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
-                    <td className="py-1.5 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
-                    <td className="py-1.5 px-2.5 text-slate-700">{d.statutoryRatePct}%</td>
+                    <td className="py-1 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
+                    <td className="py-1 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
+                    <td className="py-1 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
+                    <td className="py-1 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
+                    <td className="py-1 px-2.5 text-slate-700">{d.statutoryRatePct}%</td>
                     <td className="py-1.5 px-2.5 font-bold text-emerald-800">{d.netEffectiveRatePct}%</td>
                     <td className="py-1.5 px-2.5 font-bold text-slate-900">${d.planRoth.toLocaleString()}</td>
                   </tr>
@@ -550,8 +550,8 @@ export default function AdvisorTool() {
           </div>
         </div>
 
-        {/* ==================== PRINT PAGE 3: FULL REGULATORY DISCLOSURES & SIGNATURE BLOCK ==================== */}
-        <div className="space-y-6 page-break-before pt-2">
+        {/* ==================== PRINT PAGE 3: COMPLETE REGULATORY DISCLOSURES & SIGNATURE BLOCK ==================== */}
+        <div style={{ breakBefore: 'page', pageBreakBefore: 'always' }} className="space-y-5 pt-2">
           <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black uppercase tracking-wider text-slate-900 text-xs">
               <FileText className="w-4 h-4 text-slate-800" />
@@ -560,8 +560,8 @@ export default function AdvisorTool() {
             <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Page 3</span>
           </div>
 
-          {/* Complete Uncut Regulatory Disclosures */}
-          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-3.5 text-[10.5px] text-slate-700 leading-relaxed">
+          {/* Full Restored Disclosures */}
+          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-4 text-[11px] text-slate-700 leading-relaxed">
             <p>
               <b>Not Tax, Accounting, or Legal Advice:</b> This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys. Federal, state, and local tax laws, brackets, deductions, and phase-out thresholds (including TCJA sunset assumptions and SECURE 2.0 legislation) are complex, subject to statutory change, and depend on individual financial circumstances. Clients must consult a qualified CPA, independent tax advisor, or estate planning attorney regarding their specific tax position before executing any Roth conversions, withdrawals, or asset reallocations.
             </p>
@@ -580,7 +580,7 @@ export default function AdvisorTool() {
           </div>
 
           {/* Endorsement & Signatures Block */}
-          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-6 avoid-break">
+          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-5 avoid-break">
             <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
               {lang === 'es' ? 'Endoso del Plan y Reconocimiento del Cliente' : 'Plan Endorsement & Client Acknowledgment'}
             </div>
@@ -589,19 +589,19 @@ export default function AdvisorTool() {
               By signing below, the client acknowledges receipt of this educational GFI Distribution Blueprint. The client confirms they have reviewed the assumptions, fee structures, conversion trajectories, and regulatory disclosures herein with their licensed representative and understands that formal product values are determined solely by carrier-approved policy illustrations.
             </p>
 
-            <div className="pt-4 border-t border-slate-300 grid grid-cols-2 gap-10 text-xs text-slate-800">
-              <div className="space-y-7">
+            <div className="pt-3 border-t border-slate-300 grid grid-cols-2 gap-10 text-xs text-slate-800">
+              <div className="space-y-6">
                 <div>Client Signature: _________________________________________</div>
                 <div>Date: ________________________</div>
               </div>
-              <div className="space-y-7">
+              <div className="space-y-6">
                 <div>Licensed Advisor Signature: _______________________________</div>
                 <div>License / National Producer #: _____________________________</div>
               </div>
             </div>
           </div>
 
-          <div className="text-[9.5px] text-slate-500 text-center pt-2">
+          <div className="text-[9.5px] text-slate-500 text-center pt-1">
             © 2026 Global Financial Impact (GFI). All rights reserved. Calculations are generated via mathematical simulation models and do not constitute a formal prospectus.
           </div>
         </div>
@@ -2461,15 +2461,7 @@ export default function AdvisorTool() {
         </div>
 
         <p>
-          <b>Not Tax, Accounting, or Legal Advice:</b> This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys. Federal, state, and local tax laws, brackets, deductions, and phase-out thresholds (including TCJA sunset assumptions and SECURE 2.0 legislation) are complex, subject to statutory change, and depend on individual financial circumstances. Clients must consult a qualified CPA, independent tax advisor, or estate planning attorney regarding their specific tax position before executing any Roth conversions, withdrawals, or asset reallocations.
-        </p>
-
-        <p>
-          <b>Not Registered Investment Advisory or Securities Recommendations:</b> Nothing contained within this presentation or generated output constitutes an offer to buy, sell, or hold any security, mutual fund, ETF, or stock portfolio. The comparisons provided between equities, fixed income instruments, and Fixed Indexed Annuities (FIAs) are mathematical and hypothetical models based on historical benchmark performance (e.g., S&amp;P 500 Price Return index data) and do not represent the actual trading performance of any specific client portfolio or investment fund. Traditional AUM management fee modeled: {(aumFeePct * 100).toFixed(2)}%/yr. Past performance is never a guarantee of future investment results.
-        </p>
-
-        <p>
-          <b>Insurance and Annuity Contract Terms & Guarantee Backing:</b> Fixed Indexed Annuities (FIAs) and Guaranteed Lifetime Withdrawal Benefit (GLWB) riders are long-term insurance contracts issued by third-party insurance carriers. All contractual guarantees—including annual index crediting floors (0% floor), income payout rates, and lifetime paychecks—are backed solely by the financial strength and claims-paying ability of the issuing insurance company. FIA contracts may be subject to surrender charges, market value adjustments (MVA), crediting rate caps, annual rider fees (modeled at {(annuityFeePct * 100).toFixed(2)}% with duration: {feeDuration === 'ten_years' ? 'First 10 Years' : 'Life of Contract'}), and participation limits that vary by carrier and state of issue. Upfront premium bonuses and bonus credits may be subject to vesting schedules, recapture charges, or lower underlying crediting caps. Withdrawals prior to age 59½ may trigger a 10% IRS penalty in addition to ordinary income taxation.
+          <b>{lang === 'es' ? 'No Constituye Asesoramiento Tributario ni Legal:' : 'Not Tax, Accounting, or Legal Advice:'}</b> {lang === 'es' ? 'Esta plataforma y sus materiales son de carácter exclusivamente ilustrativo y educativo. Ni Global Financial Impact ni sus agentes con licencia de seguros son contadores públicos certificados (CPA) o abogados tributarios.' : 'This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys.'}
         </p>
 
         <p className="text-xs text-slate-500">
