@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, BookOpen, Compass as CompassIcon
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, ArrowRight, BookOpen, Compass as CompassIcon
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -445,25 +445,25 @@ export default function AdvisorTool() {
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
                 <tr>
-                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
-                  <td className="py-2 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
-                  <td className="py-2 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
-                  <td className="py-2 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
+                  <td className="py-2.5 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
+                  <td className="py-2.5 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
+                  <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
                 </tr>
                 <tr>
-                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
-                  <td className="py-2 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
+                  <td className="py-2.5 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
                   <td className="py-2.5 px-3 font-bold text-emerald-800">{taxAnalysis.overallNetEffectiveTaxRate}%</td>
                   <td className="py-2.5 px-3 text-right font-bold text-slate-900">-{(carrierBonusPct * 100).toFixed(0)}% Bonus Offset</td>
                 </tr>
                 <tr>
-                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Retiros Forzosos RMD Obligatorios (Edad 73+)' : 'Compulsory Mandatory RMDs (Age 73+)'}</td>
-                  <td className="py-2 px-3">Subject to peak tax brackets</td>
-                  <td className="py-2 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Retiros Forzosos RMD Obligatorios (Edad 73+)' : 'Compulsory Mandatory RMDs (Age 73+)'}</td>
+                  <td className="py-2.5 px-3">Subject to peak tax brackets</td>
+                  <td className="py-2.5 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
                   <td className="py-2.5 px-3 text-right font-bold text-indigo-700">Protected</td>
                 </tr>
                 <tr>
-                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Penalidad de 10 Años a Herederos (SECURE 2.0)' : 'Heir SECURE Act 10-Yr Tax Drag'}</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Penalidad de 10 Años a Herederos (SECURE 2.0)' : 'Heir SECURE Act 10-Yr Tax Drag'}</td>
                   <td className="py-2.5 px-3">${(taxAnalysis.terminalWealthBase * heirsTaxRate).toLocaleString()}</td>
                   <td className="py-2.5 px-3 font-bold text-indigo-900">$0 Tax-Free Inherited Base</td>
                   <td className="py-2.5 px-3 text-right font-black text-indigo-700">+${taxAnalysis.heirSavings.toLocaleString()} Sheltered</td>
@@ -2453,19 +2453,33 @@ export default function AdvisorTool() {
 
       </div>
 
-      {/* Regulatory Disclosures */}
-      <footer className="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-400 leading-relaxed space-y-3 print:hidden">
+      {/* =========================================================================
+          FOOTER DISCLOSURES (LIVE WEBSITE VIEW - print:hidden)
+          ========================================================================= */}
+      <footer className="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-400 leading-relaxed space-y-4 print:hidden">
         <div className="flex items-center gap-2 font-black uppercase tracking-wider text-slate-300 text-xs">
           <FileText className="w-4 h-4 text-cyan-400" />
           <span>{lang === 'es' ? 'AVISO REGULATORIO Y LEGAL IMPORTANTE' : 'IMPORTANT REGULATORY & LEGAL DISCLOSURES'}</span>
         </div>
 
         <p>
-          <b>{lang === 'es' ? 'No Constituye Asesoramiento Tributario ni Legal:' : 'Not Tax, Accounting, or Legal Advice:'}</b> {lang === 'es' ? 'Esta plataforma y sus materiales son de carácter exclusivamente ilustrativo y educativo. Ni Global Financial Impact ni sus agentes con licencia de seguros son contadores públicos certificados (CPA) o abogados tributarios.' : 'This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys.'}
+          <b>Not Tax, Accounting, or Legal Advice:</b> This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys. Federal, state, and local tax laws, brackets, deductions, and phase-out thresholds (including TCJA sunset assumptions and SECURE 2.0 legislation) are complex, subject to statutory change, and depend on individual financial circumstances. Clients must consult a qualified CPA, independent tax advisor, or estate planning attorney regarding their specific tax position before executing any Roth conversions, withdrawals, or asset reallocations.
         </p>
 
-        <p className="text-xs text-slate-500">
-          © 2026 Global Financial Impact (GFI). All rights reserved. Calculations are generated via mathematical simulation models and do not constitute a formal insurance illustration or prospectus.
+        <p>
+          <b>Not Registered Investment Advisory or Securities Recommendations:</b> Nothing contained within this presentation or generated output constitutes an offer to buy, sell, or hold any security, mutual fund, ETF, or stock portfolio. The comparisons provided between equities, fixed income instruments, and Fixed Indexed Annuities (FIAs) are mathematical and hypothetical models based on historical benchmark performance (e.g., S&amp;P 500 Price Return index data) and do not represent the actual trading performance of any specific client portfolio or investment fund. Traditional AUM management fee modeled: {(aumFeePct * 100).toFixed(2)}%/yr. Past performance is never a guarantee of future investment results.
+        </p>
+
+        <p>
+          <b>Insurance and Annuity Contract Terms & Guarantee Backing:</b> Fixed Indexed Annuities (FIAs) and Guaranteed Lifetime Withdrawal Benefit (GLWB) riders are long-term insurance contracts issued by third-party insurance carriers. All contractual guarantees—including annual index crediting floors (0% floor), income payout rates, and lifetime paychecks—are backed solely by the financial strength and claims-paying ability of the issuing insurance company. FIA contracts may be subject to surrender charges, market value adjustments (MVA), crediting rate caps, annual rider fees (modeled at {(annuityFeePct * 100).toFixed(2)}% with duration: {feeDuration === 'ten_years' ? 'First 10 Years' : 'Life of Contract'}), and participation limits that vary by carrier and state of issue. Upfront premium bonuses and bonus credits may be subject to vesting schedules, recapture charges, or lower underlying crediting caps. Withdrawals prior to age 59½ may trigger a 10% IRS penalty in addition to ordinary income taxation.
+        </p>
+
+        <p>
+          <b>Dynamic Spending Guardrails Policy Notice:</b> The guardrail adjustment triggers presented herein represent an adaptive cash flow guideline inspired by dynamic withdrawal research. They do not constitute a legal obligation or guarantee of investment return. Recommended adjustments to discretionary spending are modeled to illustrate capital preservation tactics in severe contraction scenarios.
+        </p>
+
+        <p className="text-xs text-slate-500 pt-2 border-t border-slate-900">
+          © 2026 Global Financial Impact (GFI). All rights reserved. Calculations are generated via mathematical simulation models and do not constitute a formal insurance illustration or prospectus. For official contract values, obtain a carrier-approved product illustration from a properly appointed, state-licensed insurance producer.
         </p>
       </footer>
 
