@@ -286,36 +286,73 @@ export default function AdvisorTool() {
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans print:p-0 print:bg-white print:text-slate-900">
       
       {/* =========================================================================
-          PRINT-ONLY EXECUTIVE DOSSIER
+          PRINT-ONLY EXECUTIVE DOSSIER (3-PAGE STRUCTURAL ARCHITECTURE)
           ========================================================================= */}
-      <div className="hidden print:block w-full max-w-4xl mx-auto space-y-6 font-sans">
-        <div className="space-y-5">
-          <div className="flex justify-between items-center border-b-2 border-slate-900 pb-3">
+      <div className="hidden print:block w-full max-w-4xl mx-auto font-sans text-slate-900">
+        
+        {/* ==================== PRINT PAGE 1: EXECUTIVE BRIEFING, STORY & ACCOMPLISHMENTS ==================== */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center border-b-2 border-slate-900 pb-2.5">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Global Financial Impact" className="h-12 w-auto object-contain" />
+              <img src="/logo.png" alt="Global Financial Impact" className="h-11 w-auto object-contain" />
               <div>
-                <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
+                <h1 className="text-lg font-black text-slate-900 tracking-tight uppercase">
                   {lang === 'es' ? 'El Plan Maestro de Distribución GFI™' : 'The GFI Distribution Blueprint™'}
                 </h1>
-                <p className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">{t.subtitle}</p>
+                <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">{t.subtitle}</p>
               </div>
             </div>
-            <div className="text-right text-xs text-slate-700 space-y-0.5">
+            <div className="text-right text-[11px] text-slate-700 space-y-0.5">
               <div><b className="text-slate-900">{t.prepFor}</b> {clientName}</div>
               <div><b className="text-slate-900">{lang === 'es' ? 'Jurisdicción:' : 'Jurisdiction:'}</b> {STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}% {t.tax})</div>
               <div><b className="text-slate-900">{t.targetRet}</b> {retirementAge} ({t.projTo95})</div>
             </div>
           </div>
 
+          {/* 4 Stat Metric Banners */}
+          <div className="grid grid-cols-4 gap-2.5">
+            <div className="border border-slate-300 p-2.5 rounded-lg bg-slate-50">
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">{t.statPreserved}</div>
+              <div className="text-base font-black text-emerald-700 mt-0.5">
+                ${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings).toLocaleString()}
+              </div>
+              <div className="text-[9px] text-slate-600 mt-0.5">{t.statPreservedSub}</div>
+            </div>
+
+            <div className="border border-slate-300 p-2.5 rounded-lg bg-slate-50">
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">{t.statInaction}</div>
+              <div className="text-base font-black text-slate-900 mt-0.5">
+                ${taxAnalysis.totalBaselineTax.toLocaleString()}
+              </div>
+              <div className="text-[9px] text-slate-600 mt-0.5">{t.statInactionSub}</div>
+            </div>
+
+            <div className="border border-slate-300 p-2.5 rounded-lg bg-slate-50">
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">{t.statHeir}</div>
+              <div className="text-base font-black text-indigo-700 mt-0.5">
+                ${taxAnalysis.heirSavings.toLocaleString()}
+              </div>
+              <div className="text-[9px] text-slate-600 mt-0.5">{t.statHeirSub}</div>
+            </div>
+
+            <div className="border border-slate-300 p-2.5 rounded-lg bg-slate-50">
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">{lang === 'es' ? 'CHEQUE VITALICIO' : 'GUARANTEED PAYCHECK'}</div>
+              <div className="text-base font-black text-emerald-700 mt-0.5">
+                ${guaranteedFiaIncome.toLocaleString()}/yr
+              </div>
+              <div className="text-[9px] text-slate-600 mt-0.5">{lang === 'es' ? 'Piso contractual legal' : 'Contractual life floor'}</div>
+            </div>
+          </div>
+
           {/* CHAPTER STORY STYLE NARRATIVE */}
-          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-3">
-            <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-2.5">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-1.5">
               <BookOpen className="w-4 h-4 text-slate-800" />
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-900">
                 {lang === 'es' ? 'La Historia de su Jubilación: De la Incertidumbre a la Certeza' : 'Your Retirement Story: From Uncertainty to Contractual Certainty'}
               </h2>
             </div>
-            <div className="text-xs text-slate-700 leading-relaxed space-y-2">
+            <div className="text-[11px] text-slate-700 leading-relaxed space-y-2">
               <p>
                 <b>{lang === 'es' ? 'Capítulo 1: El Dilema Tradicional.' : 'Chapter 1: The Traditional Dilemma.'}</b> {lang === 'es'
                   ? `Durante décadas, la sabiduría convencional le dijo que acumulara dinero en un 401(k) y dependiera de un portafolio 60/40 con la "regla del 4%". Sin embargo, retirar $${withdrawalNeed.toLocaleString()} anuales durante un mercado bajista crea un riesgo severo de secuencia: vender activos en pérdida agota el capital permanentemente. Al mismo tiempo, acumular dinero antes de impuestos invita al IRS a convertirse en su socio mayoritario a los 73 años a través de los retiros forzosos (RMDs).`
@@ -338,14 +375,14 @@ export default function AdvisorTool() {
           </div>
 
           {/* DYNAMIC GUARDRAILS EXPLANATION FOR CLIENT */}
-          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-2.5">
+          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-2">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-1.5">
               <Gauge className="w-4 h-4 text-indigo-700" />
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-900">
                 {lang === 'es' ? 'Cómo Funcionan sus Barandillas de Retiro Dinámico' : 'How Your Dynamic Spending Guardrails Work'}
               </h2>
             </div>
-            <p className="text-xs text-slate-700 leading-relaxed">
+            <p className="text-[11px] text-slate-700 leading-relaxed">
               {lang === 'es'
                 ? `En lugar de probabilidades abstractas, las barandillas funcionan como los rieles de una autopista. Su gasto actual de $${monthlyNeed.toLocaleString()}/mes está 100% protegido. Si el mercado cae severamente a $${lowerGuardrailPortfolio.toLocaleString()}, se aplica un recorte temporal preventivo de 10% únicamente a sus gastos de diversión, mientras su cheque básico FIA de $${fiaMonthlyIncome.toLocaleString()}/mes continúa intacto. Si el mercado sube a $${upperGuardrailPortfolio.toLocaleString()}, usted recibe un aumento automático a $${raisedMonthlyPaycheck.toLocaleString()}/mes.`
                 : `Rather than confusing probabilities of failure, dynamic guardrails work like lane markers on a highway. Your current target income of $${monthlyNeed.toLocaleString()}/month is 100% on-track. If a severe market crash contracts your balance to $${lowerGuardrailPortfolio.toLocaleString()}, an objective 10% temporary trim ($${reducedMonthlyPaycheck.toLocaleString()}/mo) is applied only to discretionary playchecks, while your FIA contractual paycheck of $${fiaMonthlyIncome.toLocaleString()}/mo remains fully immune. If markets rally to $${upperGuardrailPortfolio.toLocaleString()}, you unlock a permanent lifestyle raise to $${raisedMonthlyPaycheck.toLocaleString()}/mo.`
@@ -353,96 +390,69 @@ export default function AdvisorTool() {
             </p>
           </div>
 
+          {/* Key Strategic Accomplishments Checklist */}
           <div className="border border-slate-300 rounded-lg overflow-hidden">
             <div className="bg-slate-100 px-4 py-2 border-b border-slate-300">
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                 <CheckSquare className="w-4 h-4 text-emerald-700" /> {lang === 'es' ? 'Logros Estratégicos Clave' : 'Key Strategic Accomplishments'}
               </h2>
             </div>
-            <div className="p-3.5 bg-white grid grid-cols-2 gap-2.5 text-xs text-slate-800">
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
-                <span><b>{lang === 'es' ? 'Inmunidad al Riesgo de Secuencia:' : 'Sequence-of-Returns Immunity:'}</b> {lang === 'es' ? 'Flujo de efectivo vital protegido legalmente con piso de 0% y cláusula de ingresos garantizados de por vida.' : 'Essential annual lifestyle cash flow is legally defended by a contractual 0% floor and guaranteed income rider.'}</span>
+            <div className="p-3 bg-white grid grid-cols-2 gap-2 text-[10px] text-slate-800">
+              <div className="flex items-start gap-1.5">
+                <span className="text-emerald-700 font-bold text-xs leading-none">☑</span>
+                <span><b>{lang === 'es' ? 'Inmunidad al Riesgo de Secuencia:' : 'Sequence-of-Returns Immunity:'}</b> {lang === 'es' ? 'Flujo vital protegido legalmente con piso de 0% y retiro garantizado de por vida.' : 'Essential cash flow legally defended by 0% floor and guaranteed lifetime rider.'}</span>
               </div>
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
-                <span><b>{lang === 'es' ? 'Avalancha Fiscal RMD Neutralizada:' : 'RMD Tax Avalanche Neutralized:'}</b> {lang === 'es' ? 'Saldo IRA pre-impuestos reducido a $0, evitando retiros forzados en tramos tributarios elevados a los 73+ años.' : 'Pre-tax IRA balance systematically reduced to $0, preventing compulsory peak bracket distributions at age 73+.'}</span>
+              <div className="flex items-start gap-1.5">
+                <span className="text-emerald-700 font-bold text-xs leading-none">☑</span>
+                <span><b>{lang === 'es' ? 'Avalancha Fiscal RMD Neutralizada:' : 'RMD Tax Avalanche Neutralized:'}</b> {lang === 'es' ? 'Saldo IRA reducido a $0, evitando retiros forzados en tramos altos a los 73+ años.' : 'IRA reduced to $0, preventing compulsory peak distributions at age 73+.'}</span>
               </div>
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
-                <span><b>{lang === 'es' ? 'Protección Herederos SECURE 2.0:' : 'Heir SECURE Act 2.0 Protection:'}</b> {lang === 'es' ? 'Elimina la liquidación forzosa en 10 años, otorgando herencias 100% libres de impuestos.' : 'Liquidated inherited account drag eliminated, leaving beneficiaries with 100% tax-exempt legacy transfers.'}</span>
+              <div className="flex items-start gap-1.5">
+                <span className="text-emerald-700 font-bold text-xs leading-none">☑</span>
+                <span><b>{lang === 'es' ? 'Protección Herederos SECURE 2.0:' : 'Heir SECURE Act 2.0 Protection:'}</b> {lang === 'es' ? 'Elimina la liquidación en 10 años, entregando herencias 100% libres de impuestos.' : 'Eliminates 10-year liquidation drag for 100% tax-exempt legacy transfer.'}</span>
               </div>
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-700 font-bold text-sm leading-none">☑</span>
-                <span><b>{lang === 'es' ? 'Transparencia Total de Comisiones:' : 'Fee Transparency:'}</b> {lang === 'es' ? `Comisión AUM de ${(aumFeePct * 100).toFixed(2)}% en mercado y ${(annuityFeePct * 100).toFixed(2)}% en contrato FIA (${feeDuration === 'ten_years' ? 'Primeros 10 Años' : 'De Por Vida'}).` : `Factored ${(aumFeePct * 100).toFixed(2)}% AUM management fee on market portfolios alongside ${(annuityFeePct * 100).toFixed(2)}% contract fee (${feeDuration === 'ten_years' ? 'First 10 Yrs' : 'Life'}).`}</span>
+              <div className="flex items-start gap-1.5">
+                <span className="text-emerald-700 font-bold text-xs leading-none">☑</span>
+                <span><b>{lang === 'es' ? 'Transparencia Total de Comisiones:' : 'Fee Transparency:'}</b> {lang === 'es' ? `AUM de ${(aumFeePct * 100).toFixed(2)}% en mercado y ${(annuityFeePct * 100).toFixed(2)}% en FIA (${feeDuration === 'ten_years' ? 'Primeros 10 Años' : 'De Por Vida'}).` : `Factored ${(aumFeePct * 100).toFixed(2)}% AUM fee on market portfolios alongside ${(annuityFeePct * 100).toFixed(2)}% contract fee (${feeDuration === 'ten_years' ? 'First 10 Yrs' : 'Life'}).`}</span>
               </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-3">
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t.statPreserved}</div>
-              <div className="text-lg font-black text-emerald-700 mt-0.5">
-                ${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings).toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{t.statPreservedSub}</div>
-            </div>
-
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t.statInaction}</div>
-              <div className="text-lg font-black text-slate-900 mt-0.5">
-                ${taxAnalysis.totalBaselineTax.toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{t.statInactionSub}</div>
-            </div>
-
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t.statHeir}</div>
-              <div className="text-lg font-black text-indigo-700 mt-0.5">
-                ${taxAnalysis.heirSavings.toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{t.statHeirSub}</div>
-            </div>
-
-            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{lang === 'es' ? 'CHEQUE VITALICIO' : 'GUARANTEED PAYCHECK'}</div>
-              <div className="text-lg font-black text-emerald-700 mt-0.5">
-                ${guaranteedFiaIncome.toLocaleString()}/yr
-              </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{lang === 'es' ? 'Respaldado por contrato legal' : 'Contractual life floor'}</div>
             </div>
           </div>
         </div>
 
-        {/* PRINT PAGE 2: CHARTS & COMPARISON MATRIX */}
-        <div className="space-y-5 page-break-before">
-          <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">
-              {lang === 'es' ? 'Resumen Comparativo y Pruebas de Estrés' : 'Comparative Matrix & Visual Stress Testing'}
-            </h2>
-            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Strategic Client Dossier</span>
+        {/* ==================== PRINT PAGE 2: COMPARATIVE MATRIX & VISUAL STRESS TESTING ==================== */}
+        <div className="space-y-5 page-break-before pt-2">
+          <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-center">
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">
+                {lang === 'es' ? 'MATRIZ COMPARATIVA Y PRUEBAS DE ESTRÉS VISUAL' : 'COMPARATIVE MATRIX & VISUAL STRESS TESTING'}
+              </h2>
+              <p className="text-[10px] text-slate-600 font-medium">
+                {lang === 'es' ? 'Comparación cuantitativa del camino tradicional vs. el plan integrado optimizado' : 'Quantitative performance comparison: Traditional inaction path vs. the integrated GFI blueprint'}
+              </p>
+            </div>
+            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Page 2</span>
           </div>
 
+          {/* Full Executive Comparison Matrix Table */}
           <div className="border border-slate-300 rounded-lg overflow-hidden">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-2 px-3">{lang === 'es' ? 'Dimensión Estratégica' : 'Strategic Dimension'}</th>
-                  <th className="py-2 px-3">{lang === 'es' ? 'Camino Actual (Tradicional 60/40)' : 'Current Path (Traditional 60/40)'}</th>
-                  <th className="py-2 px-3">{lang === 'es' ? 'Plan Integrado GFI' : 'Integrated GFI Plan'}</th>
-                  <th className="py-2 px-3 text-right">{lang === 'es' ? 'Ventaja Neta para el Cliente' : 'Net Client Advantage'}</th>
+                  <th className="py-2.5 px-3">{lang === 'es' ? 'Dimensión Estratégica' : 'Strategic Dimension'}</th>
+                  <th className="py-2.5 px-3">{lang === 'es' ? 'Camino Actual (Tradicional 60/40)' : 'Current Path (Traditional 60/40)'}</th>
+                  <th className="py-2.5 px-3">{lang === 'es' ? 'Plan Integrado GFI' : 'Integrated GFI Plan'}</th>
+                  <th className="py-2.5 px-3 text-right">{lang === 'es' ? 'Ventaja Neta para el Cliente' : 'Net Client Advantage'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
                 <tr>
-                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
-                  <td className="py-2 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
-                  <td className="py-2 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
-                  <td className="py-2 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
+                  <td className="py-2.5 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
+                  <td className="py-2.5 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
+                  <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
                 </tr>
                 <tr>
-                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
-                  <td className="py-2 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
+                  <td className="py-2.5 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
                   <td className="py-2.5 px-3 font-bold text-emerald-800">{taxAnalysis.overallNetEffectiveTaxRate}%</td>
                   <td className="py-2.5 px-3 text-right font-bold text-slate-900">-{(carrierBonusPct * 100).toFixed(0)}% Bonus Offset</td>
                 </tr>
@@ -465,10 +475,10 @@ export default function AdvisorTool() {
                   <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
                 </tr>
                 <tr className="bg-slate-100 font-black border-t-2 border-slate-900">
-                  <td className="py-2.5 px-3 uppercase tracking-wider text-slate-900">{lang === 'es' ? 'Ventaja Familiar Integral' : 'Comprehensive Family Advantage'}</td>
-                  <td className="py-2.5 px-3">--</td>
-                  <td className="py-2.5 px-3">--</td>
-                  <td className="py-2.5 px-3 text-right text-emerald-800 text-sm">
+                  <td className="py-3 px-3 uppercase tracking-wider text-slate-900">{lang === 'es' ? 'Ventaja Familiar Integral' : 'Comprehensive Family Advantage'}</td>
+                  <td className="py-3 px-3">--</td>
+                  <td className="py-3 px-3">--</td>
+                  <td className="py-3 px-3 text-right text-emerald-800 text-sm">
                     +${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}
                   </td>
                 </tr>
@@ -476,11 +486,12 @@ export default function AdvisorTool() {
             </table>
           </div>
 
+          {/* Visual Stress Comparison Charts */}
           <div className="grid grid-cols-2 gap-4 avoid-break">
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
               <h3 className="text-xs font-bold text-slate-900 mb-2">{lang === 'es' ? 'Carga Fiscal de por Vida: Inacción vs. Plan' : 'Lifetime Tax Burden: Inaction vs. Plan'}</h3>
               <div className="flex justify-center">
-                <BarChart width={380} height={210} data={taxAnalysis.yearlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <BarChart width={380} height={205} data={taxAnalysis.yearlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <XAxis dataKey="age" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
                   <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
                   <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
@@ -493,7 +504,7 @@ export default function AdvisorTool() {
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
               <h3 className="text-xs font-bold text-slate-900 mb-2">{lang === 'es' ? 'Cheques vs. Volatilidad de Mercado 60/40' : 'Paychecks vs. 60/40 Market Volatility'}</h3>
               <div className="flex justify-center">
-                <BarChart width={380} height={210} data={feeAdjustedBacktestResults} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <BarChart width={380} height={205} data={feeAdjustedBacktestResults} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <XAxis dataKey="calendarYear" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
                   <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
                   <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
@@ -504,10 +515,11 @@ export default function AdvisorTool() {
             </div>
           </div>
 
+          {/* Tactical Conversion Runway Schedule Table */}
           <div className="border border-slate-300 rounded-lg overflow-hidden avoid-break">
             <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 flex justify-between items-center">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">{lang === 'es' ? 'Calendario de Conversión Táctica Roth (Meta: $0 en IRA)' : 'Tactical Roth Conversion Schedule ($0 Pre-Tax Target)'}</span>
-              <span className="text-[10px] text-slate-600">{(carrierBonusPct * 100).toFixed(0)}% Carrier Bonus Offset Applied</span>
+              <span className="text-[10px] text-slate-600 font-semibold">{(carrierBonusPct * 100).toFixed(0)}% Carrier Bonus Offset Applied</span>
             </div>
             <table className="w-full text-left text-[11px] border-collapse">
               <thead>
@@ -524,10 +536,10 @@ export default function AdvisorTool() {
               <tbody className="divide-y divide-slate-200">
                 {taxAnalysis.yearlyData.filter(d => d.conversionAmount > 0).slice(0, 8).map(d => (
                   <tr key={d.age}>
-                    <td className="py-1 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
-                    <td className="py-1 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
-                    <td className="py-1 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
-                    <td className="py-1 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
+                    <td className="py-1.5 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
+                    <td className="py-1.5 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
+                    <td className="py-1.5 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
+                    <td className="py-1.5 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
                     <td className="py-1.5 px-2.5 text-slate-700">{d.statutoryRatePct}%</td>
                     <td className="py-1.5 px-2.5 font-bold text-emerald-800">{d.netEffectiveRatePct}%</td>
                     <td className="py-1.5 px-2.5 font-bold text-slate-900">${d.planRoth.toLocaleString()}</td>
@@ -536,23 +548,61 @@ export default function AdvisorTool() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50 space-y-3 avoid-break">
-            <div className="text-[10px] text-slate-600 leading-relaxed space-y-1">
-              <p><b>Important Professional & Legal Disclosures:</b> This presentation is prepared strictly for educational and comparative illustration purposes. Global Financial Impact and its appointed agents are not CPAs, tax attorneys, or registered investment advisors. Tax codes, sunset provisions, and statutory exemptions are subject to state and federal legislative change.</p>
-              <p>Fixed Indexed Annuities (FIAs) and GLWB income riders are long-term insurance contracts subject to surrender charges, carrier solvency, index participation limits, and contract rules. AUM fee: {(aumFeePct * 100).toFixed(2)}%, FIA rider fee: {(annuityFeePct * 100).toFixed(2)}% ({feeDuration === 'ten_years' ? 'First 10 Yrs' : 'Life of Contract'}). Past benchmark performance does not guarantee future results.</p>
+        {/* ==================== PRINT PAGE 3: FULL REGULATORY DISCLOSURES & SIGNATURE BLOCK ==================== */}
+        <div className="space-y-6 page-break-before pt-2">
+          <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-center">
+            <div className="flex items-center gap-2 font-black uppercase tracking-wider text-slate-900 text-xs">
+              <FileText className="w-4 h-4 text-slate-800" />
+              <span>{lang === 'es' ? 'AVISOS REGULATORIOS, DIVULGACIONES LEGALES Y ENDOSO' : 'REGULATORY DISCLOSURES, FIDUCIARY NOTICES & CLIENT ENDORSEMENT'}</span>
             </div>
+            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Page 3</span>
+          </div>
 
-            <div className="pt-3 border-t border-slate-300 grid grid-cols-2 gap-8 text-xs text-slate-800">
-              <div className="space-y-5">
+          {/* Complete Uncut Regulatory Disclosures */}
+          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-3.5 text-[10.5px] text-slate-700 leading-relaxed">
+            <p>
+              <b>Not Tax, Accounting, or Legal Advice:</b> This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys. Federal, state, and local tax laws, brackets, deductions, and phase-out thresholds (including TCJA sunset assumptions and SECURE 2.0 legislation) are complex, subject to statutory change, and depend on individual financial circumstances. Clients must consult a qualified CPA, independent tax advisor, or estate planning attorney regarding their specific tax position before executing any Roth conversions, withdrawals, or asset reallocations.
+            </p>
+
+            <p>
+              <b>Not Registered Investment Advisory or Securities Recommendations:</b> Nothing contained within this presentation or generated output constitutes an offer to buy, sell, or hold any security, mutual fund, ETF, or stock portfolio. The comparisons provided between equities, fixed income instruments, and Fixed Indexed Annuities (FIAs) are mathematical and hypothetical models based on historical benchmark performance (e.g., S&amp;P 500 Price Return index data) and do not represent the actual trading performance of any specific client portfolio or investment fund. Traditional AUM management fee modeled: {(aumFeePct * 100).toFixed(2)}%/yr. Past performance is never a guarantee of future investment results.
+            </p>
+
+            <p>
+              <b>Insurance and Annuity Contract Terms & Guarantee Backing:</b> Fixed Indexed Annuities (FIAs) and Guaranteed Lifetime Withdrawal Benefit (GLWB) riders are long-term insurance contracts issued by third-party insurance carriers. All contractual guarantees—including annual index crediting floors (0% floor), income payout rates, and lifetime paychecks—are backed solely by the financial strength and claims-paying ability of the issuing insurance company. FIA contracts may be subject to surrender charges, market value adjustments (MVA), crediting rate caps, annual rider fees (modeled at {(annuityFeePct * 100).toFixed(2)}% with duration: {feeDuration === 'ten_years' ? 'First 10 Years' : 'Life of Contract'}), and participation limits that vary by carrier and state of issue. Upfront premium bonuses and bonus credits may be subject to vesting schedules, recapture charges, or lower underlying crediting caps. Withdrawals prior to age 59½ may trigger a 10% IRS penalty in addition to ordinary income taxation.
+            </p>
+
+            <p>
+              <b>Dynamic Spending Guardrails Policy Notice:</b> The guardrail adjustment triggers presented herein represent an adaptive cash flow guideline inspired by dynamic withdrawal research. They do not constitute a legal obligation or guarantee of investment return. Recommended adjustments to discretionary spending are modeled to illustrate capital preservation tactics in severe contraction scenarios.
+            </p>
+          </div>
+
+          {/* Endorsement & Signatures Block */}
+          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-6 avoid-break">
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+              {lang === 'es' ? 'Endoso del Plan y Reconocimiento del Cliente' : 'Plan Endorsement & Client Acknowledgment'}
+            </div>
+            
+            <p className="text-[10.5px] text-slate-700 leading-relaxed">
+              By signing below, the client acknowledges receipt of this educational GFI Distribution Blueprint. The client confirms they have reviewed the assumptions, fee structures, conversion trajectories, and regulatory disclosures herein with their licensed representative and understands that formal product values are determined solely by carrier-approved policy illustrations.
+            </p>
+
+            <div className="pt-4 border-t border-slate-300 grid grid-cols-2 gap-10 text-xs text-slate-800">
+              <div className="space-y-7">
                 <div>Client Signature: _________________________________________</div>
                 <div>Date: ________________________</div>
               </div>
-              <div className="space-y-5">
+              <div className="space-y-7">
                 <div>Licensed Advisor Signature: _______________________________</div>
                 <div>License / National Producer #: _____________________________</div>
               </div>
             </div>
+          </div>
+
+          <div className="text-[9.5px] text-slate-500 text-center pt-2">
+            © 2026 Global Financial Impact (GFI). All rights reserved. Calculations are generated via mathematical simulation models and do not constitute a formal prospectus.
           </div>
         </div>
       </div>
@@ -2411,7 +2461,15 @@ export default function AdvisorTool() {
         </div>
 
         <p>
-          <b>{lang === 'es' ? 'No Constituye Asesoramiento Tributario ni Legal:' : 'Not Tax, Accounting, or Legal Advice:'}</b> {lang === 'es' ? 'Esta plataforma y sus materiales son de carácter exclusivamente ilustrativo y educativo. Ni Global Financial Impact ni sus agentes con licencia de seguros son contadores públicos certificados (CPA) o abogados tributarios.' : 'This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys.'}
+          <b>Not Tax, Accounting, or Legal Advice:</b> This software platform, presentation materials, and associated discussion points are designed strictly for educational, illustrative, and informational purposes. Neither the creators of this tool, Global Financial Impact (GFI), nor the presenting life insurance licensed agents are Certified Public Accountants (CPAs), licensed tax professionals, or attorneys. Federal, state, and local tax laws, brackets, deductions, and phase-out thresholds (including TCJA sunset assumptions and SECURE 2.0 legislation) are complex, subject to statutory change, and depend on individual financial circumstances. Clients must consult a qualified CPA, independent tax advisor, or estate planning attorney regarding their specific tax position before executing any Roth conversions, withdrawals, or asset reallocations.
+        </p>
+
+        <p>
+          <b>Not Registered Investment Advisory or Securities Recommendations:</b> Nothing contained within this presentation or generated output constitutes an offer to buy, sell, or hold any security, mutual fund, ETF, or stock portfolio. The comparisons provided between equities, fixed income instruments, and Fixed Indexed Annuities (FIAs) are mathematical and hypothetical models based on historical benchmark performance (e.g., S&amp;P 500 Price Return index data) and do not represent the actual trading performance of any specific client portfolio or investment fund. Traditional AUM management fee modeled: {(aumFeePct * 100).toFixed(2)}%/yr. Past performance is never a guarantee of future investment results.
+        </p>
+
+        <p>
+          <b>Insurance and Annuity Contract Terms & Guarantee Backing:</b> Fixed Indexed Annuities (FIAs) and Guaranteed Lifetime Withdrawal Benefit (GLWB) riders are long-term insurance contracts issued by third-party insurance carriers. All contractual guarantees—including annual index crediting floors (0% floor), income payout rates, and lifetime paychecks—are backed solely by the financial strength and claims-paying ability of the issuing insurance company. FIA contracts may be subject to surrender charges, market value adjustments (MVA), crediting rate caps, annual rider fees (modeled at {(annuityFeePct * 100).toFixed(2)}% with duration: {feeDuration === 'ten_years' ? 'First 10 Years' : 'Life of Contract'}), and participation limits that vary by carrier and state of issue. Upfront premium bonuses and bonus credits may be subject to vesting schedules, recapture charges, or lower underlying crediting caps. Withdrawals prior to age 59½ may trigger a 10% IRS penalty in addition to ordinary income taxation.
         </p>
 
         <p className="text-xs text-slate-500">
