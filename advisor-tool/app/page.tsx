@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -85,136 +85,6 @@ export default function AdvisorTool() {
     iraBalance > 0
   );
 
-  // Bilingual UI Localization Dictionary
-  const t = {
-    en: {
-      title: "The GFI Distribution Blueprint",
-      subtitle: "Tax Optimization & Income Architecture",
-      eduBadge: "EDUCATIONAL & INFORMATIONAL MODEL ONLY",
-      prepFor: "Prepared for:",
-      tax: "Tax",
-      targetRet: "Target Retirement:",
-      projTo95: "Projected to Age 95",
-      foodForThought: "Food for Thought",
-      printBtn: "Print Summary",
-      storyTab: "Story Mode",
-      backtestTab: "GFILogix Backtest",
-      rothTab: "Roth Blueprint",
-      summaryTab: "Executive Ledger",
-      statPreserved: "TOTAL FAMILY WEALTH PRESERVED",
-      statPreservedSub: "Kept in family pocket vs. IRS",
-      statInaction: "TAX UNDER INACTION",
-      statInactionSub: "Taxes across retirement through age 95",
-      statNetRate: "NET CONVERSION TAX RATE",
-      statBonusSub: `${(carrierBonusPct * 100).toFixed(0)}% Carrier Bonus offsets tax friction in ${selectedState}`,
-      statHeir: "HEIRS 10-YR TAX SHIELD",
-      statHeirSub: "SECURE 2.0 penalty neutralized",
-      intakeCard: "Client Intake (Cardinal)",
-      complete: "Complete",
-      incomplete: "Incomplete",
-      intakeNote: "Fields marked with * directly calculate living taxes and conversion runways.",
-      taxHikeBtn: "+4% Tax Hike",
-      crashShockBtn: "Crash Shock",
-      clientParams: "Client Parameters",
-      mfj: "Married Filing Joint",
-      single: "Single Filer",
-      tabIntake: "Intake",
-      tabIncome: "Income",
-      tabTaxes: "Taxes",
-      tabCarrier: "Fees/Carrier",
-      clientNameLabel: "Client Name(s):",
-      required: "Required",
-      stateResLabel: "State of Residence:",
-      currAgeLabel: "Current Age:",
-      targetRetLabel: "Target Retirement:",
-      iraLabel: "Pre-Tax IRA / 401(k):",
-      rothLabel: "Existing Roth IRA:",
-      preRetIncome: "Pre-Retirement Income:",
-      targetRetIncome: "Target Retirement Income:",
-      socSec: "Social Security (Combined):",
-      pension: "Pension / Other Annuities:",
-      targetBracket: "Target Conversion Tax Bracket:",
-      carrierBonus: "Carrier Upfront Bonus:",
-      heirsBracket: "Heirs Marginal Tax Bracket:",
-      strategySplit: "FIA Strategy Split",
-      capRateLabel: "S&P 500 Annual Cap Rate:",
-      aumFeeLabel: "Traditional Advisory AUM Fee:",
-      annuityFeeLabel: "Annuity Contract / Rider Fee:",
-      feeDurationLabel: "Annuity Fee Duration:",
-      first10Yrs: "First 10 Yrs Only",
-      lifeOfAnnuity: "Life of Annuity",
-      freeWithdrawalLabel: "Free Withdrawal Liquidity Schedule:",
-      incomeDepositLabel: "Income FIA Deposit:",
-      paychecksSub: "Paychecks:",
-      playchecksSub: "Playchecks:",
-      glwbRateLabel: "Contractual GLWB Payout Rate:",
-      marketCycleLabel: "Historical Market Stress Cycle:",
-    },
-    es: {
-      title: "El Plan Maestro de Distribución GFI",
-      subtitle: "Arquitectura de Ingresos y Optimización Fiscal",
-      eduBadge: "MODELO EXCLUSIVAMENTE EDUCATIVO E ILUSTRATIVO",
-      prepFor: "Preparado para:",
-      tax: "Impuesto",
-      targetRet: "Jubilación Meta:",
-      projTo95: "Proyectado hasta los 95 años",
-      foodForThought: "Puntos Clave de Reflexión",
-      printBtn: "Imprimir Resumen",
-      storyTab: "Modo Historia",
-      backtestTab: "Análisis GFILogix",
-      rothTab: "Estrategia Roth",
-      summaryTab: "Libro Ejecutivo",
-      statPreserved: "PATRIMONIO FAMILIAR PRESERVADO",
-      statPreservedSub: "Conservado en la familia frente al IRS",
-      statInaction: "IMPUESTO POR INACCIÓN",
-      statInactionSub: "Impuestos en jubilación hasta los 95 años",
-      statNetRate: "TASA NETA DE CONVERSIÓN",
-      statBonusSub: `${(carrierBonusPct * 100).toFixed(0)}% Bono de aseguradora absorbe fricción en ${selectedState}`,
-      statHeir: "ESCUDO HEREDEROS 10 AÑOS",
-      statHeirSub: "Penalidad ley SECURE 2.0 neutralizada",
-      intakeCard: "Perfil del Cliente (Cardinal)",
-      complete: "Completo",
-      incomplete: "Incompleto",
-      intakeNote: "Los campos con * calculan directamente impuestos vivos y conversiones.",
-      taxHikeBtn: "+4% Alza Fiscal",
-      crashShockBtn: "Choque de Mercado",
-      clientParams: "Parámetros del Cliente",
-      mfj: "Declaración Conjunta Casados",
-      single: "Declarante Soltero",
-      tabIntake: "Perfil",
-      tabIncome: "Ingresos",
-      tabTaxes: "Impuestos",
-      tabCarrier: "Comisiones/Plan",
-      clientNameLabel: "Nombre(s) del Cliente:",
-      required: "Requerido",
-      stateResLabel: "Estado de Residencia:",
-      currAgeLabel: "Edad Actual:",
-      targetRetLabel: "Jubilación Meta:",
-      iraLabel: "IRA / 401(k) Antes de Impuestos:",
-      rothLabel: "Roth IRA Actual:",
-      preRetIncome: "Ingreso Pre-Jubilación:",
-      targetRetIncome: "Ingreso Meta en Jubilación:",
-      socSec: "Seguro Social (Combinado):",
-      pension: "Pensión / Otras Anualidades:",
-      targetBracket: "Tramo Impositivo Objetivo de Conversión:",
-      carrierBonus: "Bono Inicial de la Aseguradora:",
-      heirsBracket: "Tramo Fiscal Marginal de Herederos:",
-      strategySplit: "Distribución de Estrategia FIA",
-      capRateLabel: "Tope Anual S&P 500 (Cap):",
-      aumFeeLabel: "Comisión de Asesoría Tradicional (AUM):",
-      annuityFeeLabel: "Comisión del Contrato / Cláusula FIA:",
-      feeDurationLabel: "Duración de Comisión del Contrato:",
-      first10Yrs: "Primeros 10 Años Solo",
-      lifeOfAnnuity: "De Por Vida",
-      freeWithdrawalLabel: "Calendario de Retiros Libres de Penalidad:",
-      incomeDepositLabel: "Depósito en FIA de Ingreso:",
-      paychecksSub: "Cheques Básicos:",
-      playchecksSub: "Cheques de Disfrute:",
-      glwbRateLabel: "Tasa de Retiro Garantizada (GLWB):",
-      marketCycleLabel: "Ciclo Histórico de Estrés:",
-    }
-  }[lang];
-
   // Net baseline market expected return net of AUM fee
   const netExpectedReturn = Math.max(0.01, 0.065 - aumFeePct);
 
@@ -270,6 +140,14 @@ export default function AdvisorTool() {
   const capitalNeededUnder4Pct = Math.round(guaranteedFiaIncome / 0.04);
   const liberatedCapitalForGrowth = Math.max(0, capitalNeededUnder4Pct - customFiaDeposit);
   const playcheckEquitiesRemaining = Math.max(0, iraBalance - customFiaDeposit);
+
+  // Income Lab Style Guardrail Bounds Calculations
+  const monthlyNeed = Math.round(withdrawalNeed / 12);
+  const fiaMonthlyIncome = Math.round(guaranteedFiaIncome / 12);
+  const lowerGuardrailPortfolio = Math.round(iraBalance * 0.76); // -24% market contraction trigger
+  const upperGuardrailPortfolio = Math.round(iraBalance * 1.28); // +28% market expansion trigger
+  const reducedMonthlyPaycheck = Math.round(monthlyNeed * 0.90); // -10% belt-tightening
+  const raisedMonthlyPaycheck = Math.round(monthlyNeed * 1.10);  // +10% lifestyle raise
 
   // Recalculate backtest balances with fee logic
   let netTrad6040Bal = iraBalance;
@@ -354,13 +232,15 @@ export default function AdvisorTool() {
                 <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
                   {lang === 'es' ? 'El Plan Maestro de Distribución GFI™' : 'The GFI Distribution Blueprint™'}
                 </h1>
-                <p className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">{t.subtitle}</p>
+                <p className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">
+                  {lang === 'es' ? 'Arquitectura de Ingresos y Optimización Fiscal' : 'Strategic Wealth Architecture & Tax Optimization'}
+                </p>
               </div>
             </div>
             <div className="text-right text-xs text-slate-700 space-y-0.5">
-              <div><b className="text-slate-900">{t.prepFor}</b> {clientName}</div>
-              <div><b className="text-slate-900">{lang === 'es' ? 'Jurisdicción:' : 'Jurisdiction:'}</b> {STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}% {t.tax})</div>
-              <div><b className="text-slate-900">{t.targetRet}</b> {retirementAge} ({t.projTo95})</div>
+              <div><b className="text-slate-900">{lang === 'es' ? 'Preparado para:' : 'Prepared For:'}</b> {clientName}</div>
+              <div><b className="text-slate-900">{lang === 'es' ? 'Jurisdicción:' : 'Jurisdiction:'}</b> {STATE_TAX_RATES[selectedState]?.name} ({(stateTaxRate * 100).toFixed(1)}% {lang === 'es' ? 'Impuesto' : 'Tax'})</div>
+              <div><b className="text-slate-900">{lang === 'es' ? 'Jubilación Meta:' : 'Retirement Horizon:'}</b> {retirementAge} ({lang === 'es' ? 'Proyectado a los 95 años' : 'Modeled through Age 95'})</div>
             </div>
           </div>
 
@@ -404,27 +284,33 @@ export default function AdvisorTool() {
 
           <div className="grid grid-cols-4 gap-3">
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t.statPreserved}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                {lang === 'es' ? 'PATRIMONIO FAMILIAR PRESERVADO' : 'TOTAL FAMILY WEALTH PRESERVED'}
+              </div>
               <div className="text-lg font-black text-emerald-700 mt-0.5">
                 ${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings).toLocaleString()}
               </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{t.statPreservedSub}</div>
+              <div className="text-[10px] text-slate-600 mt-0.5">{lang === 'es' ? 'Conservado en la familia frente al IRS' : 'Kept in family pocket vs. IRS'}</div>
             </div>
 
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t.statInaction}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                {lang === 'es' ? 'IMPUESTO POR INACCIÓN' : 'TAX UNDER INACTION'}
+              </div>
               <div className="text-lg font-black text-slate-900 mt-0.5">
                 ${taxAnalysis.totalBaselineTax.toLocaleString()}
               </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{t.statInactionSub}</div>
+              <div className="text-[10px] text-slate-600 mt-0.5">{lang === 'es' ? 'Impuestos en jubilación hasta los 95 años' : 'Taxes across retirement through age 95'}</div>
             </div>
 
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t.statHeir}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                {lang === 'es' ? 'ESCUDO HEREDEROS 10 AÑOS' : 'HEIRS 10-YR TAX SHIELD'}
+              </div>
               <div className="text-lg font-black text-indigo-700 mt-0.5">
                 ${taxAnalysis.heirSavings.toLocaleString()}
               </div>
-              <div className="text-[10px] text-slate-600 mt-0.5">{t.statHeirSub}</div>
+              <div className="text-[10px] text-slate-600 mt-0.5">{lang === 'es' ? 'Penalidad ley SECURE 2.0 neutralizada' : 'SECURE 2.0 penalty neutralized'}</div>
             </div>
 
             <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
@@ -468,22 +354,22 @@ export default function AdvisorTool() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
                   <span className="bg-gradient-to-r from-sky-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
-                    {t.title}
+                    {lang === 'es' ? 'El Plan Maestro de Distribución GFI' : 'The GFI Distribution Blueprint'}
                   </span>
                 </span>
                 <span className="text-xs bg-sky-500/15 border border-sky-500/40 text-sky-300 px-2.5 py-0.5 rounded-full font-mono font-medium">
-                  {t.subtitle}
+                  {lang === 'es' ? 'Arquitectura de Ingresos y Optimización Fiscal' : 'Tax Optimization & Income Architecture'}
                 </span>
                 <span className="text-xs bg-amber-500/15 border border-amber-500/40 text-amber-300 px-2.5 py-0.5 rounded-full font-mono font-semibold">
-                  {t.eduBadge}
+                  {lang === 'es' ? 'MODELO EXCLUSIVAMENTE EDUCATIVO E ILUSTRATIVO' : 'EDUCATIONAL & INFORMATIONAL MODEL ONLY'}
                 </span>
               </div>
               <div className="text-sm text-slate-300 mt-1.5 space-y-0.5">
                 <div>
-                  {t.prepFor} <b className="text-white text-base">{clientName || (lang === 'es' ? 'Cliente Sin Nombre' : 'Unnamed Client')}</b> ({STATE_TAX_RATES[selectedState]?.name} • {(stateTaxRate * 100).toFixed(1)}% {t.tax})
+                  {lang === 'es' ? 'Preparado para:' : 'Prepared for:'} <b className="text-white text-base">{clientName || (lang === 'es' ? 'Cliente Sin Nombre' : 'Unnamed Client')}</b> ({STATE_TAX_RATES[selectedState]?.name} • {(stateTaxRate * 100).toFixed(1)}% {lang === 'es' ? 'Impuesto' : 'Tax'})
                 </div>
                 <div>
-                  {t.targetRet} <b className="text-sky-300">{retirementAge}</b> • <span className="text-emerald-400 font-semibold">{t.projTo95}</span>
+                  {lang === 'es' ? 'Jubilación Meta:' : 'Target Retirement:'} <b className="text-sky-300">{retirementAge}</b> • <span className="text-emerald-400 font-semibold">{lang === 'es' ? 'Proyectado hasta los 95 años' : 'Projected to Age 95'}</span>
                 </div>
               </div>
             </div>
@@ -501,7 +387,7 @@ export default function AdvisorTool() {
               title="Toggle Advisor Dialogue Boxes ('Food for Thought') across all sections"
             >
               {showAdvisorNotes ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
-              <span>{t.foodForThought}: {showAdvisorNotes ? 'ON' : 'OFF'}</span>
+              <span>{lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'}: {showAdvisorNotes ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Language Switcher */}
@@ -528,7 +414,7 @@ export default function AdvisorTool() {
               onClick={() => window.print()}
               className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition"
             >
-              <Printer className="w-4 h-4" /> {t.printBtn}
+              <Printer className="w-4 h-4" /> {lang === 'es' ? 'Imprimir Resumen' : 'Print Summary'}
             </button>
 
             <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-1">
@@ -538,7 +424,7 @@ export default function AdvisorTool() {
                   activeTab === 'story' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <PlayCircle className="w-4 h-4" /> {t.storyTab}
+                <PlayCircle className="w-4 h-4" /> {lang === 'es' ? 'Modo Historia' : 'Story Mode'}
               </button>
               <button
                 onClick={() => setActiveTab('backtest')}
@@ -546,7 +432,7 @@ export default function AdvisorTool() {
                   activeTab === 'backtest' ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.backtestTab}
+                {lang === 'es' ? 'Análisis GFILogix' : 'GFILogix Backtest'}
               </button>
               <button
                 onClick={() => setActiveTab('roth')}
@@ -554,7 +440,7 @@ export default function AdvisorTool() {
                   activeTab === 'roth' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.rothTab}
+                {lang === 'es' ? 'Estrategia Roth' : 'Roth Blueprint'}
               </button>
               <button
                 onClick={() => setActiveTab('summary')}
@@ -562,7 +448,7 @@ export default function AdvisorTool() {
                   activeTab === 'summary' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.summaryTab}
+                {lang === 'es' ? 'Libro Ejecutivo' : 'Executive Ledger'}
               </button>
             </div>
           </div>
@@ -572,27 +458,27 @@ export default function AdvisorTool() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
             <div className="flex items-center gap-2 text-emerald-400 mb-1.5 text-xs font-bold uppercase tracking-wide">
-              <DollarSign className="w-4 h-4" /> {t.statPreserved}
+              <DollarSign className="w-4 h-4" /> {lang === 'es' ? 'PATRIMONIO FAMILIAR PRESERVADO' : 'TOTAL FAMILY WEALTH PRESERVED'}
             </div>
             <div className="text-3xl font-black tracking-tight text-white">
               ${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings).toLocaleString()}
             </div>
-            <div className="text-xs text-slate-400 mt-1">{t.statPreservedSub}</div>
+            <div className="text-xs text-slate-400 mt-1">{lang === 'es' ? 'Conservado en la familia frente al IRS' : 'Kept in family pocket vs. IRS'}</div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
             <div className="flex items-center gap-2 text-rose-400 mb-1.5 text-xs font-bold uppercase tracking-wide">
-              <TrendingDown className="w-4 h-4" /> {t.statInaction}
+              <TrendingDown className="w-4 h-4" /> {lang === 'es' ? 'IMPUESTO POR INACCIÓN' : 'TAX UNDER INACTION'}
             </div>
             <div className="text-3xl font-black tracking-tight text-white">
               ${taxAnalysis.totalBaselineTax.toLocaleString()}
             </div>
-            <div className="text-xs text-slate-400 mt-1">{t.statInactionSub}</div>
+            <div className="text-xs text-slate-400 mt-1">{lang === 'es' ? 'Impuestos en jubilación hasta los 95 años' : 'Taxes across retirement through age 95'}</div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
             <div className="flex items-center gap-2 text-cyan-400 mb-1.5 text-xs font-bold uppercase tracking-wide">
-              <Percent className="w-4 h-4" /> {t.statNetRate}
+              <Percent className="w-4 h-4" /> {lang === 'es' ? 'TASA NETA DE CONVERSIÓN' : 'NET CONVERSION TAX RATE'}
             </div>
             <div className="text-3xl font-black tracking-tight text-cyan-300">
               {taxAnalysis.overallNetEffectiveTaxRate}%
@@ -600,17 +486,17 @@ export default function AdvisorTool() {
                 {taxAnalysis.grossStatutoryRatePct}%
               </span>
             </div>
-            <div className="text-xs text-emerald-400 mt-1 font-semibold">{t.statBonusSub}</div>
+            <div className="text-xs text-emerald-400 mt-1 font-semibold">{`${(carrierBonusPct * 100).toFixed(0)}% ${lang === 'es' ? 'Bono de aseguradora absorbe fricción en' : 'Carrier Bonus offsets tax friction in'} ${selectedState}`}</div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
             <div className="flex items-center gap-2 text-indigo-400 mb-1.5 text-xs font-bold uppercase tracking-wide">
-              <Users className="w-4 h-4" /> {t.statHeir}
+              <Users className="w-4 h-4" /> {lang === 'es' ? 'ESCUDO HEREDEROS 10 AÑOS' : 'HEIRS 10-YR TAX SHIELD'}
             </div>
             <div className="text-3xl font-black tracking-tight text-white">
               ${taxAnalysis.heirSavings.toLocaleString()}
             </div>
-            <div className="text-xs text-slate-400 mt-1">{t.statHeirSub}</div>
+            <div className="text-xs text-slate-400 mt-1">{lang === 'es' ? 'Penalidad ley SECURE 2.0 neutralizada' : 'SECURE 2.0 penalty neutralized'}</div>
           </div>
         </div>
 
@@ -623,19 +509,19 @@ export default function AdvisorTool() {
             <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2 text-xs">
-                  <ClipboardList className="w-4 h-4 text-emerald-400" /> {t.intakeCard}
+                  <ClipboardList className="w-4 h-4 text-emerald-400" /> {lang === 'es' ? 'Perfil del Cliente (Cardinal)' : 'Client Intake (Cardinal)'}
                 </span>
                 {isCardinalComplete ? (
                   <span className="text-xs bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {t.complete}
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {lang === 'es' ? 'Completo' : 'Complete'}
                   </span>
                 ) : (
                   <span className="text-xs bg-rose-500/15 border border-rose-500/40 text-rose-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> {t.incomplete}
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> {lang === 'es' ? 'Incompleto' : 'Incomplete'}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">{t.intakeNote}</p>
+              <p className="text-xs text-slate-400 leading-relaxed">{lang === 'es' ? 'Los campos con * calculan directamente impuestos vivos y conversiones.' : 'Fields marked with * directly calculate living taxes and conversion runways.'}</p>
             </div>
 
             {/* DUAL SCENARIO QUICK-TOGGLE BAR */}
@@ -651,7 +537,7 @@ export default function AdvisorTool() {
               >
                 <span className="flex items-center gap-1.5 font-semibold truncate">
                   <Flame className={`w-3.5 h-3.5 shrink-0 ${taxHikeActive ? 'text-rose-400 animate-pulse' : 'text-slate-400'}`} />
-                  <span>{t.taxHikeBtn}</span>
+                  <span>{lang === 'es' ? '+4% Alza Fiscal' : '+4% Tax Hike'}</span>
                 </span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border shrink-0 ${
                   taxHikeActive ? 'bg-rose-950 border-rose-700 text-rose-200' : 'bg-slate-900 border-slate-700 text-slate-400'
@@ -671,7 +557,7 @@ export default function AdvisorTool() {
               >
                 <span className="flex items-center gap-1.5 font-semibold truncate">
                   <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${applySequenceShock ? 'text-amber-400 animate-pulse' : 'text-slate-400'}`} />
-                  <span>{t.crashShockBtn}</span>
+                  <span>{lang === 'es' ? 'Choque de Mercado' : 'Crash Shock'}</span>
                 </span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border shrink-0 ${
                   applySequenceShock ? 'bg-amber-950 border-amber-700 text-amber-200' : 'bg-slate-900 border-slate-700 text-slate-400'
@@ -683,15 +569,15 @@ export default function AdvisorTool() {
 
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
               <span className="font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2 text-xs">
-                <Sliders className="w-4 h-4 text-cyan-400" /> {t.clientParams}
+                <Sliders className="w-4 h-4 text-cyan-400" /> {lang === 'es' ? 'Parámetros del Cliente' : 'Client Parameters'}
               </span>
               <select 
                 value={filingStatus} 
                 onChange={(e) => setFilingStatus(e.target.value as FilingStatus)}
                 className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-slate-200 text-xs font-bold"
               >
-                <option value="mfj">{t.mfj}</option>
-                <option value="single">{t.single}</option>
+                <option value="mfj">{lang === 'es' ? 'Declaración Conjunta Casados' : 'Married Filing Joint'}</option>
+                <option value="single">{lang === 'es' ? 'Declarante Soltero' : 'Single Filer'}</option>
               </select>
             </div>
 
@@ -702,7 +588,7 @@ export default function AdvisorTool() {
                   openSection === 'client' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.tabIntake}
+                {lang === 'es' ? 'Perfil' : 'Intake'}
               </button>
               <button
                 onClick={() => setOpenSection('income')}
@@ -710,7 +596,7 @@ export default function AdvisorTool() {
                   openSection === 'income' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.tabIncome}
+                {lang === 'es' ? 'Ingresos' : 'Income'}
               </button>
               <button
                 onClick={() => setOpenSection('tax')}
@@ -718,7 +604,7 @@ export default function AdvisorTool() {
                   openSection === 'tax' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.tabTaxes}
+                {lang === 'es' ? 'Impuestos' : 'Taxes'}
               </button>
               <button
                 onClick={() => setOpenSection('carrier')}
@@ -726,7 +612,7 @@ export default function AdvisorTool() {
                   openSection === 'carrier' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.tabCarrier}
+                {lang === 'es' ? 'Comisiones/Plan' : 'Fees/Carrier'}
               </button>
             </div>
 
@@ -735,8 +621,8 @@ export default function AdvisorTool() {
               <div className="space-y-4 pt-1">
                 <div>
                   <label className="text-slate-200 block mb-1 font-semibold flex items-center justify-between text-xs">
-                    <span>{t.clientNameLabel} <span className="text-rose-400 font-bold">*</span></span>
-                    {!clientName.trim() && <span className="text-xs text-rose-400 font-bold">{t.required}</span>}
+                    <span>{lang === 'es' ? 'Nombre(s) del Cliente:' : 'Client Name(s):'} <span className="text-rose-400 font-bold">*</span></span>
+                    {!clientName.trim() && <span className="text-xs text-rose-400 font-bold">{lang === 'es' ? 'Requerido' : 'Required'}</span>}
                   </label>
                   <input
                     type="text"
@@ -752,9 +638,9 @@ export default function AdvisorTool() {
                 <div>
                   <label className="text-slate-200 block mb-1 font-semibold flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-cyan-400" /> {t.stateResLabel} <span className="text-rose-400 font-bold">*</span>
+                      <MapPin className="w-3.5 h-3.5 text-cyan-400" /> {lang === 'es' ? 'Estado de Residencia:' : 'State of Residence:'} <span className="text-rose-400 font-bold">*</span>
                     </span>
-                    <span className="text-cyan-400 font-bold text-sm">{(stateTaxRate * 100).toFixed(1)}% {t.tax}</span>
+                    <span className="text-cyan-400 font-bold text-sm">{(stateTaxRate * 100).toFixed(1)}% {lang === 'es' ? 'Impuesto' : 'Tax'}</span>
                   </label>
                   <select
                     value={selectedState}
@@ -763,7 +649,7 @@ export default function AdvisorTool() {
                   >
                     {Object.entries(STATE_TAX_RATES).map(([code, s]) => (
                       <option key={code} value={code}>
-                        {s.name} ({code}) — {(s.rate * 100).toFixed(1)}% {t.tax}
+                        {s.name} ({code}) — {(s.rate * 100).toFixed(1)}% {lang === 'es' ? 'Impuesto' : 'Tax'}
                       </option>
                     ))}
                   </select>
@@ -772,7 +658,7 @@ export default function AdvisorTool() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-slate-200 block mb-1 font-semibold text-xs">
-                      {t.currAgeLabel} <span className="text-rose-400 font-bold">*</span>
+                      {lang === 'es' ? 'Edad Actual:' : 'Current Age:'} <span className="text-rose-400 font-bold">*</span>
                     </label>
                     <input
                       type="number"
@@ -785,7 +671,7 @@ export default function AdvisorTool() {
                   </div>
                   <div>
                     <label className="text-slate-200 block mb-1 font-semibold text-xs">
-                      {t.targetRetLabel} <span className="text-rose-400 font-bold">*</span>
+                      {lang === 'es' ? 'Jubilación Meta:' : 'Target Retirement:'} <span className="text-rose-400 font-bold">*</span>
                     </label>
                     <input
                       type="number"
@@ -800,7 +686,7 @@ export default function AdvisorTool() {
 
                 <div>
                   <div className="flex justify-between items-center text-slate-200 mb-1 font-semibold text-xs">
-                    <span>{t.iraLabel} <span className="text-rose-400 font-bold">*</span></span>
+                    <span>{lang === 'es' ? 'IRA / 401(k) Antes de Impuestos:' : 'Pre-Tax IRA / 401(k):'} <span className="text-rose-400 font-bold">*</span></span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
                       <input
@@ -825,7 +711,7 @@ export default function AdvisorTool() {
 
                 <div>
                   <div className="flex justify-between items-center text-slate-200 mb-1 font-semibold text-xs">
-                    <span>{t.rothLabel}</span>
+                    <span>{lang === 'es' ? 'Roth IRA Actual:' : 'Existing Roth IRA:'}</span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
                       <input
@@ -856,7 +742,7 @@ export default function AdvisorTool() {
                 <div>
                   <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
                     <span className="flex items-center gap-1 font-bold text-sky-300">
-                      <Briefcase className="w-3.5 h-3.5" /> {t.preRetIncome} <span className="text-rose-400 font-bold">*</span>
+                      <Briefcase className="w-3.5 h-3.5" /> {lang === 'es' ? 'Ingreso Pre-Jubilación:' : 'Pre-Retirement Income:'} <span className="text-rose-400 font-bold">*</span>
                     </span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
@@ -883,7 +769,7 @@ export default function AdvisorTool() {
 
                 <div>
                   <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
-                    <span className="font-bold text-emerald-300">{t.targetRetIncome} <span className="text-rose-400 font-bold">*</span></span>
+                    <span className="font-bold text-emerald-300">{lang === 'es' ? 'Ingreso Meta en Jubilación:' : 'Target Retirement Income:'} <span className="text-rose-400 font-bold">*</span></span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
                       <input
@@ -909,7 +795,7 @@ export default function AdvisorTool() {
 
                 <div>
                   <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
-                    <span>{t.socSec}</span>
+                    <span>{lang === 'es' ? 'Seguro Social (Combinado):' : 'Social Security (Combined):'}</span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
                       <input
@@ -935,7 +821,7 @@ export default function AdvisorTool() {
 
                 <div>
                   <div className="flex justify-between items-center text-slate-200 mb-1 text-xs">
-                    <span>{t.pension}</span>
+                    <span>{lang === 'es' ? 'Pensión / Otras Anualidades:' : 'Pension / Other Annuities:'}</span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
                       <input
@@ -965,7 +851,7 @@ export default function AdvisorTool() {
             {openSection === 'tax' && (
               <div className="space-y-4 pt-1">
                 <div>
-                  <label className="text-slate-200 block mb-1 font-semibold text-xs">{t.targetBracket}</label>
+                  <label className="text-slate-200 block mb-1 font-semibold text-xs">{lang === 'es' ? 'Tramo Impositivo Objetivo de Conversión:' : 'Target Conversion Tax Bracket:'}</label>
                   <select
                     value={targetBracketCeiling}
                     onChange={(e) => setTargetBracketCeiling(Number(e.target.value))}
@@ -983,7 +869,7 @@ export default function AdvisorTool() {
                 <div>
                   <div className="flex justify-between text-slate-200 mb-1 text-xs">
                     <span className="flex items-center gap-1.5 font-bold text-cyan-300">
-                      <Gift className="w-3.5 h-3.5" /> {t.carrierBonus}
+                      <Gift className="w-3.5 h-3.5" /> {lang === 'es' ? 'Bono Inicial de la Aseguradora:' : 'Carrier Upfront Bonus:'}
                     </span>
                     <span className="font-black text-cyan-400 text-sm">
                       {(carrierBonusPct * 100).toFixed(0)}% (+${taxAnalysis.upfrontBonusDollars.toLocaleString()})
@@ -1002,7 +888,7 @@ export default function AdvisorTool() {
 
                 <div>
                   <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span>{t.heirsBracket}</span>
+                    <span>{lang === 'es' ? 'Tramo Fiscal Marginal de Herederos:' : 'Heirs Marginal Tax Bracket:'}</span>
                     <span className="font-black text-slate-200 text-sm">{(heirsTaxRate * 100).toFixed(0)}%</span>
                   </div>
                   <input
@@ -1025,7 +911,7 @@ export default function AdvisorTool() {
                 <div className="p-4 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 border border-indigo-500/40 rounded-xl space-y-3 shadow-sm">
                   <div className="flex items-center justify-between text-xs font-bold text-white">
                     <span className="flex items-center gap-1.5 text-indigo-300">
-                      <PieChart className="w-4 h-4 text-indigo-400" /> {t.strategySplit}
+                      <PieChart className="w-4 h-4 text-indigo-400" /> {lang === 'es' ? 'Distribución de Estrategia FIA' : 'FIA Strategy Split'}
                     </span>
                     <span className="text-emerald-400 font-mono font-black">
                       {(fiaIndexedAllocationPct * 100).toFixed(0)}% S&P / {((1 - fiaIndexedAllocationPct) * 100).toFixed(0)}% Fixed
@@ -1077,7 +963,7 @@ export default function AdvisorTool() {
                 {/* S&P 500 CAP RATE ADJUSTER */}
                 <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
                   <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span className="font-semibold text-cyan-300">{t.capRateLabel}</span>
+                    <span className="font-semibold text-cyan-300">{lang === 'es' ? 'Tope Anual S&P 500 (Cap):' : 'S&P 500 Annual Cap Rate:'}</span>
                     <span className="font-black text-cyan-400 text-sm">{(fiaCap * 100).toFixed(1)}%</span>
                   </div>
                   <input
@@ -1094,7 +980,7 @@ export default function AdvisorTool() {
                 {/* ADVISORY AUM MANAGEMENT FEE SLIDER */}
                 <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
                   <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span className="font-semibold text-rose-300">{t.aumFeeLabel}</span>
+                    <span className="font-semibold text-rose-300">{lang === 'es' ? 'Comisión de Asesoría Tradicional (AUM):' : 'Traditional Advisory AUM Fee:'}</span>
                     <span className="font-black text-rose-400 text-sm">{(aumFeePct * 100).toFixed(2)}% / yr</span>
                   </div>
                   <input
@@ -1112,7 +998,7 @@ export default function AdvisorTool() {
                 <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-3">
                   <div className="flex justify-between items-center text-slate-200 text-xs">
                     <span className="font-semibold text-amber-300 flex items-center gap-1.5">
-                      <Percent className="w-3.5 h-3.5 text-amber-400" /> {t.annuityFeeLabel}
+                      <Percent className="w-3.5 h-3.5 text-amber-400" /> {lang === 'es' ? 'Comisión del Contrato / Cláusula FIA:' : 'Annuity Contract / Rider Fee:'}
                     </span>
                     <span className="font-black text-amber-400 text-sm">{(annuityFeePct * 100).toFixed(2)}% / yr</span>
                   </div>
@@ -1129,7 +1015,7 @@ export default function AdvisorTool() {
                   {/* Fee Duration Option: First 10 Years vs Life of Annuity */}
                   <div className="pt-2 border-t border-slate-800/80">
                     <span className="text-[11px] text-slate-300 font-bold block mb-1.5 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" /> {t.feeDurationLabel}
+                      <Clock className="w-3.5 h-3.5 text-slate-400" /> {lang === 'es' ? 'Duración de Comisión del Contrato:' : 'Annuity Fee Duration:'}
                     </span>
                     <div className="grid grid-cols-2 gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
                       <button
@@ -1141,7 +1027,7 @@ export default function AdvisorTool() {
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        {t.first10Yrs}
+                        {lang === 'es' ? 'Primeros 10 Años Solo' : 'First 10 Yrs Only'}
                       </button>
                       <button
                         type="button"
@@ -1152,7 +1038,7 @@ export default function AdvisorTool() {
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        {t.lifeOfAnnuity}
+                        {lang === 'es' ? 'De Por Vida' : 'Life of Annuity'}
                       </button>
                     </div>
                   </div>
@@ -1162,7 +1048,7 @@ export default function AdvisorTool() {
                 <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
                   <label className="text-slate-200 block font-semibold flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1.5 text-emerald-300">
-                      <Wallet className="w-3.5 h-3.5" /> {t.freeWithdrawalLabel}
+                      <Wallet className="w-3.5 h-3.5" /> {lang === 'es' ? 'Calendario de Retiros Libres de Penalidad:' : 'Free Withdrawal Liquidity Schedule:'}
                     </span>
                   </label>
                   <select
@@ -1186,7 +1072,7 @@ export default function AdvisorTool() {
                 <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2.5">
                   <div className="flex justify-between items-center text-slate-200 text-xs">
                     <span className="font-bold text-emerald-300 flex items-center gap-1.5">
-                      <Wallet className="w-3.5 h-3.5" /> {t.incomeDepositLabel}
+                      <Wallet className="w-3.5 h-3.5" /> {lang === 'es' ? 'Depósito en FIA de Ingreso:' : 'Income FIA Deposit:'}
                     </span>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400">$</span>
@@ -1209,14 +1095,14 @@ export default function AdvisorTool() {
                     className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg"
                   />
                   <div className="flex justify-between text-xs text-slate-300 font-medium">
-                    <span>{t.paychecksSub} ${customFiaDeposit.toLocaleString()}</span>
-                    <span>{t.playchecksSub} ${playcheckEquitiesRemaining.toLocaleString()}</span>
+                    <span>{lang === 'es' ? 'Cheques Básicos:' : 'Paychecks:'} ${customFiaDeposit.toLocaleString()}</span>
+                    <span>{lang === 'es' ? 'Cheques de Disfrute:' : 'Playchecks:'} ${playcheckEquitiesRemaining.toLocaleString()}</span>
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-slate-200 mb-1 text-xs">
-                    <span className="font-semibold">{t.glwbRateLabel}</span>
+                    <span className="font-semibold">{lang === 'es' ? 'Tasa de Retiro Garantizada (GLWB):' : 'Contractual GLWB Payout Rate:'}</span>
                     <span className="font-black text-emerald-400 text-sm">{(incomePayoutRate * 100).toFixed(1)}%</span>
                   </div>
                   <input
@@ -1233,7 +1119,7 @@ export default function AdvisorTool() {
                 {/* STRESS BACKTEST MARKET OPTIONS SELECTOR */}
                 <div className="pt-2 border-t border-slate-800">
                   <label className="text-slate-200 block mb-1 text-xs font-semibold flex items-center justify-between">
-                    <span>{t.marketCycleLabel}</span>
+                    <span>{lang === 'es' ? 'Ciclo Histórico de Estrés:' : 'Historical Market Stress Cycle:'}</span>
                   </label>
                   <select
                     value={backtestPeriod}
@@ -1315,7 +1201,7 @@ export default function AdvisorTool() {
                     {showAdvisorNotes && (
                       <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                         <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                          <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'Acto 1: La Trampa' : 'Act 1: The Trap'}
+                          <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'Acto 1: La Trampa' : 'Act 1: The Trap'}
                         </div>
                         <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                           <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1397,7 +1283,7 @@ export default function AdvisorTool() {
                   {showAdvisorNotes && (
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'Acto 2: La Solución' : 'Act 2: The Solution'}
+                        <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'Acto 2: La Solución' : 'Act 2: The Solution'}
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1499,7 +1385,7 @@ export default function AdvisorTool() {
                   {showAdvisorNotes && (
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'Acto 3: Cheques Vitalicios y de Disfrute' : 'Act 3: Paychecks & Playchecks'}
+                        <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'Acto 3: Cheques Vitalicios y de Disfrute' : 'Act 3: Paychecks & Playchecks'}
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1541,7 +1427,7 @@ export default function AdvisorTool() {
             </div>
           )}
 
-          {/* TAB: GFILOGIX BACKTEST STUDIO */}
+          {/* TAB: GFILOGIX BACKTEST STUDIO WITH INCOME LAB GUARDRAILS */}
           {activeTab === 'backtest' && (
             <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
@@ -1584,6 +1470,102 @@ export default function AdvisorTool() {
                     {lang === 'es' ? 'Anualidad Fija vs. FIA' : 'Fixed Annuity vs. FIA'}
                   </button>
                 </div>
+              </div>
+
+              {/* INCOME LAB INTEGRATED DYNAMIC SPENDING GUARDRAILS GAUGE */}
+              <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/40 space-y-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-2.5 gap-2">
+                  <div className="flex items-center gap-2">
+                    <Gauge className="w-5 h-5 text-indigo-400" />
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                        {lang === 'es' ? 'Marco de Barandillas de Retiro Dinámico (Estilo Income Lab)' : 'Dynamic Spending Guardrails Framework (Income Lab Style)'}
+                      </span>
+                      <p className="text-[11px] text-slate-400">
+                        {lang === 'es' 
+                          ? 'Reglas claras de ajuste: Cuándo apretarse el cinturón o cuándo darse un aumento de sueldo.' 
+                          : 'Quantified decision rules: Exactly when to take a lifestyle raise or reduce discretionary spending.'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-indigo-950/80 border border-indigo-600/50 text-indigo-300 px-3 py-1 rounded-full font-mono font-bold">
+                    {lang === 'es' ? 'Distribución Adaptativa' : 'Adaptive Guardrails'}
+                  </span>
+                </div>
+
+                {/* Visual Guardrail Gauge */}
+                <div className="relative pt-7 pb-3">
+                  <div className="h-3.5 w-full bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+                    <div className="w-[30%] bg-rose-500/40 border-r border-rose-500/60" />
+                    <div className="w-[40%] bg-emerald-500/40 border-r border-emerald-500/60" />
+                    <div className="w-[30%] bg-sky-500/40" />
+                  </div>
+                  
+                  {/* Current Client Marker */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                    <span className="text-[11px] font-black text-emerald-400 bg-slate-900 px-2.5 py-0.5 rounded border border-emerald-500/60 shadow-md">
+                      {lang === 'es' ? 'Portafolio Actual:' : 'Current Balance:'} ${(iraBalance).toLocaleString()}
+                    </span>
+                    <div className="w-0.5 h-3.5 bg-emerald-400" />
+                  </div>
+                </div>
+
+                {/* 3 Interactive Guardrail Target Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center pt-1">
+                  <div className="p-3 rounded-lg bg-slate-900/90 border border-rose-500/40 space-y-1">
+                    <div className="text-[10px] text-rose-400 font-black uppercase tracking-wider">
+                      {lang === 'es' ? 'Barandilla Inferior (Reducción -10%)' : 'Lower Guardrail (Trigger -10% Cut)'}
+                    </div>
+                    <div className="text-base font-black text-white">${lowerGuardrailPortfolio.toLocaleString()}</div>
+                    <div className="text-xs text-rose-300 font-semibold">
+                      {lang === 'es' ? `Cheque mensual baja a $${reducedMonthlyPaycheck.toLocaleString()}/mes` : `Paycheck trims to $${reducedMonthlyPaycheck.toLocaleString()}/mo`}
+                    </div>
+                    <div className="text-[10px] text-emerald-400 font-bold border-t border-slate-800 pt-1">
+                      {lang === 'es' ? `Piso FIA Protegido: $${fiaMonthlyIncome.toLocaleString()}/mes` : `FIA Defended Floor: $${fiaMonthlyIncome.toLocaleString()}/mo`}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-500/60 space-y-1">
+                    <div className="text-[10px] text-emerald-400 font-black uppercase tracking-wider">
+                      {lang === 'es' ? 'Gasto Mensual Objetivo (Seguro)' : 'Current Safe Paycheck Target'}
+                    </div>
+                    <div className="text-base font-black text-emerald-300">${(iraBalance).toLocaleString()}</div>
+                    <div className="text-xs font-black text-white">
+                      ${monthlyNeed.toLocaleString()}/mo {lang === 'es' ? 'Meta Mensual' : 'Target Income'}
+                    </div>
+                    <div className="text-[10px] text-emerald-400 font-semibold border-t border-slate-800 pt-1">
+                      {lang === 'es' ? '100% En Trayectoria' : '100% On-Track Runway'}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-slate-900/90 border border-sky-500/40 space-y-1">
+                    <div className="text-[10px] text-sky-400 font-black uppercase tracking-wider">
+                      {lang === 'es' ? 'Barandilla Superior (Aumento +10%)' : 'Upper Guardrail (Trigger +10% Raise)'}
+                    </div>
+                    <div className="text-base font-black text-white">${upperGuardrailPortfolio.toLocaleString()}</div>
+                    <div className="text-xs text-sky-300 font-semibold">
+                      {lang === 'es' ? `Cheque mensual sube a $${raisedMonthlyPaycheck.toLocaleString()}/mes` : `Paycheck rises to $${raisedMonthlyPaycheck.toLocaleString()}/mo`}
+                    </div>
+                    <div className="text-[10px] text-sky-300 font-bold border-t border-slate-800 pt-1">
+                      {lang === 'es' ? 'Financiado por Plusvalía en Acciones' : 'Funded by Equity Growth Engine'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* FOOD FOR THOUGHT CARD (GUARDRAILS) */}
+                {showAdvisorNotes && (
+                  <div className="mt-2 p-4 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-lg space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
+                      <MessageSquare className="w-4 h-4" /> {t.foodForThought} — {lang === 'es' ? 'Barandillas de Ingreso Dinámico' : 'Dynamic Guardrails & Paychecks'}
+                    </div>
+                    <div className="text-xs md:text-sm text-amber-100 font-medium leading-relaxed">
+                      {lang === 'es'
+                        ? `"${firstName}, los jubilados temen quedarse a ciegas en un mercado bajista. Las barandillas le dicen exactamente cuándo ajustar su gasto con tranquilidad en lugar de entrar en pánico. Y con su FIA garantizando $${guaranteedFiaIncome.toLocaleString()} anuales de por vida, sus gastos esenciales nunca tocan la barandilla inferior."`
+                        : `"${firstName}, retirees fear flying blind during a bear market. Guardrails give you an objective playbook showing exactly when to give yourself a raise or tighten your belt without panic. And with your FIA guaranteeing $${guaranteedFiaIncome.toLocaleString()}/year, your essential groceries and mortgage never touch the lower guardrail."`
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* MODE 1: BOND REPLACEMENT STRATEGY */}
@@ -1678,7 +1660,7 @@ export default function AdvisorTool() {
                   {showAdvisorNotes && (
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'La Defensa de la Desacumulación' : 'The Decumulation Defense'}
+                        <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'La Defensa de la Desacumulación' : 'The Decumulation Defense'}
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1756,7 +1738,7 @@ export default function AdvisorTool() {
                   {showAdvisorNotes && (
                     <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                        <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'Cheques Vitalicios vs. Portafolio 60/40' : 'Paychecks vs. 60/40 Portfolio'}
+                        <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'Cheques Vitalicios vs. Portafolio 60/40' : 'Paychecks vs. 60/40 Portfolio'}
                       </div>
                       <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                         <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -1881,7 +1863,7 @@ export default function AdvisorTool() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
                 <div className="p-4 bg-cyan-950/20 border border-cyan-500/30 rounded-xl space-y-1">
                   <span className="text-xs text-cyan-400 uppercase font-black tracking-wider flex items-center gap-1.5">
-                    <Gift className="w-4 h-4" /> {t.carrierBonus}
+                    <Gift className="w-4 h-4" /> {lang === 'es' ? 'Bono Inicial' : 'Carrier Bonus'}
                   </span>
                   <div className="text-2xl font-black text-white">+${taxAnalysis.upfrontBonusDollars.toLocaleString()}</div>
                   <p className="text-xs text-slate-300">
@@ -2045,7 +2027,7 @@ export default function AdvisorTool() {
               {showAdvisorNotes && (
                 <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                   <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'Pista Táctica Roth' : 'Tactical Roth Runway'}
+                    <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'Pista Táctica Roth' : 'Tactical Roth Runway'}
                   </div>
                   <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                     <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
@@ -2145,7 +2127,7 @@ export default function AdvisorTool() {
               {showAdvisorNotes && (
                 <div className="mt-4 p-6 bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-slate-900 border border-amber-600/50 rounded-xl space-y-4 shadow-sm">
                   <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-amber-400">
-                    <MessageSquare className="w-5 h-5" /> {t.foodForThought} — {lang === 'es' ? 'Recomendación Final de Cierre' : 'Closing Recommendation'}
+                    <MessageSquare className="w-5 h-5" /> {lang === 'es' ? 'Puntos Clave de Reflexión' : 'Food for Thought'} — {lang === 'es' ? 'Recomendación Final de Cierre' : 'Closing Recommendation'}
                   </div>
                   <div className="space-y-4 text-base md:text-lg text-amber-100 font-medium leading-relaxed">
                     <div className="p-4 bg-slate-950/80 rounded-lg border border-amber-500/30 shadow-sm space-y-2.5">
