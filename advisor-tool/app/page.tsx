@@ -10,7 +10,7 @@ import {
   ShieldCheck, TrendingDown, DollarSign, Users, Sliders, AlertTriangle, 
   Printer, PlayCircle, ChevronRight, CheckCircle2,
   Award, ShieldAlert, Globe, Activity, Landmark, Wallet, Check, Gift, Percent, 
-  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge
+  MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, ArrowRight, BookOpen, Compass as CompassIcon
 } from 'lucide-react';
 
 export default function AdvisorTool() {
@@ -206,7 +206,7 @@ export default function AdvisorTool() {
   const liberatedCapitalForGrowth = Math.max(0, capitalNeededUnder4Pct - customFiaDeposit);
   const playcheckEquitiesRemaining = Math.max(0, iraBalance - customFiaDeposit);
 
-  // Income Lab Style Guardrail Bounds Calculations
+  // Dynamic Spending Guardrails Bounds Calculations
   const monthlyNeed = Math.round(withdrawalNeed / 12);
   const fiaMonthlyIncome = Math.round(guaranteedFiaIncome / 12);
   const lowerGuardrailPortfolio = Math.round(iraBalance * 0.76); // -24% market contraction trigger
@@ -307,14 +307,48 @@ export default function AdvisorTool() {
             </div>
           </div>
 
-          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">
-              {lang === 'es' ? 'Resumen Ejecutivo y Narrativa Estratégica' : 'Executive Briefing & Strategic Narrative'}
-            </h2>
+          {/* CHAPTER STORY STYLE NARRATIVE */}
+          <div className="border border-slate-300 p-5 rounded-lg bg-slate-50 space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+              <BookOpen className="w-4 h-4 text-slate-800" />
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                {lang === 'es' ? 'La Historia de su Jubilación: De la Incertidumbre a la Certeza' : 'Your Retirement Story: From Uncertainty to Contractual Certainty'}
+              </h2>
+            </div>
+            <div className="text-xs text-slate-700 leading-relaxed space-y-2">
+              <p>
+                <b>{lang === 'es' ? 'Capítulo 1: El Dilema Tradicional.' : 'Chapter 1: The Traditional Dilemma.'}</b> {lang === 'es'
+                  ? `Durante décadas, la sabiduría convencional le dijo que acumulara dinero en un 401(k) y dependiera de un portafolio 60/40 con la "regla del 4%". Sin embargo, retirar $${withdrawalNeed.toLocaleString()} anuales durante un mercado bajista crea un riesgo severo de secuencia: vender activos en pérdida agota el capital permanentemente. Al mismo tiempo, acumular dinero antes de impuestos invita al IRS a convertirse en su socio mayoritario a los 73 años a través de los retiros forzosos (RMDs).`
+                  : `For decades, conventional wisdom told you to accumulate wealth inside a pre-tax 401(k) and rely on a 60/40 stock and bond mix using the rigid "4% rule." However, withdrawing $${withdrawalNeed.toLocaleString()} per year during early bear market shocks forces you to sell assets at a loss, permanently crippling portfolio longevity. Compounding pre-tax balances also turns the IRS into your compulsory majority partner at age 73 through mandatory RMDs.`
+                }
+              </p>
+              <p>
+                <b>{lang === 'es' ? 'Capítulo 2: La Solución de Dos Bolsillos.' : 'Chapter 2: The Two-Bucket Architecture.'}</b> {lang === 'es'
+                  ? `Para eliminar el pánico de liquidación, separamos su patrimonio en dos motores distintos: un motor de "Cheques Básicos" garantizado legalmente para sus necesidades esenciales, y un motor de "Cheques de Disfrute" para crecimiento, diversión y legado familiar. El capital restante queda 100% libre para capturar las alzas del mercado sin temor a caídas.`
+                  : `To permanently cure retirement anxiety, we divide your wealth into two clear engines: a legally guaranteed "Paychecks" bucket to fund your essential living needs without market risk, and an unencumbered "Playchecks" growth engine in market equities for lifestyle, travel, and family legacy. Because your living needs are defended by contract, your growth dollars never face forced liquidation during a downturn.`
+                }
+              </p>
+              <p>
+                <b>{lang === 'es' ? 'Capítulo 3: La Pista de Conversión con Descuento.' : 'Chapter 3: The Tax-Free Runway.'}</b> {lang === 'es'
+                  ? `Aprovechando las tasas tributarias actuales y el bono inicial del ${(carrierBonusPct * 100).toFixed(0)}% de la aseguradora, convertimos estratégicamente sus saldos gravables a Roth con una tasa neta efectiva de solo ${taxAnalysis.overallNetEffectiveTaxRate}%. Sus herederos recibirán un legado totalmente blindado frente a la regla de liquidación forzosa en 10 años de la ley SECURE 2.0.`
+                  : `Capitalizing on today's lower tax brackets and the ${(carrierBonusPct * 100).toFixed(0)}% upfront carrier bonus, we systematically convert your pre-tax IRA to a tax-free Roth at a net effective friction of only ${taxAnalysis.overallNetEffectiveTaxRate}%. Your beneficiaries inherit an insulated legacy entirely protected from the SECURE Act 2.0 10-year forced liquidation penalty.`
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* DYNAMIC GUARDRAILS EXPLANATION FOR CLIENT */}
+          <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-2.5">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-1.5">
+              <Gauge className="w-4 h-4 text-indigo-700" />
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                {lang === 'es' ? 'Cómo Funcionan sus Barandillas de Retiro Dinámico' : 'How Your Dynamic Spending Guardrails Work'}
+              </h2>
+            </div>
             <p className="text-xs text-slate-700 leading-relaxed">
               {lang === 'es'
-                ? 'Este plan estratégico establece una arquitectura bifurcada de Cheques Básicos y Cheques de Disfrute diseñada para resolver los dos mayores riesgos en su jubilación: el riesgo de secuencia de rendimientos en mercados bajistas y la trampa fiscal obligatoria del IRS (RMDs y Ley SECURE 2.0). Al separar sus necesidades vitales garantizadas en instrumentos contractuales y convertir activos tributables en reservas Roth libres de impuestos, su familia elimina el pánico de liquidación y protege su crecimiento patrimonial.'
-                : 'This customized blueprint establishes a bifurcated Paychecks & Playchecks architecture designed to resolve the two greatest hazards facing your retirement: Sequence-of-Returns risk during market decumulation, and the compulsory IRS tax trap triggered by mandatory RMDs and the SECURE Act 2.0. By strategically isolating guaranteed living requirements into contractual income instruments and converting pre-tax liabilities into compounding tax-free Roth reserves, your family eliminates liquidation panic while locking in an unencumbered equity growth engine.'
+                ? `En lugar de probabilidades abstractas, las barandillas funcionan como los rieles de una autopista. Su gasto actual de $${monthlyNeed.toLocaleString()}/mes está 100% protegido. Si el mercado cae severamente a $${lowerGuardrailPortfolio.toLocaleString()}, se aplica un recorte temporal preventivo de 10% únicamente a sus gastos de diversión, mientras su cheque básico FIA de $${fiaMonthlyIncome.toLocaleString()}/mes continúa intacto. Si el mercado sube a $${upperGuardrailPortfolio.toLocaleString()}, usted recibe un aumento automático a $${raisedMonthlyPaycheck.toLocaleString()}/mes.`
+                : `Rather than confusing probabilities of failure, dynamic guardrails work like lane markers on a highway. Your current target income of $${monthlyNeed.toLocaleString()}/month is 100% on-track. If a severe market crash contracts your balance to $${lowerGuardrailPortfolio.toLocaleString()}, an objective 10% temporary trim ($${reducedMonthlyPaycheck.toLocaleString()}/mo) is applied only to discretionary playchecks, while your FIA contractual paycheck of $${fiaMonthlyIncome.toLocaleString()}/mo remains fully immune. If markets rally to $${upperGuardrailPortfolio.toLocaleString()}, you unlock a permanent lifestyle raise to $${raisedMonthlyPaycheck.toLocaleString()}/mo.`
               }
             </p>
           </div>
@@ -376,6 +410,148 @@ export default function AdvisorTool() {
                 ${guaranteedFiaIncome.toLocaleString()}/yr
               </div>
               <div className="text-[10px] text-slate-600 mt-0.5">{lang === 'es' ? 'Respaldado por contrato legal' : 'Contractual life floor'}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* PRINT PAGE 2: CHARTS & COMPARISON MATRIX */}
+        <div className="space-y-5 page-break-before">
+          <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
+            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">
+              {lang === 'es' ? 'Resumen Comparativo y Pruebas de Estrés' : 'Comparative Matrix & Visual Stress Testing'}
+            </h2>
+            <span className="text-[10px] text-slate-500 font-semibold">{clientName} • Strategic Client Dossier</span>
+          </div>
+
+          <div className="border border-slate-300 rounded-lg overflow-hidden">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="py-2 px-3">{lang === 'es' ? 'Dimensión Estratégica' : 'Strategic Dimension'}</th>
+                  <th className="py-2 px-3">{lang === 'es' ? 'Camino Actual (Tradicional 60/40)' : 'Current Path (Traditional 60/40)'}</th>
+                  <th className="py-2 px-3">{lang === 'es' ? 'Plan Integrado GFI' : 'Integrated GFI Plan'}</th>
+                  <th className="py-2 px-3 text-right">{lang === 'es' ? 'Ventaja Neta para el Cliente' : 'Net Client Advantage'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-800">
+                <tr>
+                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Impuestos Federales y Estatales (hasta 95 años)' : 'Lifetime Federal & State Taxes (to Age 95)'}</td>
+                  <td className="py-2 px-3">${taxAnalysis.totalBaselineTax.toLocaleString()}</td>
+                  <td className="py-2 px-3 font-bold text-emerald-800">${taxAnalysis.totalPlanTax.toLocaleString()}</td>
+                  <td className="py-2 px-3 text-right font-black text-emerald-700">+${taxAnalysis.lifetimeTaxSaved.toLocaleString()} Saved</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Tasa Neta Efectiva de Conversión' : 'Net Effective Conversion Tax Rate'}</td>
+                  <td className="py-2 px-3">{taxAnalysis.grossStatutoryRatePct}% (Progressive)</td>
+                  <td className="py-2.5 px-3 font-bold text-emerald-800">{taxAnalysis.overallNetEffectiveTaxRate}%</td>
+                  <td className="py-2.5 px-3 text-right font-bold text-slate-900">-{(carrierBonusPct * 100).toFixed(0)}% Bonus Offset</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Retiros Forzosos RMD Obligatorios (Edad 73+)' : 'Compulsory Mandatory RMDs (Age 73+)'}</td>
+                  <td className="py-2.5 px-3">Subject to peak tax brackets</td>
+                  <td className="py-2.5 px-3 font-bold text-indigo-900">$0 (100% Tax-Free Roth)</td>
+                  <td className="py-2.5 px-3 text-right font-bold text-indigo-700">Protected</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Penalidad de 10 Años a Herederos (SECURE 2.0)' : 'Heir SECURE Act 10-Yr Tax Drag'}</td>
+                  <td className="py-2.5 px-3">${(taxAnalysis.terminalWealthBase * heirsTaxRate).toLocaleString()}</td>
+                  <td className="py-2.5 px-3 font-bold text-indigo-900">$0 Tax-Free Inherited Base</td>
+                  <td className="py-2.5 px-3 text-right font-black text-indigo-700">+${taxAnalysis.heirSavings.toLocaleString()} Sheltered</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{lang === 'es' ? 'Garantía de Cheque de Flujo de Efectivo' : 'Retirement Cash Flow Guarantee'}</td>
+                  <td className="py-2.5 px-3">${traditional4PctIncome.toLocaleString()}/yr</td>
+                  <td className="py-2.5 px-3 font-bold text-emerald-800">${guaranteedFiaIncome.toLocaleString()}/yr</td>
+                  <td className="py-2.5 px-3 text-right font-black text-emerald-700">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
+                </tr>
+                <tr className="bg-slate-100 font-black border-t-2 border-slate-900">
+                  <td className="py-2.5 px-3 uppercase tracking-wider text-slate-900">{lang === 'es' ? 'Ventaja Familiar Integral' : 'Comprehensive Family Advantage'}</td>
+                  <td className="py-2.5 px-3">--</td>
+                  <td className="py-2.5 px-3">--</td>
+                  <td className="py-2.5 px-3 text-right text-emerald-800 text-sm">
+                    +${(taxAnalysis.lifetimeTaxSaved + taxAnalysis.heirSavings + taxAnalysis.upfrontBonusDollars).toLocaleString()}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 avoid-break">
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <h3 className="text-xs font-bold text-slate-900 mb-2">{lang === 'es' ? 'Carga Fiscal de por Vida: Inacción vs. Plan' : 'Lifetime Tax Burden: Inaction vs. Plan'}</h3>
+              <div className="flex justify-center">
+                <BarChart width={380} height={210} data={taxAnalysis.yearlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <XAxis dataKey="age" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
+                  <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
+                  <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
+                  <Bar dataKey="baselineTax" name="Taxes Under Inaction" fill="#dc2626" isAnimationActive={false} />
+                  <Bar dataKey="planTax" name="Taxes Under Plan" fill="#16a34a" isAnimationActive={false} />
+                </BarChart>
+              </div>
+            </div>
+
+            <div className="border border-slate-300 p-3 rounded-lg bg-slate-50">
+              <h3 className="text-xs font-bold text-slate-900 mb-2">{lang === 'es' ? 'Cheques vs. Volatilidad de Mercado 60/40' : 'Paychecks vs. 60/40 Market Volatility'}</h3>
+              <div className="flex justify-center">
+                <BarChart width={380} height={210} data={feeAdjustedBacktestResults} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <XAxis dataKey="calendarYear" stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} />
+                  <YAxis stroke="#64748b" tick={{ fontSize: 9, fill: '#1e293b' }} tickFormatter={formatCurrencyAxis} />
+                  <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
+                  <Bar dataKey="traditional6040Paycheck" name="4% Rule (Bear Drawdowns)" fill="#dc2626" isAnimationActive={false} />
+                  <Bar dataKey="guaranteedFiaPaycheck" name="Contractual Paycheck Floor" fill="#16a34a" isAnimationActive={false} />
+                </BarChart>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-slate-300 rounded-lg overflow-hidden avoid-break">
+            <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 flex justify-between items-center">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">{lang === 'es' ? 'Calendario de Conversión Táctica Roth (Meta: $0 en IRA)' : 'Tactical Roth Conversion Schedule ($0 Pre-Tax Target)'}</span>
+              <span className="text-[10px] text-slate-600">{(carrierBonusPct * 100).toFixed(0)}% Carrier Bonus Offset Applied</span>
+            </div>
+            <table className="w-full text-left text-[11px] border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-300 font-bold text-slate-700">
+                  <th className="py-1.5 px-2.5">{lang === 'es' ? 'Edad' : 'Age'}</th>
+                  <th className="py-1.5 px-2.5">{lang === 'es' ? 'Conversión' : 'Conversion'}</th>
+                  <th className="py-1.5 px-2.5">{lang === 'es' ? 'Retiro Libre' : 'Free Allowance'}</th>
+                  <th className="py-1.5 px-2.5">{lang === 'es' ? 'Impuestos' : 'Taxes Paid'}</th>
+                  <th className="py-1.5 px-2.5">{lang === 'es' ? 'Tasa Bruta' : 'Gross Rate'}</th>
+                  <th className="py-1.5 px-2.5 text-emerald-800">{lang === 'es' ? 'Tasa Neta' : 'Net Rate'}</th>
+                  <th className="py-1.5 px-2.5">{lang === 'es' ? 'Saldo Roth' : 'Tax-Free Roth Balance'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {taxAnalysis.yearlyData.filter(d => d.conversionAmount > 0).slice(0, 8).map(d => (
+                  <tr key={d.age}>
+                    <td className="py-1 px-2.5 font-bold">Age {d.age} {d.isWorking ? '(Working)' : '(Retired)'}</td>
+                    <td className="py-1 px-2.5 font-semibold text-emerald-800">${d.conversionAmount.toLocaleString()}</td>
+                    <td className="py-1 px-2.5 text-slate-700">${d.maxFreeWithdrawal.toLocaleString()} ({d.maxFreeWithdrawalRatePct}%)</td>
+                    <td className="py-1 px-2.5 text-rose-800">${d.taxesPaidFromWithdrawal.toLocaleString()}</td>
+                    <td className="py-1.5 px-2.5 text-slate-700">{d.statutoryRatePct}%</td>
+                    <td className="py-1.5 px-2.5 font-bold text-emerald-800">{d.netEffectiveRatePct}%</td>
+                    <td className="py-1.5 px-2.5 font-bold text-slate-900">${d.planRoth.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="border border-slate-300 p-3.5 rounded-lg bg-slate-50 space-y-3 avoid-break">
+            <div className="text-[10px] text-slate-600 leading-relaxed space-y-1">
+              <p><b>Important Professional & Legal Disclosures:</b> This presentation is prepared strictly for educational and comparative illustration purposes. Global Financial Impact and its appointed agents are not CPAs, tax attorneys, or registered investment advisors. Tax codes, sunset provisions, and statutory exemptions are subject to state and federal legislative change.</p>
+              <p>Fixed Indexed Annuities (FIAs) and GLWB income riders are long-term insurance contracts subject to surrender charges, carrier solvency, index participation limits, and contract rules. AUM fee: {(aumFeePct * 100).toFixed(2)}%, FIA rider fee: {(annuityFeePct * 100).toFixed(2)}% ({feeDuration === 'ten_years' ? 'First 10 Yrs' : 'Life of Contract'}). Past benchmark performance does not guarantee future results.</p>
+            </div>
+
+            <div className="pt-3 border-t border-slate-300 grid grid-cols-2 gap-8 text-xs text-slate-800">
+              <div className="space-y-5">
+                <div>Client Signature: _________________________________________</div>
+                <div>Date: ________________________</div>
+              </div>
+              <div className="space-y-5">
+                <div>Licensed Advisor Signature: _______________________________</div>
+                <div>License / National Producer #: _____________________________</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1484,7 +1660,7 @@ export default function AdvisorTool() {
             </div>
           )}
 
-          {/* TAB: GFILOGIX BACKTEST STUDIO WITH INCOME LAB GUARDRAILS */}
+          {/* TAB: GFILOGIX BACKTEST STUDIO WITH GUARDRAILS */}
           {activeTab === 'backtest' && (
             <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
@@ -1529,24 +1705,24 @@ export default function AdvisorTool() {
                 </div>
               </div>
 
-              {/* INCOME LAB INTEGRATED DYNAMIC SPENDING GUARDRAILS GAUGE */}
+              {/* DYNAMIC SPENDING GUARDRAILS GAUGE */}
               <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/40 space-y-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-2.5 gap-2">
                   <div className="flex items-center gap-2">
                     <Gauge className="w-5 h-5 text-indigo-400" />
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider text-slate-200">
-                        {lang === 'es' ? 'Marco de Barandillas de Retiro Dinámico (Estilo Income Lab)' : 'Dynamic Spending Guardrails Framework (Income Lab Style)'}
+                        {lang === 'es' ? 'Marco de Barandillas de Retiro Dinámico' : 'Dynamic Spending Guardrails Framework'}
                       </span>
                       <p className="text-[11px] text-slate-400">
                         {lang === 'es' 
-                          ? 'Reglas claras de ajuste: Cuándo apretarse el cinturón o cuándo darse un aumento de sueldo.' 
-                          : 'Quantified decision rules: Exactly when to take a lifestyle raise or reduce discretionary spending.'}
+                          ? 'Reglas claras de ajuste: Sepa con certeza matemática cuándo darse un aumento o cuándo recortar gastos discrecionales.' 
+                          : 'Clear quantitative adjustment rules: Know with mathematical certainty when to take a raise or when to adjust spending.'}
                       </p>
                     </div>
                   </div>
                   <span className="text-xs bg-indigo-950/80 border border-indigo-600/50 text-indigo-300 px-3 py-1 rounded-full font-mono font-bold">
-                    {lang === 'es' ? 'Distribución Adaptativa' : 'Adaptive Guardrails'}
+                    {lang === 'es' ? 'Distribución Adaptativa' : 'Adaptive Distribution Policy'}
                   </span>
                 </div>
 
@@ -1571,7 +1747,7 @@ export default function AdvisorTool() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center pt-1">
                   <div className="p-3 rounded-lg bg-slate-900/90 border border-rose-500/40 space-y-1">
                     <div className="text-[10px] text-rose-400 font-black uppercase tracking-wider">
-                      {lang === 'es' ? 'Barandilla Inferior (Reducción -10%)' : 'Lower Guardrail (Trigger -10% Cut)'}
+                      {lang === 'es' ? 'Barandilla Inferior (Ajuste -10%)' : 'Lower Guardrail (Trigger -10% Cut)'}
                     </div>
                     <div className="text-base font-black text-white">${lowerGuardrailPortfolio.toLocaleString()}</div>
                     <div className="text-xs text-rose-300 font-semibold">
@@ -1609,16 +1785,30 @@ export default function AdvisorTool() {
                   </div>
                 </div>
 
+                {/* CLIENT-FACING CLEAR GUARDRAIL EXPLANATION BOX */}
+                <div className="p-3.5 bg-slate-900/70 border border-slate-800 rounded-lg text-xs text-slate-300 space-y-1.5">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    <CompassIcon className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>{lang === 'es' ? '¿Cómo Protegen las Barandillas su Jubilación?' : 'How Do Spending Guardrails Protect Your Plan?'}</span>
+                  </div>
+                  <p className="leading-relaxed">
+                    {lang === 'es'
+                      ? 'Piense en las barandillas como las líneas divisorias de una autopista. En lugar de vivir con el temor a una caída del mercado, establecemos límites matemáticos de antemano: si el mercado cae a la barandilla inferior, recortamos temporalmente un 10% solo en gastos no esenciales (viajes, diversión) para proteger su capital de liquidaciones forzosas. Sus cheques de vida esenciales están respaldados por el contrato FIA y jamás se recortan. Si el mercado avanza a la barandilla superior, usted desbloquea un aumento de sueldo permanente.'
+                      : 'Think of guardrails like lane boundaries on an interstate highway. Rather than guessing or living in fear of bear markets, we establish mathematical boundaries ahead of time: if market drawdowns push your portfolio down to the lower guardrail, a temporary 10% trim is applied strictly to discretionary playchecks to preserve capital from liquidation. Your essential life paychecks remain legally guaranteed by the FIA and are never cut. If market growth reaches the upper guardrail, you unlock a permanent lifestyle raise.'
+                    }
+                  </p>
+                </div>
+
                 {/* FOOD FOR THOUGHT CARD (GUARDRAILS) */}
                 {showAdvisorNotes && (
                   <div className="mt-2 p-4 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-600/40 rounded-lg space-y-2">
                     <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
-                      <MessageSquare className="w-4 h-4" /> {t.foodForThought} — {lang === 'es' ? 'Barandillas de Ingreso Dinámico' : 'Dynamic Guardrails & Paychecks'}
+                      <MessageSquare className="w-4 h-4" /> {t.foodForThought} — {lang === 'es' ? 'Barandillas de Retiro y Certeza de Ingresos' : 'Spending Guardrails & Income Certainty'}
                     </div>
                     <div className="text-xs md:text-sm text-amber-100 font-medium leading-relaxed">
                       {lang === 'es'
-                        ? `"${firstName}, los jubilados temen quedarse a ciegas en un mercado bajista. Las barandillas le dicen exactamente cuándo ajustar su gasto con tranquilidad en lugar de entrar en pánico. Y con su FIA garantizando $${guaranteedFiaIncome.toLocaleString()} anuales de por vida, sus gastos esenciales nunca tocan la barandilla inferior."`
-                        : `"${firstName}, retirees fear flying blind during a bear market. Guardrails give you an objective playbook showing exactly when to give yourself a raise or tighten your belt without panic. And with your FIA guaranteeing $${guaranteedFiaIncome.toLocaleString()}/year, your essential groceries and mortgage never touch the lower guardrail."`
+                        ? `"${firstName}, los jubilados temen quedarse a ciegas en un mercado bajista sin saber si sus retiros son seguros. Las barandillas reemplazan las probabilidades abstractas con un protocolo claro: si el mercado cae a $${lowerGuardrailPortfolio.toLocaleString()}, ajustamos temporalmente solo los gastos discrecionales un 10%. Y porque su FIA garantiza $${guaranteedFiaIncome.toLocaleString()} anuales de por vida, sus gastos esenciales jamás corren peligro de recortarse."`
+                        : `"${firstName}, retirees fear flying blind during a bear market without knowing whether their withdrawals are sustainable. Guardrails replace abstract percentages with an actionable playbook: if the market contracts to $${lowerGuardrailPortfolio.toLocaleString()}, we adjust discretionary spending by 10%—preventing capital depletion. And because your FIA contractually guarantees $${guaranteedFiaIncome.toLocaleString()}/year, your essential bills are permanently immune."`
                       }
                     </div>
                   </div>
