@@ -225,7 +225,7 @@ export default function DiscoveryCallCoPilot({
     setAiErrorMsg('');
     setIsAnalyzingAi(true);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
       const res = await fetch('/api/discovery-copilot', {
@@ -277,7 +277,7 @@ export default function DiscoveryCallCoPilot({
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        setAiErrorMsg('Request timed out after 15 seconds. Check your GEMINI_API_KEY and network connection.');
+        setAiErrorMsg('Request timed out after 30 seconds. Check your GEMINI_API_KEY and network connection.');
       } else {
         setAiErrorMsg(`Network Error: ${err.message}`);
       }
