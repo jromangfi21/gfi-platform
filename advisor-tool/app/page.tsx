@@ -13,6 +13,7 @@ import {
   MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, ArrowRight, BookOpen, Compass as CompassIcon, PhoneCall
 } from 'lucide-react';
 import DiscoveryCallCoPilot from './DiscoveryCallCoPilot';
+import IllustrationComparison from './IllustrationComparison';
 
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
@@ -779,7 +780,14 @@ export default function AdvisorTool() {
           />
         ) : (
           <>
-            {/* Top 4 Stat Banners */}
+            <IllustrationComparison
+          iraBalance={iraBalance}
+          withdrawalNeed={withdrawalNeed}
+          socialSecurity={socialSecurity}
+          fixedIncome={fixedIncome}
+        />
+
+        {/* Top 4 Stat Banners */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
                 <div className="flex items-center gap-2 text-emerald-400 mb-1.5 text-xs font-bold uppercase tracking-wide">
