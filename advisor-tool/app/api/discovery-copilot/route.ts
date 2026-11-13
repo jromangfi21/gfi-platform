@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor Name';
-  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Based on what the prospect just said, return ONLY compact JSON with the exact next script question:
-{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"exact next question to ask","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}
+  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Return ONLY compact single-line JSON (no newlines) with the exact next script question:
+{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact next question (max 20 words)","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}
 13 Stages: 1:Open(10m) 2:Personal(age,spouse,kids,work,retireAge) 3:Goals(vision,priority,1 win) 4:Assets(401k/IRA/Roth/annuity,advisor) 5:Debt 6:Risk(crash,down-market) 7:Safe 8:Liquidity 9:Income(goal,SS,pension,gap) 10:RealGap 11:Recap 12:4Jobs 13:Book45m.`;
 }
 
@@ -14,7 +14,7 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 160,
+      maxOutputTokens: 450,
       responseMimeType: 'application/json',
     },
   };
@@ -30,8 +30,26 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
       'x-goog-api-key': apiKey,
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(6000),
   });
+}
+
+function safeParseJson(raw: string) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Recover partial fields via regex if a string was ever truncated
+    const stageMatch = raw.match(/"currentStage"\s*:\s*(\d+)/);
+    const branchMatch = raw.match(/"branchDetected"\s*:\s*"([^"]*)"/);
+    const promptMatch = raw.match(/"suggestedNextPrompt"\s*:\s*"([^"]*)"/);
+    const tipMatch = raw.match(/"coachingTip"\s*:\s*"([^"]*)"/);
+    return {
+      currentStage: stageMatch ? Number(stageMatch[1]) : undefined,
+      branchDetected: branchMatch ? branchMatch[1] : 'Active Call',
+      suggestedNextPrompt: promptMatch ? promptMatch[1] : undefined,
+      coachingTip: tipMatch ? tipMatch[1] : 'Continue discovery script',
+    };
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -62,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    return NextResponse.json(JSON.parse(rawText));
+    return NextResponse.json(safeParseJson(rawText));
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Co-Pilot analysis failed' },
