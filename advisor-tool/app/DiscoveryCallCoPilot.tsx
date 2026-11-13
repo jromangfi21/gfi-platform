@@ -80,6 +80,7 @@ export default function DiscoveryCallCoPilot({
   initialData,
   onSyncToBlueprint,
 }: DiscoveryCallCoPilotProps) {
+  const [advisorName, setAdvisorName] = useState<string>('Advisor Name');
   const [activeStage, setActiveStage] = useState<number>(1);
   const [completedStages, setCompletedStages] = useState<number[]>([]);
 
@@ -111,13 +112,17 @@ export default function DiscoveryCallCoPilot({
   const [transcript, setTranscript] = useState<string>('');
   const [interimText, setInterimText] = useState<string>('');
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
+  const [aiErrorMsg, setAiErrorMsg] = useState<string>('');
+
+  const firstName = formData.clientName.split('&')[0].trim() || 'there';
+  const displayAdvisor = advisorName.trim() || 'Advisor Name';
 
   const [aiOverlay, setAiOverlay] = useState<{
     suggestedNextPrompt: string;
     coachingTip: string;
     branchDetected: string;
   }>({
-    suggestedNextPrompt: `"Hey, ${formData.clientName.split('&')[0].trim()}, this is RJ Pimentel. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`,
+    suggestedNextPrompt: `"Hey, ${firstName}, this is ${displayAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`,
     coachingTip: 'Stage 1: Confirm they remember requesting info, then ask for 10 minutes.',
     branchDetected: 'Opening Call',
   });
@@ -140,7 +145,6 @@ export default function DiscoveryCallCoPilot({
 
   const totalGuaranteedMonthly = (formData.monthlySocialSecurity || 0) + (formData.monthlyPensionFixed || 0);
   const monthlyIncomeGap = Math.max(0, (formData.desiredMonthlyIncome || 0) - totalGuaranteedMonthly);
-  const firstName = formData.clientName.split('&')[0].trim() || 'there';
 
   const toggleLiveCallCapture = async () => {
     if (isListeningMic) {
@@ -187,7 +191,7 @@ export default function DiscoveryCallCoPilot({
 
       setIsListeningMic(true);
     } catch {
-      alert('Microphone permission is required for live call transcription.');
+      setAiErrorMsg('Microphone permission is required for live call transcription.');
     }
   };
 
@@ -201,7 +205,7 @@ export default function DiscoveryCallCoPilot({
       displayStream.getVideoTracks().forEach((track) => track.stop());
 
       if (displayStream.getAudioTracks().length === 0) {
-        alert('No tab audio detected. Make sure to select your CRM browser tab and check "Share tab audio".');
+        setAiErrorMsg('No tab audio detected. Select your CRM browser tab and check "Share tab audio".');
         return;
       }
 
@@ -213,17 +217,32 @@ export default function DiscoveryCallCoPilot({
   };
 
   const runAiCoPilotAnalysis = async () => {
-    if (!transcript.trim()) return;
+    if (!transcript.trim()) {
+      setAiErrorMsg('Type or record a few words in the Live Call Transcript box first, then click AI Next Prompt & Extract.');
+      return;
+    }
+
+    setAiErrorMsg('');
     setIsAnalyzingAi(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       const res = await fetch('/api/discovery-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript, currentData: formData }),
+        body: JSON.stringify({
+          transcript,
+          currentData: formData,
+          advisorName: displayAdvisor,
+        }),
+        signal: controller.signal,
       });
+
       const data = await res.json();
+
       if (!res.ok || data.error) {
-        alert(`Co-Pilot API Error: ${data.error || res.statusText}`);
+        setAiErrorMsg(`API Error: ${data.error || res.statusText}`);
         return;
       }
 
@@ -257,8 +276,13 @@ export default function DiscoveryCallCoPilot({
         if (typeof ext.isMarried === 'boolean') setIsMarried(ext.isMarried);
       }
     } catch (err: any) {
-      alert(`Network Error: ${err.message}`);
+      if (err.name === 'AbortError') {
+        setAiErrorMsg('Request timed out after 15 seconds. Check your GEMINI_API_KEY and network connection.');
+      } else {
+        setAiErrorMsg(`Network Error: ${err.message}`);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setIsAnalyzingAi(false);
     }
   };
@@ -287,6 +311,7 @@ export default function DiscoveryCallCoPilot({
   const handleDownloadTxt = () => {
     const content = `GFI RETIREMENT DISCOVERY CALL TRANSCRIPT & SUMMARY
 Date: ${new Date().toLocaleString()}
+Advisor: ${displayAdvisor}
 Client: ${formData.clientName}
 Age: ${formData.currentAge} | Married: ${isMarried ? `Yes (Spouse Age: ${formData.spouseAge || 'N/A'})` : 'No'}
 Target Retirement Age: ${formData.retirementAge}
@@ -334,7 +359,7 @@ ${transcript || '(No transcript recorded)'}
               <PhoneCall className="w-6 h-6 text-cyan-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-black text-white tracking-tight">
                   Live Retirement Discovery Call Co-Pilot
                 </h2>
@@ -349,6 +374,17 @@ ${transcript || '(No transcript recorded)'}
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5">
+              <span className="text-[11px] font-bold text-slate-400">Advisor:</span>
+              <input
+                type="text"
+                value={advisorName}
+                onChange={(e) => setAdvisorName(e.target.value)}
+                placeholder="Advisor Name"
+                className="w-32 bg-transparent text-xs font-bold text-cyan-300 focus:outline-none"
+              />
+            </div>
+
             <button
               onClick={toggleLiveCallCapture}
               className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm ${
@@ -376,13 +412,20 @@ ${transcript || '(No transcript recorded)'}
             <button
               onClick={runAiCoPilotAnalysis}
               disabled={isAnalyzingAi}
-              className="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition shadow-sm"
+              className="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 text-xs font-black flex items-center gap-1.5 transition shadow-sm"
             >
               <Sparkles className={`w-4 h-4 ${isAnalyzingAi ? 'animate-spin' : ''}`} />
               {isAnalyzingAi ? 'Analyzing Call...' : 'AI Next Prompt & Extract'}
             </button>
           </div>
         </div>
+
+        {aiErrorMsg && (
+          <div className="bg-rose-950/90 border border-rose-500 text-rose-200 text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center justify-between">
+            <span>{aiErrorMsg}</span>
+            <button onClick={() => setAiErrorMsg('')} className="text-rose-300 hover:text-white font-bold ml-4">Dismiss</button>
+          </div>
+        )}
 
         <div className="bg-slate-950/90 border border-amber-500/40 rounded-xl p-4 space-y-2">
           <div className="flex items-center justify-between">
@@ -394,7 +437,9 @@ ${transcript || '(No transcript recorded)'}
             </span>
           </div>
           <p className="text-base md:text-lg font-semibold text-white leading-relaxed">
-            {aiOverlay.suggestedNextPrompt}
+            {activeStage === 1 && aiOverlay.branchDetected === 'Opening Call'
+              ? `"Hey, ${firstName}, this is ${displayAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`
+              : aiOverlay.suggestedNextPrompt}
           </p>
           <p className="text-xs text-amber-200/90 flex items-center gap-1.5 pt-1 border-t border-slate-800/80">
             <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -503,7 +548,7 @@ ${transcript || '(No transcript recorded)'}
               <div className="p-4 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
                 <span className="text-xs font-bold text-cyan-400 uppercase">Opening Line:</span>
                 <p className="font-medium text-white">
-                  &ldquo;Hey, <b>{firstName}</b>, this is RJ Pimentel. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?&rdquo;
+                  &ldquo;Hey, <b>{firstName}</b>, this is <b>{displayAdvisor}</b>. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?&rdquo;
                 </p>
               </div>
 

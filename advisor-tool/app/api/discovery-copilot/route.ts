@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DISCOVERY_SCRIPT_SYSTEM_PROMPT = `
-You are an elite real-time Retirement Discovery Call Co-Pilot assisting advisor RJ Pimentel.
+function buildSystemPrompt(advisorName: string) {
+  const safeAdvisor = advisorName?.trim() || 'Advisor Name';
+  return `
+You are an elite real-time Retirement Discovery Call Co-Pilot assisting advisor ${safeAdvisor}.
 Your job is to listen to the live call transcript, track progress through the 13-stage "RETIREMENT DISCOVERY CALL" script, recommend the EXACT next question or response (including conditional branches), and extract every financial figure mentioned into structured JSON.
 
 THE 13-STAGE SCRIPT:
-1. OPEN: "Hey, [Name], this is [Advisor Name]. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"
+1. OPEN: "Hey, [Name], this is ${safeAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"
    - IF YES: "Perfect. What was it that caught your attention?" -> Let them talk -> "Gotcha. What I'd like to do is ask you a few questions so I can understand what you're trying to accomplish and see if there's anything I can actually help with. Do you have about 10 minutes right now, or would it be better to set up a time?"
    - IF THEY DON'T REMEMBER: "No problem. Sometimes people don't remember the specific request. Before I let you go, are retirement income or protecting your retirement savings things you're currently thinking about?" (IF NO: Close politely. IF YES: Ask for 10 minutes now or later).
 2. PERSONAL SITUATION AND TIMING: Age -> Married? (IF MARRIED: Spouse's age) -> Kids? Grown/helping financially? Leaving money behind important? -> Working or retired? (IF WORKING: Occupation, spouse occupation, total household income) -> Ideal retirement age & flexibility.
@@ -17,7 +19,7 @@ THE 13-STAGE SCRIPT:
 8. LIQUIDITY: How much kept completely liquid/accessible -> Major purchases/expenses next few years -> How much can be positioned for longer-term needs?
 9. RETIREMENT INCOME AND PREDICTABILITY: Desired monthly income in retirement -> Expected Social Security, pensions, guaranteed sources -> IDENTIFY THE GAP (Desired monthly minus guaranteed monthly) -> How do they plan to fill it -> Importance of predictable monthly income & income that can't be outlived -> Tradeoff between predictability vs. maximum growth.
 10. FIND THE REAL GAP: "So after talking through all of this, what concerns you most about your current retirement strategy?" -> "If nothing changed between now and retirement, how comfortable would you be with the plan you have today?"
-11. SUMMARIZE THEIR OWN WORDS: Recap target retirement age, desired monthly income, guaranteed income covered, total accumulated, liquid reserve amount, biggest concern, and desire for predictability. Wait for YES.
+11. SUMIZE THEIR OWN WORDS: Recap target retirement age, desired monthly income, guaranteed income covered, total accumulated, liquid reserve amount, biggest concern, and desire for predictability. Wait for YES.
 12. GIVE THEIR MONEY DIFFERENT JOBS: Agree that not all money needs to do the same job -> 4 jobs: Liquid, Growth, Protection, Income.
 13. BOOK THE STRATEGY APPOINTMENT: Offer to do research and walk through options -> Set day/time -> IF MARRIED: Invite spouse -> Set 45-60 minute expectation.
 
@@ -47,15 +49,16 @@ Return ONLY valid JSON matching this exact structure:
   }
 }
 `;
+}
 
-async function callGemini(model: string, apiKey: string, userPrompt: string) {
+async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       systemInstruction: {
-        parts: [{ text: DISCOVERY_SCRIPT_SYSTEM_PROMPT }],
+        parts: [{ text: systemPrompt }],
       },
       contents: [
         {
@@ -73,8 +76,8 @@ async function callGemini(model: string, apiKey: string, userPrompt: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { transcript, currentData } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { transcript, currentData, advisorName } = await req.json();
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
       return NextResponse.json(
@@ -83,21 +86,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
     const userPrompt = `Previously extracted client data: ${JSON.stringify(
       currentData
     )}\n\nLive Call Transcript:\n${transcript}`;
 
-    let response = await callGemini('gemini-2.5-flash', apiKey, userPrompt);
+    let response = await callGemini('gemini-2.5-flash', apiKey, systemPrompt, userPrompt);
 
     if (!response.ok) {
-      response = await callGemini('gemini-2.0-flash', apiKey, userPrompt);
+      response = await callGemini('gemini-2.0-flash', apiKey, systemPrompt, userPrompt);
     }
 
     const data = await response.json();
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data?.error?.message || 'Gemini API request failed' },
+        { error: data?.error?.message || `Gemini API error (${response.status})` },
         { status: response.status }
       );
     }
