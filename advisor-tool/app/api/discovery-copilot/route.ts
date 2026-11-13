@@ -2,51 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor Name';
-  return `
-You are an elite real-time Retirement Discovery Call Co-Pilot assisting advisor ${safeAdvisor}.
-Track progress through the 13-stage "RETIREMENT DISCOVERY CALL" script, recommend the exact next question/response (with conditional branches), and extract financial figures into JSON.
+  return `You are a fast real-time Retirement Discovery Call Co-Pilot for advisor ${safeAdvisor}.
+Track the 13-stage script, return the exact next tailored question/response, and extract financial numbers into JSON.
 
 STAGES:
-1. OPEN: "Hey, [Name], this is ${safeAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?" (YES: ask what caught attention -> ask for 10 mins. NO MEMORY: ask if retirement income/protection is on their mind).
-2. PERSONAL & TIMING: Age, married? (spouse age), kids/legacy, working/retired (occupation, household income), target retirement age & flexibility.
-3. WHAT DO THEY WANT?: Financial picture of retirement, top priority (growth, protection, income, liquidity), one financial win (no pitching).
-4. ASSETS & STRATEGY: Account types (401k, IRA, brokerage, savings, annuities), total accumulated, existing annuities, advisor vs DIY.
-5. DEBT & OBLIGATIONS: Mortgage, loans, family obligations.
-6. MARKET RISK: Impact of early crash, pulling income in down market, loss vs upside concern.
-7. DEFINE SAFE (ONLY IF MENTIONED): What does "safe" mean to them? Protection vs upside.
-8. LIQUIDITY: Liquid reserve needed, major upcoming expenses, long-term bucket.
-9. INCOME & PREDICTABILITY: Desired monthly income, SS/pension, monthly gap, lifetime predictable income vs growth.
-10. REAL GAP: Biggest concern & comfort if nothing changes.
-11. SUMMARIZE: Recap target retirement age, monthly income, guaranteed income, total savings, liquid reserve, concern. Wait for YES.
-12. DIFFERENT JOBS: Liquid, Growth, Protection, Income buckets.
-13. BOOK STRATEGY SESSION: Set day/time, invite spouse if married, 45-60 mins.
+1. OPEN: Confirm info request -> ask for 10 mins (or ask if retirement income/protection is on their mind).
+2. PERSONAL: Age, married? (spouse age), kids/legacy, working/retired (occupation, household income), retirement age.
+3. GOALS: Financial picture of retirement, top priority (growth, protection, income, liquidity), one financial win.
+4. ASSETS: 401k/IRA/Roth/brokerage/annuities, total saved, existing annuities, advisor vs DIY.
+5. DEBT: Mortgage, loans, obligations.
+6. RISK: Early crash impact, down-market withdrawals, loss vs upside.
+7. SAFE (if mentioned): Define "safe", protection vs upside.
+8. LIQUIDITY: Cash reserve needed, major upcoming expenses, long-term bucket.
+9. INCOME: Desired monthly income, SS/pension, income gap, predictable lifetime income vs growth.
+10. GAP: Biggest concern & comfort if nothing changes.
+11. SUMMARIZE: Recap retirement age, monthly income, guaranteed income, total savings, liquid reserve, concern.
+12. JOBS: Liquid, Growth, Protection, Income buckets.
+13. BOOK: Set 45-60 min Strategy Session day/time, invite spouse if married.
 
 Return ONLY valid JSON:
-{
-  "currentStage": 1,
-  "stageName": "1. Open & Permission",
-  "branchDetected": "Opening Call",
-  "suggestedNextPrompt": "exact tailored script line to say next",
-  "coachingTip": "brief 1-sentence tactical cue",
-  "safetyMentioned": false,
-  "extractedData": {
-    "clientName": null,
-    "currentAge": null,
-    "spouseAge": null,
-    "isMarried": null,
-    "retirementAge": null,
-    "currentEarnedIncome": null,
-    "iraBalance": null,
-    "rothBalance": null,
-    "liquidReserveNeed": null,
-    "desiredMonthlyIncome": null,
-    "monthlySocialSecurity": null,
-    "monthlyPensionFixed": null,
-    "biggestConcern": null,
-    "currentAnnuity": null
-  }
-}
-`;
+{"currentStage":1,"stageName":"1. Open & Permission","branchDetected":"Opening Call","suggestedNextPrompt":"exact next line","coachingTip":"brief cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}`;
 }
 
 async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
@@ -61,17 +36,18 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       generationConfig: {
-        temperature: 0.2,
+        temperature: 0.1,
+        maxOutputTokens: 512,
         responseMimeType: 'application/json',
       },
     }),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(10000),
   });
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { transcript, currentData, advisorName } = await req.json();
+    const { transcript, advisorName } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
@@ -82,9 +58,9 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
-    const userPrompt = `Current data: ${JSON.stringify(currentData)}\n\nTranscript:\n${transcript}`;
+    const userPrompt = `Call Transcript:\n${transcript}`;
 
-    const models = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+    const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
     let response: Response | null = null;
     let lastError = 'Gemini API request failed';
 
