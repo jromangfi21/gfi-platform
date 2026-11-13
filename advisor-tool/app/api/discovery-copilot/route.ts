@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor Name';
-  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Return ONLY compact single-line JSON (no newlines) with the exact next script question:
+  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Analyze the call transcript & notes, extract ALL mentioned client numbers/details into extractedData (convert "500k"->500000, "1.2 million"->1200000), and return ONLY compact single-line JSON:
 {"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact next question (max 20 words)","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}
 13 Stages: 1:Open(10m) 2:Personal(age,spouse,kids,work,retireAge) 3:Goals(vision,priority,1 win) 4:Assets(401k/IRA/Roth/annuity,advisor) 5:Debt 6:Risk(crash,down-market) 7:Safe 8:Liquidity 9:Income(goal,SS,pension,gap) 10:RealGap 11:Recap 12:4Jobs 13:Book45m.`;
 }
@@ -14,7 +14,7 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 450,
+      maxOutputTokens: 500,
       responseMimeType: 'application/json',
     },
   };
@@ -60,9 +60,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing GEMINI_API_KEY' }, { status: 500 });
     }
 
-    const recentTranscript = (transcript || '').slice(-450);
+    const recentTranscript = (transcript || '').slice(-2500);
     const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
-    const userPrompt = `Latest call exchange:\n${recentTranscript}`;
+    const userPrompt = `Call transcript and advisor notes:\n${recentTranscript}`;
 
     const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
     let res: Response | null = null;

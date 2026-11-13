@@ -343,30 +343,37 @@ export default function DiscoveryCallCoPilot({
 
   
   const instantExtractFromText = (text: string) => {
+    if (!text) return;
     const lower = text.toLowerCase();
     const parseMoney = (raw: string, suffix?: string) => {
-      const num = parseFloat(raw.replace(/,/g, ""));
+      const num = parseFloat(raw.replace(/,/g, ''));
       if (isNaN(num)) return null;
-      if (suffix && /m|million/i.test(suffix)) return Math.round(num * 1000000);
-      if (suffix && /k|thousand/i.test(suffix)) return Math.round(num * 1000);
+      if (suffix && /^m|million/i.test(suffix)) return Math.round(num * 1000000);
+      if (suffix && /^k|thousand/i.test(suffix)) return Math.round(num * 1000);
       return Math.round(num);
     };
 
-    const ageMatch = lower.match(/(?:age|i am|he is|she is|client is|[a-z]+,)\s*(\d{2})(?:\b|\s*years?\s*old)/);
-    const retireMatch = lower.match(/retire(?:\s+at|\s+around|\s+age)?\s*(\d{2})/);
-    const iraMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:a|an|my|his|her|their)\s+)?(?:401k|401\(k\)|ira|saved|retirement)/);
-    const rothMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:a|my)\s+)?roth/);
-    const incomeMatch = lower.match(/(?:wants?|need|needs|looking for|goal of)\s*\$?([\d,.]+)\s*(k|thousand)?\s*(?:a\s+month|per\s+month|\/mo|monthly)/);
-    const ssMatch = lower.match(/social\s+security[^\d$]{0,15}\$?([\d,.]+)\s*(k)?/);
-    const pensionMatch = lower.match(/pension[^\d$]{0,15}\$?([\d,.]+)\s*(k)?/);
+    const ageMatch = lower.match(/(?:i'm|i am|age|he's|he is|she's|she is|client is|turned)\s*(\d{2})(?:\b|\s*years?\s*old)/);
+    const spouseAgeMatch = lower.match(/(?:wife|husband|spouse)\s*(?:is|'s)?\s*(\d{2})(?:\b|\s*years?\s*old)/);
+    const retireMatch = lower.match(/retire(?:\s+at|\s+around|\s+by|\s+in|\s+age)?\s*(\d{2})/);
+    const iraMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:a|an|my|our|his|her|their)\s+)?(?:401k|401\(k\)|ira|pre-?tax|saved|retirement)/);
+    const rothMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:a|my|our)\s+)?roth/);
+    const liquidMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:the\s+)?)?(?:savings|bank|cash|checking|liquid|money\s+market)/);
+    const earnedMatch = lower.match(/(?:make|making|earn|earning|income\s+is|salary\s+is)\s*\$?([\d,.]+)\s*(k|thousand|m|million)?(?:\s*(?:a\s+year|per\s+year|annually|\/yr))?/);
+    const incomeMatch = lower.match(/(?:want|wants|need|needs|looking\s+for|goal\s+of|spend|spending)\s*\$?([\d,.]+)\s*(k|thousand)?\s*(?:a\s+month|per\s+month|\/mo|monthly)/);
+    const ssMatch = lower.match(/social\s+security[^\d$]{0,20}\$?([\d,.]+)\s*(k|thousand)?/);
+    const pensionMatch = lower.match(/pension[^\d$]{0,20}\$?([\d,.]+)\s*(k|thousand)?/);
     const marriedMentioned = /\b(married|spouse|wife|husband)\b/.test(lower);
 
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
       currentAge: ageMatch ? Number(ageMatch[1]) : prev.currentAge,
+      spouseAge: spouseAgeMatch ? Number(spouseAgeMatch[1]) : prev.spouseAge,
       retirementAge: retireMatch ? Number(retireMatch[1]) : prev.retirementAge,
       iraBalance: iraMatch ? (parseMoney(iraMatch[1], iraMatch[2]) ?? prev.iraBalance) : prev.iraBalance,
       rothBalance: rothMatch ? (parseMoney(rothMatch[1], rothMatch[2]) ?? prev.rothBalance) : prev.rothBalance,
+      liquidReserveNeed: liquidMatch ? (parseMoney(liquidMatch[1], liquidMatch[2]) ?? prev.liquidReserveNeed) : prev.liquidReserveNeed,
+      currentEarnedIncome: earnedMatch ? (parseMoney(earnedMatch[1], earnedMatch[2]) ?? prev.currentEarnedIncome) : prev.currentEarnedIncome,
       desiredMonthlyIncome: incomeMatch ? (parseMoney(incomeMatch[1], incomeMatch[2]) ?? prev.desiredMonthlyIncome) : prev.desiredMonthlyIncome,
       monthlySocialSecurity: ssMatch ? (parseMoney(ssMatch[1], ssMatch[2]) ?? prev.monthlySocialSecurity) : prev.monthlySocialSecurity,
       monthlyPensionFixed: pensionMatch ? (parseMoney(pensionMatch[1], pensionMatch[2]) ?? prev.monthlyPensionFixed) : prev.monthlyPensionFixed,
@@ -450,11 +457,11 @@ export default function DiscoveryCallCoPilot({
 
   
   useEffect(() => {
-    const trimmed = transcript.trim();
-    if (!trimmed) return;
-    instantExtractFromText(trimmed);
+    const combined = [transcript, crmNotes].filter(Boolean).join('\n').trim();
+    if (!combined) return;
+    instantExtractFromText(combined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcript]);
+  }, [transcript, crmNotes]);
 
   const toggleStageComplete = (id: number) => {
     setCompletedStages((prev) =>
