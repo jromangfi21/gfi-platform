@@ -153,7 +153,8 @@ export default function DiscoveryCallCoPilot({
       shouldKeepListeningRef.current = false;
       recognitionRef.current?.stop();
       micStreamRef.current?.getTracks().forEach((t) => t.stop());
-      crmStreamRef.current?.getTracks().forEach((t) => t.stop());
+      stopCrmTabTranscription();
+    crmStreamRef.current?.getTracks().forEach((t) => t.stop());
       setIsListeningMic(false);
       setIsCapturingCrmTab(false);
       return;
@@ -218,6 +219,104 @@ export default function DiscoveryCallCoPilot({
     }
   };
 
+  
+  const crmRecorderIntervalRef = useRef<any>(null);
+  const crmAudioCtxRef = useRef<AudioContext | null>(null);
+
+  const stopCrmTabTranscription = () => {
+    if (crmRecorderIntervalRef.current) {
+      clearInterval(crmRecorderIntervalRef.current);
+      crmRecorderIntervalRef.current = null;
+    }
+    if (crmAudioCtxRef.current) {
+      crmAudioCtxRef.current.close().catch(() => {});
+      crmAudioCtxRef.current = null;
+    }
+  };
+
+  const startCrmTabTranscription = async (stream: MediaStream) => {
+    stopCrmTabTranscription();
+    const audioTracks = stream.getAudioTracks();
+    if (!audioTracks.length) return;
+
+    const audioOnlyStream = new MediaStream(audioTracks);
+    const audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume().catch(() => {});
+    }
+    crmAudioCtxRef.current = audioCtx;
+    const source = audioCtx.createMediaStreamSource(audioOnlyStream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    let peakVolume = 0;
+    const volumeCheck = setInterval(() => {
+      analyser.getByteFrequencyData(dataArray);
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+      const avg = sum / dataArray.length;
+      if (avg > peakVolume) peakVolume = avg;
+    }, 150);
+
+    const recordChunk = () => {
+      if (!audioOnlyStream.active || audioTracks[0].readyState === 'ended') {
+        clearInterval(volumeCheck);
+        stopCrmTabTranscription();
+        return;
+      }
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+      const recorder = new MediaRecorder(audioOnlyStream, { mimeType });
+      const chunks: BlobPart[] = [];
+      const lastChunkPeak = peakVolume;
+      peakVolume = 0;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        if (peakVolume < 0.5 && lastChunkPeak < 0.5) return;
+        if (chunks.length === 0) return;
+
+        const blob = new Blob(chunks, { type: mimeType });
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string)?.split(',')[1];
+          if (!base64) return;
+          try {
+            const res = await fetch('/api/transcribe-crm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audioBase64: base64, mimeType: 'audio/webm' }),
+            });
+            const data = await res.json();
+            if (data.text && data.text.trim()) {
+              setTranscript((prev) =>
+                prev ? prev + '\n[Prospect]: ' + data.text.trim() : '[Prospect]: ' + data.text.trim()
+              );
+            }
+          } catch (err) {
+            console.error('CRM transcribe chunk error:', err);
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      recorder.start();
+      setTimeout(() => {
+        if (recorder.state === 'recording') recorder.stop();
+      }, 3800);
+    };
+
+    recordChunk();
+    crmRecorderIntervalRef.current = setInterval(recordChunk, 4000);
+  };
+
   const connectCrmTabAudio = async () => {
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -225,7 +324,7 @@ export default function DiscoveryCallCoPilot({
         audio: true,
       });
 
-      displayStream.getVideoTracks().forEach((track) => track.stop());
+      // Keep video track active so Chrome preserves tab audio stream
 
       if (displayStream.getAudioTracks().length === 0) {
         setAiErrorMsg('No tab audio detected. Select your CRM browser tab and check "Share tab audio".');
@@ -233,6 +332,7 @@ export default function DiscoveryCallCoPilot({
       }
 
       crmStreamRef.current = displayStream;
+      startCrmTabTranscription(displayStream);
       setIsCapturingCrmTab(true);
     } catch {
       // User cancelled tab picker
