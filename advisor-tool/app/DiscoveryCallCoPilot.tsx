@@ -517,6 +517,18 @@ ${transcript || '(No transcript recorded)'}
     });
   };
 
+
+  const handleCopyCrmNotes = async () => {
+    if (!crmNotes.trim()) return;
+    try {
+      await navigator.clipboard.writeText(crmNotes);
+      setCopiedNotes(true);
+      setTimeout(() => setCopiedNotes(false), 2000);
+    } catch {
+      // fallback if clipboard permission denied
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-cyan-950 border border-indigo-500/50 rounded-xl p-5 shadow-lg space-y-4">
@@ -927,6 +939,40 @@ ${transcript || '(No transcript recorded)'}
               placeholder="Live speech-to-text appears here automatically during your CRM call, or paste/type call notes here and click 'AI Next Prompt & Extract'..."
               className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 leading-relaxed focus:border-cyan-500 focus:outline-none"
             />
+
+            {/* Separate Advisor CRM Notes Box */}
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold tracking-wider text-amber-400 uppercase">
+                  Advisor CRM Notes (Isolated from Live Transcript)
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCrmNotes('')}
+                    disabled={!crmNotes.trim()}
+                    className="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 transition"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyCrmNotes}
+                    disabled={!crmNotes.trim()}
+                    className="px-3 py-1 text-xs font-semibold rounded bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-40 transition"
+                  >
+                    {copiedNotes ? 'Copied to Clipboard!' : 'Copy Notes for CRM'}
+                  </button>
+                </div>
+              </div>
+              <textarea
+                rows={4}
+                value={crmNotes}
+                onChange={(e) => setCrmNotes(e.target.value)}
+                placeholder="Type your private call notes, follow-up items, or CRM summary here without interrupting the live transcript..."
+                className="w-full rounded-lg bg-slate-950/90 border border-slate-700/80 focus:border-amber-400 focus:outline-none p-3 text-sm text-slate-100 placeholder-slate-500 resize-y"
+              />
+            </div>
             {interimText && (
               <div className="text-[11px] text-cyan-400 italic">Hearing: {interimText}...</div>
             )}
