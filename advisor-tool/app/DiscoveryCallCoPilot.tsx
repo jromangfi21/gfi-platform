@@ -110,6 +110,8 @@ export default function DiscoveryCallCoPilot({
   const [isListeningMic, setIsListeningMic] = useState(false);
   const [isCapturingCrmTab, setIsCapturingCrmTab] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
+  const [crmNotes, setCrmNotes] = useState<string>('');
+  const [copiedNotes, setCopiedNotes] = useState<boolean>(false);
   const [interimText, setInterimText] = useState<string>('');
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
   const [aiErrorMsg, setAiErrorMsg] = useState<string>('');
