@@ -322,6 +322,19 @@ export default function DiscoveryCallCoPilot({
     }
   };
 
+  
+  useEffect(() => {
+    if (!transcript.trim()) return;
+    instantExtractFromText(transcript);
+    const timer = setTimeout(() => {
+      if (!isAnalyzingAi) {
+        runAiCoPilotAnalysis();
+      }
+    }, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript]);
+
   const toggleStageComplete = (id: number) => {
     setCompletedStages((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
