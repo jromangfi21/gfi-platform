@@ -131,6 +131,7 @@ export default function DiscoveryCallCoPilot({
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string>('');
 
   const recognitionRef = useRef<any>(null);
+  const shouldKeepListeningRef = useRef<boolean>(false);
   const crmStreamRef = useRef<MediaStream | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const lastApiCallRef = useRef<number>(0);
@@ -149,6 +150,7 @@ export default function DiscoveryCallCoPilot({
 
   const toggleLiveCallCapture = async () => {
     if (isListeningMic) {
+      shouldKeepListeningRef.current = false;
       recognitionRef.current?.stop();
       micStreamRef.current?.getTracks().forEach((t) => t.stop());
       crmStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -186,6 +188,26 @@ export default function DiscoveryCallCoPilot({
           setInterimText(interimChunk);
         };
 
+        recognition.onerror = (event: any) => {
+          if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            shouldKeepListeningRef.current = false;
+            setIsListeningMic(false);
+          }
+        };
+
+        recognition.onend = () => {
+          if (shouldKeepListeningRef.current) {
+            setTimeout(() => {
+              try {
+                recognition.start();
+              } catch {
+                // ignore if already started
+              }
+            }, 150);
+          }
+        };
+
+        shouldKeepListeningRef.current = true;
         recognition.start();
         recognitionRef.current = recognition;
       }
