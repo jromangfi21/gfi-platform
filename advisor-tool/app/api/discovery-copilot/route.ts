@@ -30,7 +30,7 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
       'x-goog-api-key': apiKey,
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(6000),
+    signal: AbortSignal.timeout(12000),
   });
 }
 
@@ -38,7 +38,6 @@ function safeParseJson(raw: string) {
   try {
     return JSON.parse(raw);
   } catch {
-    // Recover partial fields via regex if a string was ever truncated
     const stageMatch = raw.match(/"currentStage"\s*:\s*(\d+)/);
     const branchMatch = raw.match(/"branchDetected"\s*:\s*"([^"]*)"/);
     const promptMatch = raw.match(/"suggestedNextPrompt"\s*:\s*"([^"]*)"/);
@@ -65,17 +64,26 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
     const userPrompt = `Latest call exchange:\n${recentTranscript}`;
 
-    let res = await callGemini('gemini-3.5-flash-lite', apiKey, systemPrompt, userPrompt);
-    if (!res.ok) {
-      res = await callGemini('gemini-3.8-flash', apiKey, systemPrompt, userPrompt);
+    const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+    let res: Response | null = null;
+    let lastError = 'Co-Pilot request timed out';
+
+    for (const model of models) {
+      try {
+        const attempt = await callGemini(model, apiKey, systemPrompt, userPrompt);
+        if (attempt.ok) {
+          res = attempt;
+          break;
+        }
+        const errData = await attempt.json().catch(() => ({}));
+        lastError = errData?.error?.message || `Gemini API error (${attempt.status})`;
+      } catch (e: any) {
+        lastError = e.message || `${model} timed out`;
+      }
     }
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return NextResponse.json(
-        { error: errData?.error?.message || `Gemini API error (${res.status})` },
-        { status: res.status }
-      );
+    if (!res) {
+      return NextResponse.json({ error: lastError }, { status: 504 });
     }
 
     const data = await res.json();
