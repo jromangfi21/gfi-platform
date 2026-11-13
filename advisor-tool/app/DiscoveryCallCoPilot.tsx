@@ -89,7 +89,7 @@ export default function DiscoveryCallCoPilot({
   const [isWorking, setIsWorking] = useState<boolean>(true);
   const [broughtUpSafety, setBroughtUpSafety] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DiscoveryExtractedData>({
     clientName: '',
     currentAge: 0,
     spouseAge: 0,
@@ -103,7 +103,7 @@ export default function DiscoveryCallCoPilot({
     monthlySocialSecurity: 0,
     monthlyPensionFixed: 0,
     biggestConcern: '',
-    currentAnnuity: '',
+    hasExistingAnnuity: false,
   });
 
   const [isListeningMic, setIsListeningMic] = useState(false);
