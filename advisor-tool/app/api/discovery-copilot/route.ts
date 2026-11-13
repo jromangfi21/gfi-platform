@@ -91,10 +91,10 @@ export async function POST(req: NextRequest) {
       currentData
     )}\n\nLive Call Transcript:\n${transcript}`;
 
-    let response = await callGemini('gemini-2.5-flash', apiKey, systemPrompt, userPrompt);
+    let response = await callGemini('gemini-3.8-flash', apiKey, systemPrompt, userPrompt);
 
     if (!response.ok) {
-      response = await callGemini('gemini-2.0-flash', apiKey, systemPrompt, userPrompt);
+      response = await callGemini('gemini-3.5-flash-lite', apiKey, systemPrompt, userPrompt);
     }
 
     const data = await response.json();
