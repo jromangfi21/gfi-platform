@@ -133,6 +133,7 @@ export default function DiscoveryCallCoPilot({
   const recognitionRef = useRef<any>(null);
   const crmStreamRef = useRef<MediaStream | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
+  const lastApiCallRef = useRef<number>(0);
 
   useEffect(() => {
     try {
@@ -276,6 +277,7 @@ export default function DiscoveryCallCoPilot({
 
       const data = await res.json();
 
+      if (data.rateLimited) { return; }
       if (!res.ok || data.error) {
         setAiErrorMsg(`API Error: ${data.error || res.statusText}`);
         return;
@@ -324,13 +326,18 @@ export default function DiscoveryCallCoPilot({
 
   
   useEffect(() => {
-    if (!transcript.trim()) return;
-    instantExtractFromText(transcript);
+    const trimmed = transcript.trim();
+    if (!trimmed) return;
+    instantExtractFromText(trimmed);
+    if (trimmed.length < 25) return;
+
     const timer = setTimeout(() => {
-      if (!isAnalyzingAi) {
+      const now = Date.now();
+      if (!isAnalyzingAi && now - lastApiCallRef.current >= 6000) {
+        lastApiCallRef.current = now;
         runAiCoPilotAnalysis();
       }
-    }, 1200);
+    }, 3500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcript]);
