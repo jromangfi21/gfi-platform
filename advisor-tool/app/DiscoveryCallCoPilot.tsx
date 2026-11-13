@@ -89,22 +89,21 @@ export default function DiscoveryCallCoPilot({
   const [isWorking, setIsWorking] = useState<boolean>(true);
   const [broughtUpSafety, setBroughtUpSafety] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState<DiscoveryExtractedData>({
-    clientName: initialData.clientName,
-    currentAge: initialData.currentAge,
-    spouseAge: initialData.currentAge - 2,
-    isMarried: initialData.filingStatus === 'mfj',
-    retirementAge: initialData.retirementAge,
-    currentEarnedIncome: initialData.currentEarnedIncome,
-    iraBalance: initialData.iraBalance,
-    rothBalance: initialData.rothBalance,
-    liquidReserveNeed: 75000,
-    desiredMonthlyIncome: Math.round(initialData.withdrawalNeed / 12),
-    monthlySocialSecurity: Math.round(initialData.socialSecurity / 12),
-    monthlyPensionFixed: Math.round(initialData.fixedIncome / 12),
-    biggestConcern: 'Outliving savings or losing money in a market crash right at retirement',
-    hasExistingAnnuity: false,
-    notes: '',
+  const [formData, setFormData] = useState({
+    clientName: '',
+    currentAge: 0,
+    spouseAge: 0,
+    isMarried: false,
+    retirementAge: 0,
+    currentEarnedIncome: 0,
+    iraBalance: 0,
+    rothBalance: 0,
+    liquidReserveNeed: 0,
+    desiredMonthlyIncome: 0,
+    monthlySocialSecurity: 0,
+    monthlyPensionFixed: 0,
+    biggestConcern: '',
+    currentAnnuity: '',
   });
 
   const [isListeningMic, setIsListeningMic] = useState(false);
