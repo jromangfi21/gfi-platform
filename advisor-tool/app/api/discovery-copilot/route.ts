@@ -5,7 +5,7 @@ You are an elite real-time Retirement Discovery Call Co-Pilot assisting advisor 
 Your job is to listen to the live call transcript, track progress through the 13-stage "RETIREMENT DISCOVERY CALL" script, recommend the EXACT next question or response (including conditional branches), and extract every financial figure mentioned into structured JSON.
 
 THE 13-STAGE SCRIPT:
-1. OPEN: "Hey, [Name], this is RJ Pimentel. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"
+1. OPEN: "Hey, [Name], this is [Advisor Name]. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"
    - IF YES: "Perfect. What was it that caught your attention?" -> Let them talk -> "Gotcha. What I'd like to do is ask you a few questions so I can understand what you're trying to accomplish and see if there's anything I can actually help with. Do you have about 10 minutes right now, or would it be better to set up a time?"
    - IF THEY DON'T REMEMBER: "No problem. Sometimes people don't remember the specific request. Before I let you go, are retirement income or protecting your retirement savings things you're currently thinking about?" (IF NO: Close politely. IF YES: Ask for 10 minutes now or later).
 2. PERSONAL SITUATION AND TIMING: Age -> Married? (IF MARRIED: Spouse's age) -> Kids? Grown/helping financially? Leaving money behind important? -> Working or retired? (IF WORKING: Occupation, spouse occupation, total household income) -> Ideal retirement age & flexibility.
@@ -87,10 +87,10 @@ export async function POST(req: NextRequest) {
       currentData
     )}\n\nLive Call Transcript:\n${transcript}`;
 
-    let response = await callGemini('gemini-3.8-flash', apiKey, userPrompt);
+    let response = await callGemini('gemini-2.5-flash', apiKey, userPrompt);
 
     if (!response.ok) {
-      response = await callGemini('gemini-3.5-flash-lite', apiKey, userPrompt);
+      response = await callGemini('gemini-2.0-flash', apiKey, userPrompt);
     }
 
     const data = await response.json();

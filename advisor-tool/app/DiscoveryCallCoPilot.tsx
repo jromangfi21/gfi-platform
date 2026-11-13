@@ -222,37 +222,42 @@ export default function DiscoveryCallCoPilot({
         body: JSON.stringify({ transcript, currentData: formData }),
       });
       const data = await res.json();
-      if (!data.error) {
-        if (data.currentStage) setActiveStage(data.currentStage);
-        if (data.safetyMentioned) setBroughtUpSafety(true);
-        setAiOverlay({
-          suggestedNextPrompt: data.suggestedNextPrompt || aiOverlay.suggestedNextPrompt,
-          coachingTip: data.coachingTip || aiOverlay.coachingTip,
-          branchDetected: data.branchDetected || 'Active Call',
-        });
-
-        if (data.extractedData) {
-          const ext = data.extractedData;
-          setFormData((prev) => ({
-            ...prev,
-            clientName: ext.clientName ?? prev.clientName,
-            currentAge: ext.currentAge ?? prev.currentAge,
-            spouseAge: ext.spouseAge ?? prev.spouseAge,
-            isMarried: ext.isMarried ?? prev.isMarried,
-            retirementAge: ext.retirementAge ?? prev.retirementAge,
-            currentEarnedIncome: ext.currentEarnedIncome ?? prev.currentEarnedIncome,
-            iraBalance: ext.iraBalance ?? prev.iraBalance,
-            rothBalance: ext.rothBalance ?? prev.rothBalance,
-            liquidReserveNeed: ext.liquidReserveNeed ?? prev.liquidReserveNeed,
-            desiredMonthlyIncome: ext.desiredMonthlyIncome ?? prev.desiredMonthlyIncome,
-            monthlySocialSecurity: ext.monthlySocialSecurity ?? prev.monthlySocialSecurity,
-            monthlyPensionFixed: ext.monthlyPensionFixed ?? prev.monthlyPensionFixed,
-            biggestConcern: ext.biggestConcern ?? prev.biggestConcern,
-            hasExistingAnnuity: ext.currentAnnuity ?? prev.hasExistingAnnuity,
-          }));
-          if (typeof ext.isMarried === 'boolean') setIsMarried(ext.isMarried);
-        }
+      if (!res.ok || data.error) {
+        alert(`Co-Pilot API Error: ${data.error || res.statusText}`);
+        return;
       }
+
+      if (data.currentStage) setActiveStage(data.currentStage);
+      if (data.safetyMentioned) setBroughtUpSafety(true);
+      setAiOverlay({
+        suggestedNextPrompt: data.suggestedNextPrompt || aiOverlay.suggestedNextPrompt,
+        coachingTip: data.coachingTip || aiOverlay.coachingTip,
+        branchDetected: data.branchDetected || 'Active Call',
+      });
+
+      if (data.extractedData) {
+        const ext = data.extractedData;
+        setFormData((prev) => ({
+          ...prev,
+          clientName: ext.clientName ?? prev.clientName,
+          currentAge: ext.currentAge ?? prev.currentAge,
+          spouseAge: ext.spouseAge ?? prev.spouseAge,
+          isMarried: ext.isMarried ?? prev.isMarried,
+          retirementAge: ext.retirementAge ?? prev.retirementAge,
+          currentEarnedIncome: ext.currentEarnedIncome ?? prev.currentEarnedIncome,
+          iraBalance: ext.iraBalance ?? prev.iraBalance,
+          rothBalance: ext.rothBalance ?? prev.rothBalance,
+          liquidReserveNeed: ext.liquidReserveNeed ?? prev.liquidReserveNeed,
+          desiredMonthlyIncome: ext.desiredMonthlyIncome ?? prev.desiredMonthlyIncome,
+          monthlySocialSecurity: ext.monthlySocialSecurity ?? prev.monthlySocialSecurity,
+          monthlyPensionFixed: ext.monthlyPensionFixed ?? prev.monthlyPensionFixed,
+          biggestConcern: ext.biggestConcern ?? prev.biggestConcern,
+          hasExistingAnnuity: ext.currentAnnuity ?? prev.hasExistingAnnuity,
+        }));
+        if (typeof ext.isMarried === 'boolean') setIsMarried(ext.isMarried);
+      }
+    } catch (err: any) {
+      alert(`Network Error: ${err.message}`);
     } finally {
       setIsAnalyzingAi(false);
     }
