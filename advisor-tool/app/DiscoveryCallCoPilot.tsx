@@ -329,16 +329,6 @@ export default function DiscoveryCallCoPilot({
     const trimmed = transcript.trim();
     if (!trimmed) return;
     instantExtractFromText(trimmed);
-    if (trimmed.length < 25) return;
-
-    const timer = setTimeout(() => {
-      const now = Date.now();
-      if (!isAnalyzingAi && now - lastApiCallRef.current >= 6000) {
-        lastApiCallRef.current = now;
-        runAiCoPilotAnalysis();
-      }
-    }, 3500);
-    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcript]);
 
