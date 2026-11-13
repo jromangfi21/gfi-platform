@@ -22,12 +22,19 @@ export default function IllustrationComparison({
   const [currentCdOrAccountRate, setCurrentCdOrAccountRate] = useState<number>(4.25);
   const [stockAllocationPercent, setStockAllocationPercent] = useState<number>(60);
   const [safeWithdrawalRate, setSafeWithdrawalRate] = useState<number>(4.0);
-
   const handleIllustrationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsParsingIllustration(true);
     setErrorMsg('');
+
+    // Vercel serverless functions reject payloads > 4.5MB with an HTML error page
+    if (file.size > 3.2 * 1024 * 1024) {
+      setErrorMsg('PDF is over 3.2 MB (' + (file.size / 1024 / 1024).toFixed(1) + ' MB). Print/Save just the 1–3 summary ledger pages as a smaller PDF or screenshot and upload that.');
+      setIsParsingIllustration(false);
+      e.target.value = '';
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = async () => {
@@ -45,7 +52,18 @@ export default function IllustrationComparison({
           }),
         });
 
-        const data = await res.json();
+        const rawText = await res.text();
+        let data: any = {};
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          throw new Error(
+            res.status === 413
+              ? 'Illustration file too large for server limit. Upload the 1–3 summary pages or a screenshot.'
+              : `Server returned HTTP ${res.status} (route deploying or payload limit)`
+          );
+        }
+
         if (!res.ok) throw new Error(data.error || 'Illustration parse failed');
         setIllustrationData(data);
       } catch (err: any) {
