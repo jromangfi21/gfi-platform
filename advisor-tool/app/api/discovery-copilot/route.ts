@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
 
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor Name';
