@@ -104,6 +104,7 @@ export default function DiscoveryCallCoPilot({
     monthlyPensionFixed: 0,
     biggestConcern: '',
     hasExistingAnnuity: false,
+    notes: "",
   });
 
   const [isListeningMic, setIsListeningMic] = useState(false);
