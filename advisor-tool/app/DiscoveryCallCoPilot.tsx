@@ -216,6 +216,40 @@ export default function DiscoveryCallCoPilot({
     }
   };
 
+  
+  const instantExtractFromText = (text: string) => {
+    const lower = text.toLowerCase();
+    const parseMoney = (raw: string, suffix?: string) => {
+      const num = parseFloat(raw.replace(/,/g, ""));
+      if (isNaN(num)) return null;
+      if (suffix && /m|million/i.test(suffix)) return Math.round(num * 1000000);
+      if (suffix && /k|thousand/i.test(suffix)) return Math.round(num * 1000);
+      return Math.round(num);
+    };
+
+    const ageMatch = lower.match(/(?:age|i am|he is|she is|client is|[a-z]+,)\s*(\d{2})(?:\b|\s*years?\s*old)/);
+    const retireMatch = lower.match(/retire(?:\s+at|\s+around|\s+age)?\s*(\d{2})/);
+    const iraMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:a|an|my|his|her|their)\s+)?(?:401k|401\(k\)|ira|saved|retirement)/);
+    const rothMatch = lower.match(/\$?([\d,.]+)\s*(k|thousand|m|million)?\s*(?:in\s+(?:a|my)\s+)?roth/);
+    const incomeMatch = lower.match(/(?:wants?|need|needs|looking for|goal of)\s*\$?([\d,.]+)\s*(k|thousand)?\s*(?:a\s+month|per\s+month|\/mo|monthly)/);
+    const ssMatch = lower.match(/social\s+security[^\d$]{0,15}\$?([\d,.]+)\s*(k)?/);
+    const pensionMatch = lower.match(/pension[^\d$]{0,15}\$?([\d,.]+)\s*(k)?/);
+    const marriedMentioned = /\b(married|spouse|wife|husband)\b/.test(lower);
+
+    setFormData((prev) => ({
+      ...prev,
+      currentAge: ageMatch ? Number(ageMatch[1]) : prev.currentAge,
+      retirementAge: retireMatch ? Number(retireMatch[1]) : prev.retirementAge,
+      iraBalance: iraMatch ? (parseMoney(iraMatch[1], iraMatch[2]) ?? prev.iraBalance) : prev.iraBalance,
+      rothBalance: rothMatch ? (parseMoney(rothMatch[1], rothMatch[2]) ?? prev.rothBalance) : prev.rothBalance,
+      desiredMonthlyIncome: incomeMatch ? (parseMoney(incomeMatch[1], incomeMatch[2]) ?? prev.desiredMonthlyIncome) : prev.desiredMonthlyIncome,
+      monthlySocialSecurity: ssMatch ? (parseMoney(ssMatch[1], ssMatch[2]) ?? prev.monthlySocialSecurity) : prev.monthlySocialSecurity,
+      monthlyPensionFixed: pensionMatch ? (parseMoney(pensionMatch[1], pensionMatch[2]) ?? prev.monthlyPensionFixed) : prev.monthlyPensionFixed,
+      isMarried: marriedMentioned ? true : prev.isMarried,
+    }));
+    if (marriedMentioned) setIsMarried(true);
+  };
+
   const runAiCoPilotAnalysis = async () => {
     if (!transcript.trim()) {
       setAiErrorMsg('Type or record a few words in the Live Call Transcript box first, then click AI Next Prompt & Extract.');
@@ -223,6 +257,7 @@ export default function DiscoveryCallCoPilot({
     }
 
     setAiErrorMsg('');
+    instantExtractFromText(transcript);
     setIsAnalyzingAi(true);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);

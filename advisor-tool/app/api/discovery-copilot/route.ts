@@ -1,47 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor Name';
-  return `You are a fast real-time Retirement Discovery Call Co-Pilot for advisor ${safeAdvisor}.
-Track the 13-stage script, return the exact next tailored question/response, and extract financial numbers into JSON.
-
-STAGES:
-1. OPEN: Confirm info request -> ask for 10 mins (or ask if retirement income/protection is on their mind).
-2. PERSONAL: Age, married? (spouse age), kids/legacy, working/retired (occupation, household income), retirement age.
-3. GOALS: Financial picture of retirement, top priority (growth, protection, income, liquidity), one financial win.
-4. ASSETS: 401k/IRA/Roth/brokerage/annuities, total saved, existing annuities, advisor vs DIY.
-5. DEBT: Mortgage, loans, obligations.
-6. RISK: Early crash impact, down-market withdrawals, loss vs upside.
-7. SAFE (if mentioned): Define "safe", protection vs upside.
-8. LIQUIDITY: Cash reserve needed, major upcoming expenses, long-term bucket.
-9. INCOME: Desired monthly income, SS/pension, income gap, predictable lifetime income vs growth.
-10. GAP: Biggest concern & comfort if nothing changes.
-11. SUMMARIZE: Recap retirement age, monthly income, guaranteed income, total savings, liquid reserve, concern.
-12. JOBS: Liquid, Growth, Protection, Income buckets.
-13. BOOK: Set 45-60 min Strategy Session day/time, invite spouse if married.
-
-Return ONLY valid JSON:
-{"currentStage":1,"stageName":"1. Open & Permission","branchDetected":"Opening Call","suggestedNextPrompt":"exact next line","coachingTip":"brief cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}`;
+  return `Real-time Retirement Discovery Call Co-Pilot for ${safeAdvisor}. Output compact JSON only.
+Stages: 1:Open(10m) 2:Personal(age,spouse,work,retireAge) 3:Goals 4:Assets(401k/IRA/Roth/annuity) 5:Debt 6:Risk 7:Safe 8:Liquidity 9:Income(goal,SS,pension) 10:Gap 11:Recap 12:4Jobs 13:Book45m.
+JSON schema:
+{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact line","coachingTip":"5-word cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}`;
 }
 
 async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const body: Record<string, any> = {
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: 320,
+      responseMimeType: 'application/json',
+    },
+  };
+
+  if (model.includes('3.8')) {
+    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
+
   return fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-goog-api-key': apiKey,
     },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 512,
-        responseMimeType: 'application/json',
-      },
-    }),
-    signal: AbortSignal.timeout(10000),
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(7000),
   });
 }
 
@@ -51,45 +43,30 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Missing GEMINI_API_KEY in environment variables.' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Missing GEMINI_API_KEY' }, { status: 500 });
     }
 
+    const recentTranscript = (transcript || '').slice(-1200);
     const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
-    const userPrompt = `Call Transcript:\n${transcript}`;
+    const userPrompt = `Transcript:\n${recentTranscript}`;
 
-    const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
-    let response: Response | null = null;
-    let lastError = 'Gemini API request failed';
-
-    for (const model of models) {
-      try {
+    // Race both models simultaneously and take the first valid 200 OK response
+    const models = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+    const response = await Promise.any(
+      models.map(async (model) => {
         const res = await callGemini(model, apiKey, systemPrompt, userPrompt);
-        if (res.ok) {
-          response = res;
-          break;
-        }
-        const errData = await res.json().catch(() => ({}));
-        lastError = errData?.error?.message || `${model} failed (${res.status})`;
-      } catch (e: any) {
-        lastError = `${model}: ${e.message}`;
-      }
-    }
-
-    if (!response) {
-      return NextResponse.json({ error: lastError }, { status: 502 });
-    }
+        if (!res.ok) throw new Error(`${model}:${res.status}`);
+        return res;
+      })
+    );
 
     const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    const parsed = JSON.parse(rawText);
-    return NextResponse.json(parsed);
+    return NextResponse.json(JSON.parse(rawText));
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message || 'Co-Pilot analysis failed' },
-      { status: 500 }
+      { error: err?.errors?.[0]?.message || err.message || 'Co-Pilot fast-extract failed' },
+      { status: 502 }
     );
   }
 }
