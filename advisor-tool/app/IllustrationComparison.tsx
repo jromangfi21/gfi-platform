@@ -22,58 +22,78 @@ export default function IllustrationComparison({
   const [currentCdOrAccountRate, setCurrentCdOrAccountRate] = useState<number>(4.25);
   const [stockAllocationPercent, setStockAllocationPercent] = useState<number>(60);
   const [safeWithdrawalRate, setSafeWithdrawalRate] = useState<number>(4.0);
+
+  const renderPdfSummaryPages = async (file: File): Promise<string[]> => {
+    const pdfjs = await import('pdfjs-dist');
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    const maxPages = Math.min(pdf.numPages, 5);
+    const pages: string[] = [];
+
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) continue;
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const base64 = dataUrl.split(',')[1];
+      if (base64) pages.push(base64);
+    }
+    return pages;
+  };
+
   const handleIllustrationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsParsingIllustration(true);
     setErrorMsg('');
 
-    // Vercel serverless functions reject payloads > 4.5MB with an HTML error page
-    if (file.size > 3.2 * 1024 * 1024) {
-      setErrorMsg('PDF is over 3.2 MB (' + (file.size / 1024 / 1024).toFixed(1) + ' MB). Print/Save just the 1–3 summary ledger pages as a smaller PDF or screenshot and upload that.');
+    try {
+      let payload: Record<string, any> = { fileName: file.name };
+
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const pagesBase64 = await renderPdfSummaryPages(file);
+        if (!pagesBase64.length) throw new Error('Could not render PDF pages');
+        payload.pagesBase64 = pagesBase64;
+      } else {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve((reader.result as string)?.split(',')[1] || '');
+          reader.onerror = () => reject(new Error('Could not read image'));
+          reader.readAsDataURL(file);
+        });
+        payload.fileBase64 = base64;
+        payload.mimeType = file.type || 'image/jpeg';
+      }
+
+      const res = await fetch('/api/parse-illustration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
+      if (!res.ok) throw new Error(data.error || 'Illustration parse failed');
+      setIllustrationData(data);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to read illustration');
+    } finally {
       setIsParsingIllustration(false);
       e.target.value = '';
-      return;
     }
-
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        const base64 = (reader.result as string)?.split(',')[1];
-        if (!base64) throw new Error('Could not read file');
-
-        const res = await fetch('/api/parse-illustration', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileBase64: base64,
-            mimeType: file.type || 'application/pdf',
-            fileName: file.name,
-          }),
-        });
-
-        const rawText = await res.text();
-        let data: any = {};
-        try {
-          data = JSON.parse(rawText);
-        } catch {
-          throw new Error(
-            res.status === 413
-              ? 'Illustration file too large for server limit. Upload the 1–3 summary pages or a screenshot.'
-              : `Server returned HTTP ${res.status} (route deploying or payload limit)`
-          );
-        }
-
-        if (!res.ok) throw new Error(data.error || 'Illustration parse failed');
-        setIllustrationData(data);
-      } catch (err: any) {
-        setErrorMsg(err.message || 'Failed to read illustration PDF');
-      } finally {
-        setIsParsingIllustration(false);
-        e.target.value = '';
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   return (
