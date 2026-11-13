@@ -49,24 +49,23 @@ Return ONLY valid JSON:
 `;
 }
 
-async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string, disableThinking = false) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const generationConfig: Record<string, any> = {
-    temperature: 0.2,
-    responseMimeType: 'application/json',
-  };
-  if (disableThinking) {
-    generationConfig.thinkingConfig = { thinkingBudget: 0 };
-  }
-
+async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   return fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      generationConfig,
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+      },
     }),
+    signal: AbortSignal.timeout(15000),
   });
 }
 
@@ -85,21 +84,29 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
     const userPrompt = `Current data: ${JSON.stringify(currentData)}\n\nTranscript:\n${transcript}`;
 
-    let response = await callGemini('gemini-3.8-flash', apiKey, systemPrompt, userPrompt, true);
+    const models = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+    let response: Response | null = null;
+    let lastError = 'Gemini API request failed';
 
-    if (!response.ok) {
-      response = await callGemini('gemini-3.5-flash-lite', apiKey, systemPrompt, userPrompt, false);
+    for (const model of models) {
+      try {
+        const res = await callGemini(model, apiKey, systemPrompt, userPrompt);
+        if (res.ok) {
+          response = res;
+          break;
+        }
+        const errData = await res.json().catch(() => ({}));
+        lastError = errData?.error?.message || `${model} failed (${res.status})`;
+      } catch (e: any) {
+        lastError = `${model}: ${e.message}`;
+      }
+    }
+
+    if (!response) {
+      return NextResponse.json({ error: lastError }, { status: 502 });
     }
 
     const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: data?.error?.message || `Gemini API error (${response.status})` },
-        { status: response.status }
-      );
-    }
-
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     const parsed = JSON.parse(rawText);
     return NextResponse.json(parsed);
