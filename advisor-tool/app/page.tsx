@@ -17,6 +17,7 @@ import IllustrationComparison from './IllustrationComparison';
 
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
+  const [savedSocialSecurity, setSavedSocialSecurity] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'discovery' | 'story' | 'backtest' | 'roth' | 'summary'>('discovery');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('stocks_fia_vs_6040');
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
@@ -2206,6 +2207,94 @@ export default function AdvisorTool() {
                         {lang === 'es' ? 'Ahorro Fiscal Total:' : 'Total Lifetime Savings:'} ${taxAnalysis.lifetimeTaxSaved.toLocaleString()}
                       </span>
                     </div>
+
+          {/* Retired Pre-RMD Golden Tax Valley Controls */}
+          {(() => {
+            const rmdTriggerAge = currentAge >= 66 ? 73 : 75;
+            const isAlreadyRetired = currentAge >= retirementAge && Number(currentEarnedIncome || 0) === 0;
+            const preRmdYears = Math.max(0, rmdTriggerAge - currentAge);
+            const isSsDeferred = Number(annualSocialSecurity || 0) === 0 && savedSocialSecurity > 0;
+
+            return (
+              <div className="rounded-xl bg-slate-950/90 border border-amber-500/30 p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      {isAlreadyRetired && preRmdYears > 0
+                        ? `Retired Pre-RMD Golden Window: ${preRmdYears} Yrs (Ages ${currentAge}–${rmdTriggerAge - 1})`
+                        : preRmdYears > 0
+                        ? `Pre-RMD Runway: ${preRmdYears} Yrs Before Age ${rmdTriggerAge} RMDs`
+                        : `RMD Active Window (Age ${currentAge})`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRetirementAge(currentAge);
+                        setCurrentEarnedIncome(0);
+                      }}
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition border ${
+                        isAlreadyRetired
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                          : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-amber-400'
+                      }`}
+                    >
+                      {isAlreadyRetired ? '✓ Retired ($0 Wages)' : 'Set Already Retired ($0 Wages)'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {isAlreadyRetired && preRmdYears > 0
+                      ? `With earned wages at $0 before forced RMDs hit at Age ${rmdTriggerAge}, fill low tax brackets now at a lower effective rate.`
+                      : 'Model converting traditional IRA dollars into tax-free Roth before forced RMDs push income into higher brackets.'}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Target Bracket Ceiling Selector */}
+                  <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5">
+                    <span className="text-[11px] font-semibold text-slate-400">Fill Up To Bracket:</span>
+                    {[12, 22, 24].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => setTargetBracketCeiling(pct)}
+                        className={`px-2 py-0.5 rounded text-xs font-bold transition ${
+                          Number(targetBracketCeiling) === pct
+                            ? 'bg-emerald-500 text-slate-950'
+                            : 'bg-slate-950 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Defer Social Security Toggle */}
+                  {(Number(annualSocialSecurity || 0) > 0 || savedSocialSecurity > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (Number(annualSocialSecurity || 0) > 0) {
+                          setSavedSocialSecurity(Number(annualSocialSecurity));
+                          setAnnualSocialSecurity(0);
+                        } else {
+                          setAnnualSocialSecurity(savedSocialSecurity);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                        isSsDeferred
+                          ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                          : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-sky-400'
+                      }`}
+                    >
+                      {isSsDeferred
+                        ? `✓ SS Deferred (Restore $${Math.round(savedSocialSecurity / 12).toLocaleString()}/mo)`
+                        : 'Model Deferring SS to 70'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
                       <div className="p-4 bg-cyan-950/20 border border-cyan-500/30 rounded-xl space-y-1">
