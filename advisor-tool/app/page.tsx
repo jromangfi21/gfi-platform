@@ -167,7 +167,7 @@ export default function AdvisorTool() {
     rothBalance,
     taxableBrokerage: 0,
     annualFixedIncome: fixedIncome,
-    socialSecurity: socialSecurity,
+    annualSocialSecurity: socialSecurity,
     annualWithdrawalNeed: withdrawalNeed,
     expectedReturn: netExpectedReturn,
     targetBracketCeiling,
