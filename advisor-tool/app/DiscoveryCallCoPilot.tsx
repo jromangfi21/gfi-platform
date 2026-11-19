@@ -112,6 +112,8 @@ export default function DiscoveryCallCoPilot({
   const [transcript, setTranscript] = useState<string>('');
   const [crmNotes, setCrmNotes] = useState<string>('');
   const [copiedNotes, setCopiedNotes] = useState<boolean>(false);
+  const lastAutoAnalyzedRef = React.useRef<string>('');
+  const isAiRunningRef = React.useRef<boolean>(false);
   const [interimText, setInterimText] = useState<string>('');
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
   const [aiErrorMsg, setAiErrorMsg] = useState<string>('');
@@ -383,6 +385,8 @@ export default function DiscoveryCallCoPilot({
   };
 
   const runAiCoPilotAnalysis = async () => {
+    if (isAiRunningRef.current) return;
+    isAiRunningRef.current = true;
     if (!transcript.trim()) {
       setAiErrorMsg('Type or record a few words in the Live Call Transcript box first, then click AI Next Prompt & Extract.');
       return;
@@ -537,6 +541,24 @@ ${transcript || '(No transcript recorded)'}
       // fallback if clipboard permission denied
     }
   };
+
+
+  useEffect(() => {
+    const trimmed = transcript.trim();
+    if (!trimmed || trimmed === lastAutoAnalyzedRef.current) return;
+    // Only auto-trigger when new prospect dialogue has arrived
+    if (!trimmed.includes('[Prospect]:')) return;
+
+    const timer = setTimeout(() => {
+      if (!isAiRunningRef.current && transcript.trim() !== lastAutoAnalyzedRef.current) {
+        lastAutoAnalyzedRef.current = transcript.trim();
+        runAiCoPilotAnalysis();
+      }
+    }, 2500);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript]);
 
   return (
     <div className="space-y-6">
