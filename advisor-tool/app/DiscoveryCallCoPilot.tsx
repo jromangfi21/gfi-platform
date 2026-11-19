@@ -160,7 +160,7 @@ export default function DiscoveryCallCoPilot({
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
   const [aiErrorMsg, setAiErrorMsg] = useState<string>('');
 
-  const firstName = formData.clientName.split('&')[0].trim() || 'there';
+  const firstName = primaryName.trim() || (formData.clientName || '').trim().split(/[\s&]+/)[0] || 'there';
   const displayAdvisor = advisorName.trim() || 'Advisor Name';
 
   const [aiOverlay, setAiOverlay] = useState<{
@@ -168,7 +168,7 @@ export default function DiscoveryCallCoPilot({
     coachingTip: string;
     branchDetected: string;
   }>({
-    suggestedNextPrompt: `"Hey, ${firstName}, this is ${displayAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`,
+    suggestedNextPrompt: `"Hey ${firstName}, this is ${displayAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`,
     coachingTip: 'Stage 1: Confirm they remember requesting info, then ask for 10 minutes.',
     branchDetected: 'Opening Call',
   });
@@ -781,8 +781,8 @@ ${transcript || '(No transcript recorded)'}
           </div>
           <p className="text-base md:text-lg font-semibold text-white leading-relaxed">
             {activeStage === 1 && aiOverlay.branchDetected === 'Opening Call'
-              ? `"Hey, ${firstName}, this is ${displayAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`
-              : aiOverlay.suggestedNextPrompt}
+              ? `"Hey ${firstName}, this is ${displayAdvisor}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?"`
+              : (aiOverlay.suggestedNextPrompt || '').replace(/Hey,?\s*there\b/gi, `Hey ${firstName}`)}
           </p>
           <p className="text-xs text-amber-200/90 flex items-center gap-1.5 pt-1 border-t border-slate-800/80">
             <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
