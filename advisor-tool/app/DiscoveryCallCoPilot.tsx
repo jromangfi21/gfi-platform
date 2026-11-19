@@ -408,17 +408,28 @@ export default function DiscoveryCallCoPilot({
     const ssMatch = lower.match(/social\s+security[^\d$]{0,20}\$?([\d,.]+)\s*(k|thousand)?/);
     const pensionMatch = lower.match(/pension[^\d$]{0,20}\$?([\d,.]+)\s*(k|thousand)?/);
     const marriedMentioned = /\b(married|spouse|wife|husband)\b/.test(lower);
-    const primaryNameMatch = text.match(/(?:my name is|i'm|i am|this is)\s+([A-Z][a-z]{2,15})(?:\b|\s+and\b)/);
-    const spouseNameMatch = text.match(/(?:my wife|my husband|my spouse|wife's name is|husband's name is|spouse's name is)\s+([A-Z][a-z]{2,15})\b/);
-    const coupleMatch = text.match(/\b([A-Z][a-z]{2,15})\s+and\s+([A-Z][a-z]{2,15})\b/);
+    // Strip [Advisor]: lines before extracting prospect names so advisor's greeting ("Hi this is Jerry") is never picked up as client
+    const prospectOnlyText = text
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('[Advisor]:'))
+      .join(' ');
+    const advisorFirstName = (advisorName || '').trim().split(/\s+/)[0]?.toLowerCase() || '';
+    const blockedNames = new Set([
+      'sure', 'looking', 'thinking', 'going', 'trying', 'retired', 'married', 'single', 'currently',
+      'assets', 'income', 'social', 'stocks', 'bonds', 'roth', 'life', 'jerry', advisorFirstName,
+    ]);
 
-    if (primaryNameMatch && !['Sure', 'Looking', 'Thinking', 'Going', 'Trying', 'Retired', 'Married', 'Single', 'Currently'].includes(primaryNameMatch[1])) {
+    const primaryNameMatch = prospectOnlyText.match(/(?:my name is|i'm|i am|this is)\s+([A-Z][a-z]{2,15})(?:\b|\s+and\b)/);
+    const spouseNameMatch = prospectOnlyText.match(/(?:my wife|my husband|my spouse|wife's name is|husband's name is|spouse's name is)\s+([A-Z][a-z]{2,15})\b/);
+    const coupleMatch = prospectOnlyText.match(/\b([A-Z][a-z]{2,15})\s+and\s+([A-Z][a-z]{2,15})\b/);
+
+    if (primaryNameMatch && !blockedNames.has(primaryNameMatch[1].toLowerCase())) {
       setPrimaryName((prev) => prev || primaryNameMatch[1]);
-    } else if (coupleMatch && !['Assets', 'Income', 'Social', 'Stocks', 'Bonds', 'Roth', 'Life'].includes(coupleMatch[1])) {
+    } else if (coupleMatch && !blockedNames.has(coupleMatch[1].toLowerCase()) && !blockedNames.has(coupleMatch[2].toLowerCase())) {
       setPrimaryName((prev) => prev || coupleMatch[1]);
       setSpouseName((prev) => prev || coupleMatch[2]);
     }
-    if (spouseNameMatch) {
+    if (spouseNameMatch && !blockedNames.has(spouseNameMatch[1].toLowerCase())) {
       setSpouseName((prev) => prev || spouseNameMatch[1]);
     }
 
@@ -439,8 +450,8 @@ export default function DiscoveryCallCoPilot({
     if (marriedMentioned) setIsMarried(true);
   };
 
-  const runAiCoPilotAnalysis = async () => {
-    if (isAiRunningRef.current) return;
+  const runAiCoPilotAnalysis = async (isManual = false) => {
+    if (!isManual && isAiRunningRef.current) return;
     isAiRunningRef.current = true;
     if (!transcript.trim()) {
       setAiErrorMsg('Type or record a few words in the Live Call Transcript box first, then click AI Next Prompt & Extract.');
@@ -482,7 +493,8 @@ export default function DiscoveryCallCoPilot({
       });
 
       if (data.extractedData) {
-        if (data.extractedData.primaryName) {
+        const advFirst = (advisorName || '').trim().split(/\s+/)[0]?.toLowerCase() || '';
+        if (data.extractedData.primaryName && String(data.extractedData.primaryName).toLowerCase() !== advFirst && String(data.extractedData.primaryName).toLowerCase() !== 'jerry') {
           setPrimaryName((prev) => prev || String(data.extractedData.primaryName));
         }
         if (data.extractedData.spouseName) {
@@ -694,7 +706,7 @@ ${transcript || '(No transcript recorded)'}
             </button>
 
             <button
-              onClick={runAiCoPilotAnalysis}
+              onClick={() => runAiCoPilotAnalysis(true)}
               disabled={isAnalyzingAi}
               className="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 text-xs font-black flex items-center gap-1.5 transition shadow-sm"
             >

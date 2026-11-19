@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 function buildSystemPrompt(advisorName: string) {
-  const safeAdvisor = advisorName?.trim() || 'Advisor Name';
-  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Analyze the call transcript & notes, extract ALL mentioned client numbers/details into extractedData (separate primaryName and spouseName into first/full names; convert "500k"->500000, "1.2 million"->1200000), and use their actual first names naturally in suggestedNextPrompt. Return ONLY compact single-line JSON:
-{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact next question using their names (max 22 words)","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"primaryName":null,"spouseName":null,"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"hasExistingAnnuity":null}}
-13 Stages: 1:Open(10m) 2:Personal(names,ages,spouse,kids,work,retireAge) 3:Goals(vision,priority,1 win) 4:Assets(401k/IRA/Roth/annuity,advisor) 5:Debt 6:Risk(crash,down-market) 7:Safe 8:Liquidity 9:Income(goal,SS,pension,gap) 10:RealGap 11:Recap 12:4Jobs 13:Book45m.`;
+  const safeAdvisor = advisorName?.trim() || 'Advisor';
+  return `Fast Retirement Discovery Co-Pilot for advisor "${safeAdvisor}". NEVER extract "${safeAdvisor}" or [Advisor] lines as primaryName or spouseName—only extract the prospect/client names. Convert "500k"->500000. Return ONLY compact JSON:
+{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact next question using client first name(s) (max 20 words)","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"primaryName":null,"spouseName":null,"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"hasExistingAnnuity":null}}
+Stages: 1:Open 2:Personal 3:Goals 4:Assets 5:Debt 6:Risk 7:Safe 8:Liquidity 9:Income 10:RealGap 11:Recap 12:4Jobs 13:Book45m.`;
 }
 
 async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
@@ -14,14 +14,11 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 550,
+      maxOutputTokens: 260,
       responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
     },
   };
-
-  if (model.includes('3.8')) {
-    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
-  }
 
   return fetch(url, {
     method: 'POST',
@@ -30,7 +27,7 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
       'x-goog-api-key': apiKey,
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(8000),
   });
 }
 
@@ -46,7 +43,7 @@ function safeParseJson(raw: string) {
       currentStage: stageMatch ? Number(stageMatch[1]) : undefined,
       branchDetected: branchMatch ? branchMatch[1] : 'Active Call',
       suggestedNextPrompt: promptMatch ? promptMatch[1] : undefined,
-      coachingTip: tipMatch ? tipMatch[1] : 'Continue discovery script',
+      coachingTip: tipMatch ? tipMatch[1] : 'Continue discovery',
     };
   }
 }
@@ -60,9 +57,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing GEMINI_API_KEY' }, { status: 500 });
     }
 
-    const recentTranscript = (transcript || '').slice(-2500);
-    const systemPrompt = buildSystemPrompt(advisorName || 'Advisor Name');
-    const userPrompt = `Call transcript and advisor notes:\n${recentTranscript}`;
+    const recentTranscript = (transcript || '').slice(-1100);
+    const advisorFirst = (advisorName || '').trim().split(/\s+/)[0]?.toLowerCase() || '';
+    const systemPrompt = buildSystemPrompt(advisorName || 'Advisor');
+    const userPrompt = `Recent dialogue & notes:\n${recentTranscript}`;
 
     const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
     let res: Response | null = null;
@@ -91,12 +89,25 @@ export async function POST(req: NextRequest) {
     const parsed = safeParseJson(rawText);
 
     if (parsed?.extractedData) {
-      const pName = parsed.extractedData.primaryName?.trim() || '';
-      const sName = parsed.extractedData.spouseName?.trim() || '';
-      if (pName && sName && !parsed.extractedData.clientName) {
+      let pName = parsed.extractedData.primaryName?.trim() || '';
+      let sName = parsed.extractedData.spouseName?.trim() || '';
+
+      // Strip out advisor's own first name if accidentally extracted
+      if (advisorFirst && pName.toLowerCase() === advisorFirst) {
+        pName = '';
+        parsed.extractedData.primaryName = null;
+      }
+      if (advisorFirst && sName.toLowerCase() === advisorFirst) {
+        sName = '';
+        parsed.extractedData.spouseName = null;
+      }
+
+      if (pName && sName) {
         parsed.extractedData.clientName = `${pName} & ${sName}`;
-      } else if (pName && !parsed.extractedData.clientName) {
+      } else if (pName) {
         parsed.extractedData.clientName = pName;
+      } else {
+        parsed.extractedData.clientName = null;
       }
     }
 
