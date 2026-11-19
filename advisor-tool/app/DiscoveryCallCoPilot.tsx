@@ -661,7 +661,54 @@ ${transcript || '(No transcript recorded)'}
               <Sparkles className={`w-4 h-4 ${isAnalyzingAi ? 'animate-spin' : ''}`} />
               {isAnalyzingAi ? 'Analyzing Call...' : 'AI Next Prompt & Extract'}
             </button>
+          
+            <button
+              type="button"
+              onClick={handleResetNewCall}
+              className="px-3 py-2 rounded-lg text-xs font-semibold bg-rose-950/70 hover:bg-rose-900 text-rose-200 border border-rose-500/40 transition"
+              title="Clear transcript, notes, and extracted numbers for a new prospect"
+            >
+              New Call / Reset
+            </button>
           </div>
+        {/* Instant Objection Rebuttal Pills */}
+        <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 mr-1">
+            Objection Rebuttals:
+          </span>
+          {Object.keys(OBJECTION_PLAYBOOK).map((objKey) => (
+            <button
+              key={objKey}
+              type="button"
+              onClick={() => setActiveObjection(activeObjection === objKey ? null : objKey)}
+              className={`px-2.5 py-1 rounded-full text-xs transition ${
+                activeObjection === objKey
+                  ? 'bg-amber-400 text-slate-950 font-bold'
+                  : 'bg-slate-950/90 text-slate-300 border border-slate-700 hover:border-amber-400/60'
+              }`}
+            >
+              {objKey}
+            </button>
+          ))}
+        </div>
+
+        {activeObjection && (
+          <div className="mt-2.5 rounded-lg bg-amber-950/50 border border-amber-400/50 px-3.5 py-2.5 text-xs text-amber-100 flex items-start justify-between gap-3">
+            <div>
+              <span className="font-bold text-amber-300 uppercase text-[10px] tracking-wider block mb-0.5">
+                {activeObjection} Pivot Script:
+              </span>
+              {OBJECTION_PLAYBOOK[activeObjection]}
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveObjection(null)}
+              className="text-amber-300 hover:text-white text-xs font-bold px-1.5"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         </div>
 
         {aiErrorMsg && (
