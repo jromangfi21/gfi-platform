@@ -112,6 +112,7 @@ export default function DiscoveryCallCoPilot({
   const [transcript, setTranscript] = useState<string>('');
   const [crmNotes, setCrmNotes] = useState<string>('');
   const [copiedNotes, setCopiedNotes] = useState<boolean>(false);
+  const [activeObjection, setActiveObjection] = useState<string | null>(null);
   const [primaryName, setPrimaryName] = useState<string>('');
   const [spouseName, setSpouseName] = useState<string>('');
   const lastAutoAnalyzedRef = React.useRef<string>('');
@@ -778,7 +779,47 @@ ${transcript || '(No transcript recorded)'}
               const isCurrent = activeStage === stage.id;
               const isConditionalHidden = stage.id === 7 && !broughtUpSafety;
 
-              return (
+            
+  const OBJECTION_PLAYBOOK: Record<string, string> = {
+    'Talk to Spouse': '"That makes total sense—this affects both of you. Let’s put a tentative 45-minute Strategy Session on the calendar when you’re both free so you can look at the numbers together with zero pressure."',
+    'Happy w/ Advisor': '"That’s great you have someone you like. Most of our clients came to us with an advisor—they just wanted a second opinion specifically on tax-free distribution and guaranteed paycheck protection. Worth a 45-minute look?"',
+    'Rates Might Rise': '"If rates rise, locking in today’s floor protects you now—and if better yields open up later, we can always ladder or reposition. Waiting in cash costs guaranteed income every month."',
+    'No Annuities': '"I completely understand—old-school variable annuities had high fees and locked up your money. What we look at is zero-fee principal protection where you keep full control. Let’s compare the math side-by-side."',
+    'Send Info First': '"I’d love to, though generic brochures won’t reflect your exact Social Security and tax gap. In our 45-minute Blueprint session, I’ll build your custom numbers on screen so you have something real to keep."',
+  };
+
+  const handleResetNewCall = () => {
+    if (!window.confirm('Start a fresh call? This clears the current transcript, notes, and extracted numbers.')) return;
+    setTranscript('');
+    setCrmNotes('');
+    setPrimaryName('');
+    setSpouseName('');
+    setActiveObjection(null);
+    if (typeof lastAutoAnalyzedRef !== 'undefined') lastAutoAnalyzedRef.current = '';
+    setFormData({
+      clientName: '',
+      currentAge: 0,
+      spouseAge: 0,
+      isMarried: false,
+      retirementAge: 0,
+      currentEarnedIncome: 0,
+      iraBalance: 0,
+      rothBalance: 0,
+      liquidReserveNeed: 0,
+      desiredMonthlyIncome: 0,
+      monthlySocialSecurity: 0,
+      monthlyPensionFixed: 0,
+      biggestConcern: '',
+      hasExistingAnnuity: false,
+      notes: '',
+    });
+    setIsMarried(false);
+    try {
+      localStorage.removeItem('gfi_discovery_session_v1');
+    } catch {}
+  };
+
+  return (
                 <div
                   key={stage.id}
                   onClick={() => setActiveStage(stage.id)}
