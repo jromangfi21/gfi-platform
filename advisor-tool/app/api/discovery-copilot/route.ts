@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const STAGE_FALLBACKS: Record<number, { branch: string; prompt: string; tip: string }> = {
+  1: { branch: 'Opening Call', prompt: 'You recently requested info on retirement income strategies—do you have 10 minutes right now to see if we can help?', tip: 'Confirm & get 10m' },
+  2: { branch: 'Personal Situation', prompt: 'Before we look at numbers, how old are you and when are you hoping to retire?', tip: 'Get ages & timeline' },
+  3: { branch: 'Goals & Priorities', prompt: 'When you picture a successful retirement, what is the single biggest financial win you want to accomplish?', tip: 'Listen—do not pitch' },
+  4: { branch: 'Current Assets', prompt: 'Roughly what do you have tucked away across your 401(k), IRA, Roth, or savings right now?', tip: 'Map asset buckets' },
+  5: { branch: 'Debt & Obligations', prompt: 'Do you expect your mortgage and major debts to be paid off before you retire?', tip: 'Check fixed debt' },
+  6: { branch: 'Market Risk', prompt: 'If the market dropped 25% right as you retired, how would that impact your retirement plans?', tip: 'Surface sequence risk' },
+  7: { branch: 'Principal Safety', prompt: 'How important is it to have a portion of your nest egg 100% protected from market losses?', tip: 'Anchor safety need' },
+  8: { branch: 'Liquidity Reserve', prompt: 'How much cash do you want kept completely liquid in the bank for emergencies or travel?', tip: 'Set cash buffer' },
+  9: { branch: 'Income & Social Security', prompt: 'What monthly income do you need in retirement, and how much will Social Security or a pension cover?', tip: 'Quantify monthly gap' },
+  10: { branch: 'Real Income Gap', prompt: 'So after Social Security, we need your savings to reliably generate that remaining monthly paycheck—does that sound right?', tip: 'Confirm exact gap' },
+  11: { branch: 'Discovery Recap', prompt: 'Let me recap what you shared so far to make sure I did not miss anything important.', tip: 'Summarize & verify' },
+  12: { branch: '4 Jobs of Money', prompt: 'In retirement, every dollar has one of four jobs: liquidity, guaranteed income, protected growth, or tax-free legacy.', tip: 'Frame 4-job model' },
+  13: { branch: 'Book 45m Blueprint', prompt: 'Let’s put a 45-minute Blueprint session on the calendar so I can show you your exact numbers on screen—does Tuesday or Thursday work better?', tip: 'Close for 45m Zoom' },
+};
+
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor';
   return `Fast Retirement Discovery Co-Pilot for advisor "${safeAdvisor}". NEVER extract "${safeAdvisor}" or [Advisor] lines as primaryName or spouseName—only extract the prospect/client names. Convert "500k"->500000. Return ONLY compact JSON:
@@ -16,9 +32,12 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
       temperature: 0.1,
       maxOutputTokens: 260,
       responseMimeType: 'application/json',
-      thinkingConfig: { thinkingBudget: 0 },
     },
   };
+
+  if (model.includes('3.8') || model.includes('2.5')) {
+    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
 
   return fetch(url, {
     method: 'POST',
@@ -27,7 +46,7 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
       'x-goog-api-key': apiKey,
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(7500),
   });
 }
 
@@ -50,7 +69,7 @@ function safeParseJson(raw: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { transcript, advisorName } = await req.json();
+    const { transcript, advisorName, currentStage } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
@@ -62,9 +81,9 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(advisorName || 'Advisor');
     const userPrompt = `Recent dialogue & notes:\n${recentTranscript}`;
 
-    const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+    // Multi-model cascade so a 503 high-demand spike on one model fails over automatically in milliseconds
+    const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-2.5-flash'];
     let res: Response | null = null;
-    let lastError = 'Co-Pilot request timed out';
 
     for (const model of models) {
       try {
@@ -73,15 +92,21 @@ export async function POST(req: NextRequest) {
           res = attempt;
           break;
         }
-        const errData = await attempt.json().catch(() => ({}));
-        lastError = errData?.error?.message || `Gemini API error (${attempt.status})`;
-      } catch (e: any) {
-        lastError = e.message || `${model} timed out`;
+      } catch {
+        // try next model in cascade immediately
       }
     }
 
+    // If all upstream Gemini endpoints experience a temporary spike, return seamless local stage guidance instead of an error banner
     if (!res) {
-      return NextResponse.json({ error: lastError }, { status: 504 });
+      const stageNum = Math.min(13, Math.max(1, Number(currentStage) || 2));
+      const fb = STAGE_FALLBACKS[stageNum] || STAGE_FALLBACKS[2];
+      return NextResponse.json({
+        currentStage: stageNum,
+        branchDetected: fb.branch,
+        suggestedNextPrompt: fb.prompt,
+        coachingTip: fb.tip,
+      });
     }
 
     const data = await res.json();
@@ -92,7 +117,6 @@ export async function POST(req: NextRequest) {
       let pName = parsed.extractedData.primaryName?.trim() || '';
       let sName = parsed.extractedData.spouseName?.trim() || '';
 
-      // Strip out advisor's own first name if accidentally extracted
       if (advisorFirst && pName.toLowerCase() === advisorFirst) {
         pName = '';
         parsed.extractedData.primaryName = null;
