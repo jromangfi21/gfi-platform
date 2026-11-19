@@ -112,6 +112,8 @@ export default function DiscoveryCallCoPilot({
   const [transcript, setTranscript] = useState<string>('');
   const [crmNotes, setCrmNotes] = useState<string>('');
   const [copiedNotes, setCopiedNotes] = useState<boolean>(false);
+  const [primaryName, setPrimaryName] = useState<string>('');
+  const [spouseName, setSpouseName] = useState<string>('');
   const lastAutoAnalyzedRef = React.useRef<string>('');
   const isAiRunningRef = React.useRef<boolean>(false);
   const [interimText, setInterimText] = useState<string>('');
@@ -366,6 +368,19 @@ export default function DiscoveryCallCoPilot({
     const ssMatch = lower.match(/social\s+security[^\d$]{0,20}\$?([\d,.]+)\s*(k|thousand)?/);
     const pensionMatch = lower.match(/pension[^\d$]{0,20}\$?([\d,.]+)\s*(k|thousand)?/);
     const marriedMentioned = /\b(married|spouse|wife|husband)\b/.test(lower);
+    const primaryNameMatch = text.match(/(?:my name is|i'm|i am|this is)\s+([A-Z][a-z]{2,15})(?:\b|\s+and\b)/);
+    const spouseNameMatch = text.match(/(?:my wife|my husband|my spouse|wife's name is|husband's name is|spouse's name is)\s+([A-Z][a-z]{2,15})\b/);
+    const coupleMatch = text.match(/\b([A-Z][a-z]{2,15})\s+and\s+([A-Z][a-z]{2,15})\b/);
+
+    if (primaryNameMatch && !['Sure', 'Looking', 'Thinking', 'Going', 'Trying', 'Retired', 'Married', 'Single', 'Currently'].includes(primaryNameMatch[1])) {
+      setPrimaryName((prev) => prev || primaryNameMatch[1]);
+    } else if (coupleMatch && !['Assets', 'Income', 'Social', 'Stocks', 'Bonds', 'Roth', 'Life'].includes(coupleMatch[1])) {
+      setPrimaryName((prev) => prev || coupleMatch[1]);
+      setSpouseName((prev) => prev || coupleMatch[2]);
+    }
+    if (spouseNameMatch) {
+      setSpouseName((prev) => prev || spouseNameMatch[1]);
+    }
 
     setFormData((prev: any) => ({
       ...prev,
@@ -427,6 +442,12 @@ export default function DiscoveryCallCoPilot({
       });
 
       if (data.extractedData) {
+        if (data.extractedData.primaryName) {
+          setPrimaryName((prev) => prev || String(data.extractedData.primaryName));
+        }
+        if (data.extractedData.spouseName) {
+          setSpouseName((prev) => prev || String(data.extractedData.spouseName));
+        }
         const ext = data.extractedData;
         setFormData((prev) => ({
           ...prev,
@@ -556,7 +577,20 @@ ${transcript || '(No transcript recorded)'}
       }
     }, 2500);
 
-    return () => clearTimeout(timer);
+  
+  useEffect(() => {
+    const p = primaryName.trim();
+    const s = spouseName.trim();
+    const combined = p && s ? `${p} & ${s}` : p || s || '';
+    setFormData((prev: any) => ({
+      ...prev,
+      clientName: combined,
+      isMarried: s ? true : prev.isMarried,
+    }));
+    if (s) setIsMarried(true);
+  }, [primaryName, spouseName]);
+
+  return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcript]);
 
@@ -1022,14 +1056,62 @@ ${transcript || '(No transcript recorded)'}
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="col-span-2">
-              <label className="text-slate-400 block mb-1">Client Name(s)</label>
-              <input
-                type="text"
-                value={formData.clientName}
-                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white font-bold"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase mb-1">
+                  Primary Client Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. John"
+                  value={primaryName}
+                  onChange={(e) => setPrimaryName(e.target.value)}
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-1.5 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase mb-1">
+                  Spouse / Partner Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Mary"
+                  value={spouseName}
+                  onChange={(e) => setSpouseName(e.target.value)}
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-1.5 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase mb-1">
+                  {primaryName.trim() ? `${primaryName.trim()}'s Age` : 'Primary Age'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.currentAge || ''}
+                  placeholder="0"
+                  onChange={(e) => setFormData({ ...formData, currentAge: Number(e.target.value) || 0 })}
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-1.5 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase mb-1">
+                  {spouseName.trim() ? `${spouseName.trim()}'s Age` : 'Spouse Age'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.spouseAge || ''}
+                  placeholder="0"
+                  onChange={(e) => {
+                    const ageVal = Number(e.target.value) || 0;
+                    setFormData({ ...formData, spouseAge: ageVal, isMarried: ageVal > 0 ? true : formData.isMarried });
+                    if (ageVal > 0) setIsMarried(true);
+                  }}
+                  className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-1.5 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
             </div>
 
             <div>

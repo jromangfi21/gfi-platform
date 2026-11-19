@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 function buildSystemPrompt(advisorName: string) {
   const safeAdvisor = advisorName?.trim() || 'Advisor Name';
-  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Analyze the call transcript & notes, extract ALL mentioned client numbers/details into extractedData (convert "500k"->500000, "1.2 million"->1200000), and return ONLY compact single-line JSON:
-{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact next question (max 20 words)","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"currentAnnuity":null}}
-13 Stages: 1:Open(10m) 2:Personal(age,spouse,kids,work,retireAge) 3:Goals(vision,priority,1 win) 4:Assets(401k/IRA/Roth/annuity,advisor) 5:Debt 6:Risk(crash,down-market) 7:Safe 8:Liquidity 9:Income(goal,SS,pension,gap) 10:RealGap 11:Recap 12:4Jobs 13:Book45m.`;
+  return `Retirement Discovery Co-Pilot for ${safeAdvisor}. Analyze the call transcript & notes, extract ALL mentioned client numbers/details into extractedData (separate primaryName and spouseName into first/full names; convert "500k"->500000, "1.2 million"->1200000), and use their actual first names naturally in suggestedNextPrompt. Return ONLY compact single-line JSON:
+{"currentStage":1,"branchDetected":"Stage","suggestedNextPrompt":"short exact next question using their names (max 22 words)","coachingTip":"3-word cue","safetyMentioned":false,"extractedData":{"primaryName":null,"spouseName":null,"clientName":null,"currentAge":null,"spouseAge":null,"isMarried":null,"retirementAge":null,"currentEarnedIncome":null,"iraBalance":null,"rothBalance":null,"liquidReserveNeed":null,"desiredMonthlyIncome":null,"monthlySocialSecurity":null,"monthlyPensionFixed":null,"biggestConcern":null,"hasExistingAnnuity":null}}
+13 Stages: 1:Open(10m) 2:Personal(names,ages,spouse,kids,work,retireAge) 3:Goals(vision,priority,1 win) 4:Assets(401k/IRA/Roth/annuity,advisor) 5:Debt 6:Risk(crash,down-market) 7:Safe 8:Liquidity 9:Income(goal,SS,pension,gap) 10:RealGap 11:Recap 12:4Jobs 13:Book45m.`;
 }
 
 async function callGemini(model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
@@ -14,7 +14,7 @@ async function callGemini(model: string, apiKey: string, systemPrompt: string, u
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 500,
+      maxOutputTokens: 550,
       responseMimeType: 'application/json',
     },
   };
@@ -88,7 +88,19 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    return NextResponse.json(safeParseJson(rawText));
+    const parsed = safeParseJson(rawText);
+
+    if (parsed?.extractedData) {
+      const pName = parsed.extractedData.primaryName?.trim() || '';
+      const sName = parsed.extractedData.spouseName?.trim() || '';
+      if (pName && sName && !parsed.extractedData.clientName) {
+        parsed.extractedData.clientName = `${pName} & ${sName}`;
+      } else if (pName && !parsed.extractedData.clientName) {
+        parsed.extractedData.clientName = pName;
+      }
+    }
+
+    return NextResponse.json(parsed);
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Co-Pilot analysis failed' },
