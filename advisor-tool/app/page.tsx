@@ -167,7 +167,7 @@ export default function AdvisorTool() {
     rothBalance,
     taxableBrokerage: 0,
     annualFixedIncome: fixedIncome,
-    annualSocialSecurity: socialSecurity,
+    socialSecurity: socialSecurity,
     annualWithdrawalNeed: withdrawalNeed,
     expectedReturn: netExpectedReturn,
     targetBracketCeiling,
@@ -2213,7 +2213,7 @@ export default function AdvisorTool() {
             const rmdTriggerAge = currentAge >= 66 ? 73 : 75;
             const isAlreadyRetired = currentAge >= retirementAge && Number(currentEarnedIncome || 0) === 0;
             const preRmdYears = Math.max(0, rmdTriggerAge - currentAge);
-            const isSsDeferred = Number(annualSocialSecurity || 0) === 0 && savedSocialSecurity > 0;
+            const isSsDeferred = Number(socialSecurity || 0) === 0 && savedSocialSecurity > 0;
 
             return (
               <div className="rounded-xl bg-slate-950/90 border border-amber-500/30 p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -2269,15 +2269,15 @@ export default function AdvisorTool() {
                   </div>
 
                   {/* Defer Social Security Toggle */}
-                  {(Number(annualSocialSecurity || 0) > 0 || savedSocialSecurity > 0) && (
+                  {(Number(socialSecurity || 0) > 0 || savedSocialSecurity > 0) && (
                     <button
                       type="button"
                       onClick={() => {
-                        if (Number(annualSocialSecurity || 0) > 0) {
-                          setSavedSocialSecurity(Number(annualSocialSecurity));
-                          setAnnualSocialSecurity(0);
+                        if (Number(socialSecurity || 0) > 0) {
+                          setSavedSocialSecurity(Number(socialSecurity));
+                          setSocialSecurity(0);
                         } else {
-                          setAnnualSocialSecurity(savedSocialSecurity);
+                          setSocialSecurity(savedSocialSecurity);
                         }
                       }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
