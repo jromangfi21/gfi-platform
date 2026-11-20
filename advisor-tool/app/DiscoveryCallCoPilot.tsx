@@ -286,15 +286,27 @@ export default function DiscoveryCallCoPilot({
       clearInterval(crmRecorderIntervalRef.current);
       crmRecorderIntervalRef.current = null;
     }
+    if (crmAudioCtxRef.current) {
+      crmAudioCtxRef.current.close().catch(() => {});
+      crmAudioCtxRef.current = null;
+    }
 
-    // Extract AUDIO-ONLY stream so MediaRecorder never encodes 60fps screen video frames (prevents Chrome OOM tab crash)
     const audioTracks = stream.getAudioTracks();
     if (audioTracks.length === 0) return;
-    const audioOnlyStream = new MediaStream(audioTracks);
 
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : 'audio/webm';
+    // Route tab audio through Web Audio API MediaStreamDestination so macOS Chrome
+    // never crashes its WebM muxer on raw getDisplayMedia tab-capture tracks
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const audioCtx = new AudioCtx();
+    crmAudioCtxRef.current = audioCtx;
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+
+    const source = audioCtx.createMediaStreamSource(new MediaStream(audioTracks));
+    const destination = audioCtx.createMediaStreamDestination();
+    source.connect(destination);
+    const normalizedStream = destination.stream;
 
     const recordChunk = () => {
       if (!crmStreamRef.current || audioTracks[0].readyState !== 'live') return;
@@ -303,12 +315,10 @@ export default function DiscoveryCallCoPilot({
       let chunks: BlobPart[] = [];
       let recorder: MediaRecorder;
       try {
-        recorder = new MediaRecorder(audioOnlyStream, {
-          mimeType,
-          audioBitsPerSecond: 32000,
-        });
-      } catch {
-        recorder = new MediaRecorder(audioOnlyStream);
+        recorder = new MediaRecorder(normalizedStream);
+      } catch (err) {
+        console.error('MediaRecorder init failed:', err);
+        return;
       }
 
       recorder.ondataavailable = (e) => {
@@ -317,8 +327,8 @@ export default function DiscoveryCallCoPilot({
 
       recorder.onstop = () => {
         if (chunks.length === 0) return;
-        const blob = new Blob(chunks, { type: mimeType });
-        chunks = []; // Release chunk buffers immediately
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        chunks = [];
 
         if (blob.size < 1500) return;
         isCrmUploadingRef.current = true;
@@ -332,7 +342,7 @@ export default function DiscoveryCallCoPilot({
             const res = await fetch('/api/transcribe-crm', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ audioBase64: base64, mimeType: 'audio/webm' }),
+              body: JSON.stringify({ audioBase64: base64, mimeType: blob.type || 'audio/webm' }),
             });
             const data = await res.json();
             if (data.text && data.text.trim()) {
@@ -358,8 +368,12 @@ export default function DiscoveryCallCoPilot({
       }, 3800);
     };
 
-    recordChunk();
-    crmRecorderIntervalRef.current = setInterval(recordChunk, 4500);
+    // Wait 1200ms after tab share starts so Chrome finishes initializing CoreAudio capture before recording
+    setTimeout(() => {
+      if (!crmStreamRef.current) return;
+      recordChunk();
+      crmRecorderIntervalRef.current = setInterval(recordChunk, 4500);
+    }, 1200);
   };
 
   const connectCrmTabAudio = async () => {
