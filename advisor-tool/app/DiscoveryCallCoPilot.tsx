@@ -631,8 +631,10 @@ ${transcript || '(No transcript recorded)'}
         runAiCoPilotAnalysis();
       }
     }, 2500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript]);
 
-  
   useEffect(() => {
     const p = primaryName.trim();
     const s = spouseName.trim();
@@ -644,10 +646,6 @@ ${transcript || '(No transcript recorded)'}
     }));
     if (s) setIsMarried(true);
   }, [primaryName, spouseName]);
-
-  return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcript]);
 
   return (
     <div className="space-y-6">
