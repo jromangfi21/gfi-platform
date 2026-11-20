@@ -294,8 +294,7 @@ export default function DiscoveryCallCoPilot({
     const audioTracks = stream.getAudioTracks();
     if (audioTracks.length === 0) return;
 
-    // Route tab audio through Web Audio API MediaStreamDestination so macOS Chrome
-    // never crashes its WebM muxer on raw getDisplayMedia tab-capture tracks
+    // Pure Web Audio 16kHz Mono PCM -> WAV encoder (zero MediaRecorder, zero Chromium WebM muxer crash)
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const audioCtx = new AudioCtx();
     crmAudioCtxRef.current = audioCtx;
@@ -304,88 +303,140 @@ export default function DiscoveryCallCoPilot({
     }
 
     const source = audioCtx.createMediaStreamSource(new MediaStream(audioTracks));
-    const destination = audioCtx.createMediaStreamDestination();
-    source.connect(destination);
-    const normalizedStream = destination.stream;
+    const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+    const silentGain = audioCtx.createGain();
+    silentGain.gain.value = 0;
 
-    const recordChunk = () => {
+    let pcmChunks: Float32Array[] = [];
+    let totalSamples = 0;
+
+    processor.onaudioprocess = (e) => {
+      if (!crmStreamRef.current) return;
+      const input = e.inputBuffer.getChannelData(0);
+      const copy = new Float32Array(input.length);
+      copy.set(input);
+      pcmChunks.push(copy);
+      totalSamples += copy.length;
+    };
+
+    source.connect(processor);
+    processor.connect(silentGain);
+    silentGain.connect(audioCtx.destination);
+
+    const encodeWavBase64 = (chunks: Float32Array[], sampleCount: number, inRate: number): string | null => {
+      if (sampleCount === 0) return null;
+      const outRate = 16000;
+      const ratio = inRate / outRate;
+      const outLength = Math.floor(sampleCount / ratio);
+      if (outLength < 4000) return null;
+
+      // Flatten and compute RMS energy so we skip pure silence/hold dead-air
+      const flat = new Float32Array(sampleCount);
+      let offset = 0;
+      let sumSq = 0;
+      for (const c of chunks) {
+        flat.set(c, offset);
+        for (let i = 0; i < c.length; i += 8) sumSq += c[i] * c[i];
+        offset += c.length;
+      }
+      const rms = Math.sqrt(sumSq / Math.max(1, Math.floor(sampleCount / 8)));
+      if (rms < 0.006) return null; // Skip silent chunks
+
+      const buffer = new ArrayBuffer(44 + outLength * 2);
+      const view = new DataView(buffer);
+      const writeStr = (pos: number, str: string) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(pos + i, str.charCodeAt(i));
+      };
+
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + outLength * 2, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, outRate, true);
+      view.setUint32(28, outRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, outLength * 2, true);
+
+      let bytePos = 44;
+      for (let i = 0; i < outLength; i++) {
+        const idx = Math.min(sampleCount - 1, Math.floor(i * ratio));
+        const s = Math.max(-1, Math.min(1, flat[idx]));
+        view.setInt16(bytePos, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+        bytePos += 2;
+      }
+
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const step = 0x8000;
+      for (let i = 0; i < bytes.length; i += step) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + step)));
+      }
+      return btoa(binary);
+    };
+
+    crmRecorderIntervalRef.current = setInterval(async () => {
       if (!crmStreamRef.current || audioTracks[0].readyState !== 'live') return;
-      if (isCrmUploadingRef.current) return;
-
-      let chunks: BlobPart[] = [];
-      let recorder: MediaRecorder;
-      try {
-        recorder = new MediaRecorder(normalizedStream);
-      } catch (err) {
-        console.error('MediaRecorder init failed:', err);
+      if (pcmChunks.length === 0 || isCrmUploadingRef.current) {
+        pcmChunks = [];
+        totalSamples = 0;
         return;
       }
 
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) chunks.push(e.data);
-      };
+      const batch = pcmChunks;
+      const count = totalSamples;
+      pcmChunks = [];
+      totalSamples = 0;
 
-      recorder.onstop = () => {
-        if (chunks.length === 0) return;
-        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-        chunks = [];
+      const wavBase64 = encodeWavBase64(batch, count, audioCtx.sampleRate);
+      if (!wavBase64) return;
 
-        if (blob.size < 1500) return;
-        isCrmUploadingRef.current = true;
-
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const base64 = (reader.result as string)?.split(',')[1];
-            if (!base64) return;
-
-            const res = await fetch('/api/transcribe-crm', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ audioBase64: base64, mimeType: blob.type || 'audio/webm' }),
-            });
-            const data = await res.json();
-            if (data.text && data.text.trim()) {
-              setTranscript((prev) =>
-                prev ? prev + '\n[Prospect]: ' + data.text.trim() : '[Prospect]: ' + data.text.trim()
-              );
-            }
-          } catch (err) {
-            console.error('CRM transcribe chunk error:', err);
-          } finally {
-            isCrmUploadingRef.current = false;
+      isCrmUploadingRef.current = true;
+      try {
+        const res = await fetch('/api/transcribe-crm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audioBase64: wavBase64, mimeType: 'audio/wav' }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.text && data.text.trim()) {
+            setTranscript((prev) =>
+              prev ? prev + '\n[Prospect]: ' + data.text.trim() : '[Prospect]: ' + data.text.trim()
+            );
           }
-        };
-        reader.onerror = () => {
-          isCrmUploadingRef.current = false;
-        };
-        reader.readAsDataURL(blob);
-      };
-
-      recorder.start();
-      setTimeout(() => {
-        if (recorder.state === 'recording') recorder.stop();
-      }, 3800);
-    };
-
-    // Wait 1200ms after tab share starts so Chrome finishes initializing CoreAudio capture before recording
-    setTimeout(() => {
-      if (!crmStreamRef.current) return;
-      recordChunk();
-      crmRecorderIntervalRef.current = setInterval(recordChunk, 4500);
-    }, 1200);
+        }
+      } catch (err) {
+        console.error('CRM transcribe chunk error:', err);
+      } finally {
+        isCrmUploadingRef.current = false;
+      }
+    }, 4200);
   };
 
   const connectCrmTabAudio = async () => {
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true,
+        video: { width: { ideal: 16, max: 64 }, height: { ideal: 16, max: 64 }, frameRate: { ideal: 1, max: 2 } },
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
       });
 
-      // Keep video track active so Chrome preserves tab audio stream
+      // Downscale video track immediately so macOS Chrome allocates almost zero Retina GPU memory
+      const videoTrack = displayStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.applyConstraints({ width: 16, height: 16, frameRate: 1 }).catch(() => {});
+      }
 
       if (displayStream.getAudioTracks().length === 0) {
+        displayStream.getTracks().forEach((t) => t.stop());
         setAiErrorMsg('No tab audio detected. Select your CRM browser tab and check "Share tab audio".');
         return;
       }
@@ -394,7 +445,7 @@ export default function DiscoveryCallCoPilot({
       startCrmTabTranscription(displayStream);
       setIsCapturingCrmTab(true);
     } catch {
-      // User cancelled tab picker
+      // User cancelled picker
     }
   };
 
