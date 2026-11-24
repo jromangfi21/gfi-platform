@@ -13,6 +13,7 @@ import {
   MapPin, Compass, FileText, Unlock, Briefcase, MessageSquare, ClipboardList, Layers, PieChart, Flame, CheckSquare, Eye, EyeOff, Clock, Gauge, ArrowRight, BookOpen, Compass as CompassIcon, PhoneCall
 } from 'lucide-react';
 import DiscoveryCallCoPilot from './DiscoveryCallCoPilot';
+import SequenceOfReturnsTab from './SequenceOfReturnsTab';
 import IllustrationComparison from './IllustrationComparison';
 
 export default function AdvisorTool() {
@@ -102,6 +103,7 @@ export default function AdvisorTool() {
     discoveryTab: lang === 'es' ? 'Llamada Inicial' : 'Discovery Call',
     storyTab: lang === 'es' ? 'Modo Historia' : 'Story Mode',
     backtestTab: lang === 'es' ? 'Análisis GFILogix' : 'GFILogix Backtest',
+    sorrTab: lang === 'es' ? 'Secuencia de Retornos' : 'Sequence of Returns',
     rothTab: lang === 'es' ? 'Estrategia Roth' : 'Roth Blueprint',
     summaryTab: lang === 'es' ? 'Libro Ejecutivo' : 'Executive Ledger',
     statPreserved: lang === 'es' ? 'PATRIMONIO FAMILIAR PRESERVADO' : 'TOTAL FAMILY WEALTH PRESERVED',
@@ -730,6 +732,14 @@ export default function AdvisorTool() {
                 {t.backtestTab}
               </button>
               <button
+                onClick={() => setActiveTab('sorr')}
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition ${
+                  activeTab === 'sorr' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {t.sorrTab}
+              </button>
+              <button
                 onClick={() => setActiveTab('roth')}
                 className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition ${
                   activeTab === 'roth' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
@@ -749,7 +759,16 @@ export default function AdvisorTool() {
           </div>
         </header>
 
-        {/* Discovery Call Co-Pilot View */}
+        {/* Sequence of Returns Risk View */}
+      {activeTab === 'sorr' ? (
+        <SequenceOfReturnsTab
+          initialPortfolio={(iraBalance || 0) + (rothBalance || 0)}
+          retirementAge={retirementAge}
+          lang={lang}
+        />
+      ) : null}
+
+      {/* Discovery Call Co-Pilot View */}
         {activeTab === 'discovery' ? (
           <DiscoveryCallCoPilot
             initialData={{
