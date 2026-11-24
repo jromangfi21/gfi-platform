@@ -19,7 +19,7 @@ import IllustrationComparison from './IllustrationComparison';
 export default function AdvisorTool() {
   const [lang, setLang] = useState<'en' | 'es'>('en');
   const [savedSocialSecurity, setSavedSocialSecurity] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<'discovery' | 'story' | 'backtest' | 'roth' | 'summary'>('discovery');
+  const [activeTab, setActiveTab] = useState<'discovery' | 'story' | 'backtest' | 'roth' | 'summary' | 'sorr'>('discovery');
   const [backtestMode, setBacktestMode] = useState<'income_fia_vs_portfolio' | 'stocks_fia_vs_6040' | 'equity_vs_fia' | 'fixed_vs_fia'>('stocks_fia_vs_6040');
   const [storyStep, setStoryStep] = useState<1 | 2 | 3>(1);
   const [rothChartMode, setRothChartMode] = useState<'wealth' | 'tax'>('wealth');
