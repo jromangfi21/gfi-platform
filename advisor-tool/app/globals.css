@@ -1,138 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
-  --chart-1: #06b6d4;
-  --chart-2: #f43f5e;
-  --chart-3: #10b981;
-  --chart-4: #6366f1;
+  --background: #09090b;
+  --foreground: #ededed;
 }
 
-/* Base Body Setup */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
 body {
-  color: var(--foreground);
   background: var(--background);
-  font-feature-settings: "rlig" 1, "calt" 1;
-}
-
-/* Custom Smooth Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #020617;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-/* Range Input Enhancements */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-}
-
-input[type="range"]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 6px;
-  background: #334155;
-  border-radius: 9999px;
-}
-
-input[type="range"]::-moz-range-track {
-  width: 100%;
-  height: 6px;
-  background: #334155;
-  border-radius: 9999px;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #38bdf8;
-  cursor: pointer;
-  margin-top: -5px;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
-}
-
-input[type="range"]::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #38bdf8;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
-}
-
-/* Number Input - Remove Spinner Arrows */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-/* =========================================================================
-   EXECUTIVE PRINT MEDIA STYLES
-   Ensures pure white backgrounds, deep dark text, and clean page pagination.
-   ========================================================================= */
-@media print {
-  @page {
-    size: letter portrait;
-    margin: 0.5in;
-  }
-
-  html,
-  body {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    font-size: 11pt;
-    line-height: 1.4;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Force background colors and borders to print properly */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Page Break Utilities */
-  .page-break-before {
-    page-break-before: always !important;
-    break-before: page !important;
-  }
-
-  .avoid-break {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Strip shadows to prevent muddy printing */
-  .shadow-sm,
-  .shadow-md,
-  .shadow-lg,
-  .shadow-xl {
-    box-shadow: none !important;
-  }
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
