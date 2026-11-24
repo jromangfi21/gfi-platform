@@ -1,4 +1,5 @@
 export type FilingStatus = 'mfj' | 'single';
+export type FreeWithdrawalSchedule = 'tiered_2_12' | 'standard_10' | 'flat_10';
 
 export interface StateTaxInfo {
   name: string;
@@ -37,7 +38,7 @@ export const STATE_TAX_RATES: Record<string, StateTaxInfo> = {
   NH: { name: 'New Hampshire', rate: 0.00 },
   NJ: { name: 'New Jersey', rate: 0.0637 },
   NM: { name: 'New Mexico', rate: 0.049 },
-  NY: { name: 'New York', rate: 0.0685 },
+  NY: { name: 'New York', rate: 0.065 },
   NC: { name: 'North Carolina', rate: 0.045 },
   ND: { name: 'North Dakota', rate: 0.0195 },
   OH: { name: 'Ohio', rate: 0.035 },
@@ -58,128 +59,102 @@ export const STATE_TAX_RATES: Record<string, StateTaxInfo> = {
   WY: { name: 'Wyoming', rate: 0.00 },
 };
 
-export type FreeWithdrawalSchedule = 'tiered_2_12' | 'standard_10' | 'flat_10';
+// IRS Uniform Lifetime Table RMD Factors
+const UNIFORM_LIFETIME_TABLE: Record<number, number> = {
+  73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1,
+  80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2,
+  87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1,
+  94: 9.5,  95: 8.9,
+};
 
 export interface TaxSimulationParams {
   currentAge: number;
   retirementAge: number;
-  endAge: number;
+  endAge?: number;
   filingStatus: FilingStatus;
   currentEarnedIncome: number;
   traditionalIra: number;
   rothBalance: number;
-  taxableBrokerage: number;
+  taxableBrokerage?: number;
   annualFixedIncome: number;
   annualSocialSecurity: number;
   annualWithdrawalNeed: number;
-  expectedReturn: number;
+  expectedReturn?: number;
   targetBracketCeiling: number;
   stateCode: string;
   stateTaxRate: number;
   heirsTaxRate: number;
   carrierBonusPct: number;
-  freeWithdrawalSchedule?: FreeWithdrawalSchedule;
+  freeWithdrawalSchedule: FreeWithdrawalSchedule;
   freeWithdrawalPct?: number;
 }
 
-export interface YearlySimulationResult {
+export interface YearTaxData {
   age: number;
-  contractYear: number;
   isWorking: boolean;
-  baselineGrossIncome: number;
   baselineIra: number;
-  baselineRoth: number;
   baselineTax: number;
+  baselineRmd: number;
   planIra: number;
   planRoth: number;
   planTax: number;
   conversionAmount: number;
-  maxFreeWithdrawalRatePct: number;
-  isSurrenderExpired: boolean;
   maxFreeWithdrawal: number;
+  maxFreeWithdrawalRatePct: number;
   taxesPaidFromWithdrawal: number;
   statutoryRatePct: number;
   netEffectiveRatePct: number;
-  rmdAvoided: number;
+  isSurrenderExpired: boolean;
 }
 
 export interface TaxSimulationOutput {
-  yearlyData: YearlySimulationResult[];
-  lifetimeTaxSaved: number;
+  yearlyData: YearTaxData[];
   totalBaselineTax: number;
   totalPlanTax: number;
-  totalRmdAvoided: number;
+  lifetimeTaxSaved: number;
   heirSavings: number;
   upfrontBonusDollars: number;
   grossStatutoryRatePct: number;
   overallNetEffectiveTaxRate: number;
   totalConversionsExecuted: number;
+  totalRmdAvoided: number;
   terminalWealthBase: number;
 }
 
-const RMD_DIVISORS: Record<number, number> = {
-  73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1,
-  80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2,
-  87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1,
-  94: 9.5, 95: 8.9,
-};
-
-// Full Federal Progressive Bracket Tax Computation
-export function calculateProgressiveFedTax(taxableIncome: number, filingStatus: FilingStatus): number {
+function calculateFederalTax(taxableIncome: number, filingStatus: FilingStatus): number {
   if (taxableIncome <= 0) return 0;
-
-  const brackets = filingStatus === 'mfj' ? [
-    { cap: 24800, rate: 0.10 },
-    { cap: 100800, rate: 0.12 },
-    { cap: 211400, rate: 0.22 },
-    { cap: 403550, rate: 0.24 },
-    { cap: 512450, rate: 0.32 },
-    { cap: 768700, rate: 0.35 },
-    { cap: Infinity, rate: 0.37 },
-  ] : [
-    { cap: 12400, rate: 0.10 },
-    { cap: 50400, rate: 0.12 },
-    { cap: 105700, rate: 0.22 },
-    { cap: 201775, rate: 0.24 },
-    { cap: 256225, rate: 0.32 },
-    { cap: 640600, rate: 0.35 },
-    { cap: Infinity, rate: 0.37 },
-  ];
+  const brackets = filingStatus === 'mfj'
+    ? [
+        { limit: 23200, rate: 0.10 },
+        { limit: 94300, rate: 0.12 },
+        { limit: 201050, rate: 0.22 },
+        { limit: 383900, rate: 0.24 },
+        { limit: 487450, rate: 0.32 },
+        { limit: 731200, rate: 0.35 },
+        { limit: Infinity, rate: 0.37 },
+      ]
+    : [
+        { limit: 11600, rate: 0.10 },
+        { limit: 47150, rate: 0.12 },
+        { limit: 100525, rate: 0.22 },
+        { limit: 191950, rate: 0.24 },
+        { limit: 243725, rate: 0.32 },
+        { limit: 609350, rate: 0.35 },
+        { limit: Infinity, rate: 0.37 },
+      ];
 
   let tax = 0;
-  let previousCap = 0;
-
+  let prevLimit = 0;
   for (const b of brackets) {
-    if (taxableIncome > previousCap) {
-      const taxableSlice = Math.min(taxableIncome, b.cap) - previousCap;
-      tax += taxableSlice * b.rate;
-      previousCap = b.cap;
+    if (taxableIncome > b.limit) {
+      tax += (b.limit - prevLimit) * b.rate;
+      prevLimit = b.limit;
     } else {
+      tax += (taxableIncome - prevLimit) * b.rate;
       break;
     }
   }
-
   return Math.round(tax);
-}
-
-export function getMarginalFedRate(taxableIncome: number, filingStatus: FilingStatus): number {
-  if (filingStatus === 'mfj') {
-    if (taxableIncome > 768700) return 0.37;
-    if (taxableIncome > 512450) return 0.35;
-    if (taxableIncome > 403550) return 0.32;
-    if (taxableIncome > 211400) return 0.24;
-    if (taxableIncome > 100800) return 0.22;
-    if (taxableIncome > 24800) return 0.12;
-    return 0.10;
-  } else {
-    if (taxableIncome > 640600) return 0.37;
-    if (taxableIncome > 256225) return 0.35;
-    if (taxableIncome > 201775) return 0.32;
-    if (taxableIncome > 105700) return 0.24;
-    if (taxableIncome > 50400) return 0.22;
-    if (taxableIncome > 12400) return 0.12;
-    return 0.10;
-  }
 }
 
 export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulationOutput {
@@ -188,201 +163,170 @@ export function runRobustTaxSimulation(params: TaxSimulationParams): TaxSimulati
     retirementAge,
     endAge = 95,
     filingStatus,
-    currentEarnedIncome = 0,
+    currentEarnedIncome,
     traditionalIra,
     rothBalance,
     annualFixedIncome,
     annualSocialSecurity,
-    annualWithdrawalNeed = 60000,
-    expectedReturn,
+    annualWithdrawalNeed,
+    expectedReturn = 0.065,
     targetBracketCeiling,
     stateTaxRate,
     heirsTaxRate,
     carrierBonusPct,
-    freeWithdrawalSchedule = 'tiered_2_12',
+    freeWithdrawalSchedule,
     freeWithdrawalPct = 0.10,
   } = params;
 
-  const stdDeduction = filingStatus === 'mfj' ? 32200 : 16100;
-  const upfrontBonusDollars = Math.round(traditionalIra * carrierBonusPct);
-
   let baseIra = traditionalIra;
-  let baseRoth = rothBalance;
-
-  let planIra = traditionalIra + upfrontBonusDollars;
+  let planIra = traditionalIra;
+  // Apply carrier upfront bonus directly to the sheltered plan balance
+  const upfrontBonusDollars = Math.round(traditionalIra * carrierBonusPct);
   let planRoth = rothBalance;
 
   let totalBaselineTax = 0;
   let totalPlanTax = 0;
-  let totalRmdAvoided = 0;
   let totalConversionsExecuted = 0;
-  let totalTaxesPaidOnConversions = 0;
+  let totalRmdAvoided = 0;
 
-  const yearlyData: YearlySimulationResult[] = [];
+  const yearlyData: YearTaxData[] = [];
+  const standardDeduction = filingStatus === 'mfj' ? 29200 : 14600;
 
   for (let age = currentAge; age <= endAge; age++) {
-    const contractYear = age - currentAge + 1;
     const isWorking = age < retirementAge;
-
-    // After Year 10 (Year 11+), surrender charges expire -> 100% full liquidity
-    let maxFreeWithdrawalRate = 0.10;
+    const contractYear = age - currentAge + 1;
     const isSurrenderExpired = contractYear > 10;
 
-    if (isSurrenderExpired) {
-      maxFreeWithdrawalRate = 1.00;
-    } else if (freeWithdrawalSchedule === 'tiered_2_12') {
-      maxFreeWithdrawalRate = contractYear === 1 ? 0.02 : 0.12;
-    } else if (freeWithdrawalSchedule === 'standard_10') {
-      maxFreeWithdrawalRate = contractYear === 1 ? 0.00 : 0.10;
-    } else {
-      maxFreeWithdrawalRate = freeWithdrawalPct;
-    }
+    // 1. BASELINE INACTION TRACK (Subject to mandatory RMDs and forced taxation)
+    let baselineLivingDraw = 0;
+    let baselineRmd = 0;
 
-    // 1. Baseline Cash Flow & Taxes (Inaction Path)
-    let baselineGross = 0;
-    let baseTaxableIncome = 0;
-    let baselineYearTax = 0;
-
-    if (isWorking) {
-      // Pre-retirement: tax liability matches active employment salary
-      baselineGross = currentEarnedIncome;
-      baseTaxableIncome = Math.max(0, baselineGross - stdDeduction);
-      const fedTax = calculateProgressiveFedTax(baseTaxableIncome, filingStatus);
-      const stateTax = Math.round(baseTaxableIncome * stateTaxRate);
-      baselineYearTax = fedTax + stateTax;
-    } else {
-      // Post-retirement: tax liability matches desired spending need, pensions, SS, & RMDs
-      let distributionTaken = annualWithdrawalNeed;
+    if (!isWorking) {
+      baselineLivingDraw = annualWithdrawalNeed;
       if (age >= 73) {
-        const divisor = RMD_DIVISORS[age] || 8.0;
-        const rmd = baseIra / divisor;
-        distributionTaken = Math.max(rmd, annualWithdrawalNeed);
-        baseIra = Math.max(0, baseIra - distributionTaken);
-      } else {
-        baseIra = Math.max(0, baseIra - distributionTaken);
+        const factor = UNIFORM_LIFETIME_TABLE[age] || 8.0;
+        baselineRmd = Math.round(baseIra / factor);
+        totalRmdAvoided += baselineRmd;
       }
-
-      baselineGross = distributionTaken + annualFixedIncome + (annualSocialSecurity * 0.85);
-      baseTaxableIncome = Math.max(0, baselineGross - stdDeduction);
-      const fedTax = calculateProgressiveFedTax(baseTaxableIncome, filingStatus);
-      const stateTax = Math.round(baseTaxableIncome * stateTaxRate);
-      baselineYearTax = fedTax + stateTax;
     }
 
-    totalBaselineTax += baselineYearTax;
+    const baselineDistribution = Math.max(baselineLivingDraw, baselineRmd);
+    const baselineOrdinaryIncome = (isWorking ? currentEarnedIncome : 0) +
+      annualFixedIncome +
+      baselineDistribution +
+      (annualSocialSecurity * (isWorking ? 0.85 : 0.85));
+
+    const baselineTaxable = Math.max(0, baselineOrdinaryIncome - standardDeduction);
+    const baselineFedTax = calculateFederalTax(baselineTaxable, filingStatus);
+    const baselineStateTax = Math.round(baselineTaxable * stateTaxRate);
+    const baselineAnnualTax = baselineFedTax + baselineStateTax;
+    totalBaselineTax += baselineAnnualTax;
+
+    // Deduct living distribution and compound remaining baseline IRA
+    baseIra = Math.max(0, baseIra - baselineDistribution);
     baseIra = Math.round(baseIra * (1 + expectedReturn));
 
-    // 2. Strategic Plan: Conversions until Plan IRA reaches $0
+    // 2. TACTICAL ROTH CONVERSION TRACK
     let conversionAmount = 0;
-    let maxFreeDollars = Math.round(planIra * maxFreeWithdrawalRate);
-    let taxesPaidFromWithdrawal = 0;
-    let planYearTax = 0;
-    let statRatePct = 0;
-    let netRatePct = 0;
+    let allowedFreePct = freeWithdrawalPct;
 
-    // Current fixed non-conversion taxable income
-    const fixedTaxableBase = isWorking
-      ? Math.max(0, currentEarnedIncome - stdDeduction)
-      : Math.max(0, (annualFixedIncome + (annualSocialSecurity * 0.85)) - stdDeduction);
+    if (freeWithdrawalSchedule === 'tiered_2_12') {
+      if (contractYear === 1) allowedFreePct = 0.02;
+      else if (contractYear <= 10) allowedFreePct = 0.12;
+      else allowedFreePct = 1.00;
+    } else if (freeWithdrawalSchedule === 'standard_10') {
+      if (contractYear === 1) allowedFreePct = 0.00;
+      else if (contractYear <= 10) allowedFreePct = 0.10;
+      else allowedFreePct = 1.00;
+    }
+
+    const maxFreeWithdrawal = isSurrenderExpired ? planIra : Math.round(planIra * allowedFreePct);
 
     if (planIra > 0) {
-      // Remaining room up to target ceiling
-      const availableCapacity = Math.max(0, targetBracketCeiling - fixedTaxableBase);
+      const baseOrdinaryBeforeConversion = (isWorking ? currentEarnedIncome : 0) +
+        annualFixedIncome +
+        (annualSocialSecurity * (isWorking ? 0.85 : 0.50));
+      const taxableBeforeConversion = Math.max(0, baseOrdinaryBeforeConversion - standardDeduction);
+      // Adjust MFJ bracket ceiling to exact Single-filer ceiling when filingStatus is 'single'
+      const effectiveBracketCeiling =
+        filingStatus === 'single'
+          ? Math.round(targetBracketCeiling / 2)
+          : targetBracketCeiling;
+      const roomInBracket = Math.max(0, effectiveBracketCeiling - taxableBeforeConversion);
 
-      const marginalFed = getMarginalFedRate(fixedTaxableBase + Math.min(availableCapacity, 50000), filingStatus);
-      const combinedRate = marginalFed + stateTaxRate;
-      statRatePct = Number((combinedRate * 100).toFixed(1));
-
-      // Conversion amount bounded by available bracket room AND free withdrawal liquidity
-      const maxConversionPossible = Math.round(maxFreeDollars / combinedRate);
-      conversionAmount = Math.min(planIra, Math.min(availableCapacity, maxConversionPossible));
-
-      if (conversionAmount > 0) {
-        // Compute exact incremental tax triggered by conversion
-        const baseFed = calculateProgressiveFedTax(fixedTaxableBase, filingStatus);
-        const totalFed = calculateProgressiveFedTax(fixedTaxableBase + conversionAmount, filingStatus);
-        const conversionFedTax = totalFed - baseFed;
-        const conversionStateTax = Math.round(conversionAmount * stateTaxRate);
-
-        taxesPaidFromWithdrawal = conversionFedTax + conversionStateTax;
-        planYearTax = baselineYearTax + taxesPaidFromWithdrawal;
-
-        const effectiveConversionRate = taxesPaidFromWithdrawal / conversionAmount;
-        const netCostFactor = Math.max(0.01, effectiveConversionRate - carrierBonusPct);
-        netRatePct = Number((netCostFactor * 100).toFixed(1));
-
-        planIra = Math.max(0, planIra - conversionAmount - taxesPaidFromWithdrawal);
-        planRoth += conversionAmount;
-
-        totalConversionsExecuted += conversionAmount;
-        totalTaxesPaidOnConversions += taxesPaidFromWithdrawal;
-      } else {
-        planYearTax = isWorking 
-          ? baselineYearTax 
-          : calculateProgressiveFedTax(fixedTaxableBase, filingStatus) + Math.round(fixedTaxableBase * stateTaxRate);
-      }
-    } else {
-      // 100% Tax-Free Roth distributions during retirement
-      if (!isWorking) {
-        planRoth = Math.max(0, planRoth - annualWithdrawalNeed);
-        const fedTax = calculateProgressiveFedTax(fixedTaxableBase, filingStatus);
-        const stateTax = Math.round(fixedTaxableBase * stateTaxRate);
-        planYearTax = fedTax + stateTax;
-      } else {
-        planYearTax = baselineYearTax;
-      }
+      // Convert up to the ceiling or the remaining IRA
+      conversionAmount = Math.min(planIra, roomInBracket);
+      totalConversionsExecuted += conversionAmount;
     }
 
-    if (age >= 73) {
-      const divisor = RMD_DIVISORS[age] || 8.0;
-      const avoidedRmd = planIra > 0 ? (baseIra - planIra) / divisor : baseIra / divisor;
-      totalRmdAvoided += Math.max(0, Math.round(avoidedRmd));
+    const planOrdinaryIncome = (isWorking ? currentEarnedIncome : 0) +
+      annualFixedIncome +
+      conversionAmount +
+      (annualSocialSecurity * (isWorking ? 0.85 : 0.50));
+
+    const planTaxable = Math.max(0, planOrdinaryIncome - standardDeduction);
+    const planFedTax = calculateFederalTax(planTaxable, filingStatus);
+    const planStateTax = Math.round(planTaxable * stateTaxRate);
+    const planAnnualTax = planFedTax + planStateTax;
+    totalPlanTax += planAnnualTax;
+
+    const statutoryRatePct = planTaxable > 0 ? Number(((planAnnualTax / planTaxable) * 100).toFixed(1)) : 22.0;
+    const netEffectiveRatePct = Number(Math.max(0, statutoryRatePct - (carrierBonusPct * 100)).toFixed(1));
+
+    // Contractual penalty-free liquidity handles taxes directly
+    const taxesPaidFromWithdrawal = Math.min(planAnnualTax, maxFreeWithdrawal);
+
+    // Update balances
+    planIra = Math.max(0, planIra - conversionAmount);
+    planRoth = planRoth + conversionAmount;
+
+    // REALISTIC RETIREMENT LIVING SPENDING DEDUCTION:
+    // Once retired, living expenses are paid out of the tax-free Roth account
+    if (!isWorking) {
+      planRoth = Math.max(0, planRoth - annualWithdrawalNeed);
     }
 
-    totalPlanTax += planYearTax;
+    // Compound remaining balances at growth rate
     planIra = Math.round(planIra * (1 + expectedReturn));
     planRoth = Math.round(planRoth * (1 + expectedReturn));
 
     yearlyData.push({
       age,
-      contractYear,
       isWorking,
-      baselineGrossIncome: baselineGross,
       baselineIra: Math.round(baseIra),
-      baselineRoth: Math.round(baseRoth),
-      baselineTax: baselineYearTax,
+      baselineTax: Math.round(baselineAnnualTax),
+      baselineRmd: Math.round(baselineRmd),
       planIra: Math.round(planIra),
       planRoth: Math.round(planRoth),
-      planTax: planYearTax,
-      conversionAmount,
-      maxFreeWithdrawalRatePct: Number((maxFreeWithdrawalRate * 100).toFixed(0)),
+      planTax: Math.round(planAnnualTax),
+      conversionAmount: Math.round(conversionAmount),
+      maxFreeWithdrawal: Math.round(maxFreeWithdrawal),
+      maxFreeWithdrawalRatePct: Math.round(allowedFreePct * 100),
+      taxesPaidFromWithdrawal: Math.round(taxesPaidFromWithdrawal),
+      statutoryRatePct,
+      netEffectiveRatePct,
       isSurrenderExpired,
-      maxFreeWithdrawal: maxFreeDollars,
-      taxesPaidFromWithdrawal,
-      statutoryRatePct: statRatePct || Number(((0.24 + stateTaxRate) * 100).toFixed(1)),
-      netEffectiveRatePct: netRatePct || Number((Math.max(0.01, 0.24 + stateTaxRate - carrierBonusPct) * 100).toFixed(1)),
-      rmdAvoided: age >= 73 ? Math.round(baseIra / (RMD_DIVISORS[age] || 8)) : 0,
     });
   }
 
   const lifetimeTaxSaved = Math.max(0, totalBaselineTax - totalPlanTax);
-  const heirSavings = Math.round((baseIra * heirsTaxRate));
-  const avgStatutoryRate = totalConversionsExecuted > 0 
-    ? Number(((totalTaxesPaidOnConversions / totalConversionsExecuted) * 100).toFixed(1))
-    : Number(((0.24 + stateTaxRate) * 100).toFixed(1));
-  const overallNetEffectiveTaxRate = Number((Math.max(0.01, (avgStatutoryRate / 100) - carrierBonusPct) * 100).toFixed(1));
+  const terminalWealthBase = yearlyData[yearlyData.length - 1]?.baselineIra ?? 0;
+  const heirSavings = Math.round(terminalWealthBase * heirsTaxRate);
+
+  const grossStatutoryRatePct = Number(((totalPlanTax / Math.max(1, totalConversionsExecuted)) * 100).toFixed(1));
+  const overallNetEffectiveTaxRate = Number(Math.max(0, grossStatutoryRatePct - (carrierBonusPct * 100)).toFixed(1));
 
   return {
     yearlyData,
-    lifetimeTaxSaved,
     totalBaselineTax,
     totalPlanTax,
-    totalRmdAvoided,
+    lifetimeTaxSaved,
     heirSavings,
     upfrontBonusDollars,
-    grossStatutoryRatePct: avgStatutoryRate,
+    grossStatutoryRatePct,
     overallNetEffectiveTaxRate,
     totalConversionsExecuted,
-    terminalWealthBase: baseIra,
+    totalRmdAvoided,
+    terminalWealthBase,
   };
 }
