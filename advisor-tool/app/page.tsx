@@ -766,10 +766,7 @@ export default function AdvisorTool() {
           retirementAge={retirementAge}
           lang={lang}
         />
-      ) : null}
-
-      {/* Discovery Call Co-Pilot View */}
-        {activeTab === 'discovery' ? (
+      ) : activeTab === 'discovery' ? (
           <DiscoveryCallCoPilot
             initialData={{
               clientName,
