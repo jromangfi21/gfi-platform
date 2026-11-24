@@ -68,6 +68,22 @@ function safeParseJson(raw: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const clonedReq = req.clone();
+  try {
+    const previewBody = await clonedReq.json();
+    const rawTranscript = (previewBody?.transcript || '').trim();
+    const advName = (previewBody?.advisorName || '').trim() || 'Advisor Name';
+    if (!rawTranscript) {
+      return Response.json({
+        currentStage: 1,
+        branchDetected: 'Stage 1: Open & Permission',
+        suggestedNextPrompt: `Hey, there, this is ${advName}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?`,
+        coachingTip: 'Confirm request & secure 10-minute window',
+        safetyMentioned: false,
+        extractedData: {},
+      });
+    }
+  } catch (_) {}
   try {
     const { transcript, advisorName, currentStage } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY?.trim();
