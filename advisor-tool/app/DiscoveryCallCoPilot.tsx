@@ -129,16 +129,10 @@ export default function DiscoveryCallCoPilot({
     setPrimaryName('');
     setSpouseName('');
     setActiveObjection(null);
-    if (typeof setCurrentStage === 'function') setCurrentStage(1);
-    if (typeof setSuggestedNextPrompt === 'function') {
-      setSuggestedNextPrompt(`Hey, there, this is ${advisorName || 'Advisor Name'}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?`);
-    }
-    if (typeof setCoachingTip === 'function') {
-      setCoachingTip('Confirm request & secure 10-minute window');
-    }
-    if (typeof setBranchDetected === 'function') {
-      setBranchDetected('Stage 1: Open & Permission');
-    }
+    setActiveStage(1);
+    setCompletedStages([]);
+    setRememberedRequest('yes');
+    setAiOverlay(null);
     if (typeof lastAutoAnalyzedRef !== 'undefined') lastAutoAnalyzedRef.current = '';
     setFormData({
       clientName: '',
