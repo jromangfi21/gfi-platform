@@ -17,6 +17,14 @@ import SequenceOfReturnsTab from './SequenceOfReturnsTab';
 import IllustrationComparison from './IllustrationComparison';
 
 export default function AdvisorTool() {
+  const [iulLumpSum, setIulLumpSum] = useState<number>(100000);
+  const [iulMonthly, setIulMonthly] = useState<number>(2000);
+  const iulFutureValue = Math.round(
+    iulLumpSum * Math.pow(1.062, 9) +
+    (iulMonthly * 12) * ((Math.pow(1.062, 4) - 1) / 0.062) * Math.pow(1.062, 5)
+  );
+  const iulLtcPool = Math.round((iulLumpSum + iulMonthly * 48) * 2.6);
+
   const [lang, setLang] = useState<'en' | 'es'>('en');
   const [savedSocialSecurity, setSavedSocialSecurity] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'discovery' | 'story' | 'backtest' | 'roth' | 'summary' | 'sorr'>('discovery');
@@ -38,8 +46,6 @@ export default function AdvisorTool() {
   const [filingStatus, setFilingStatus] = useState<FilingStatus>('mfj');
   const [iraBalance, setIraBalance] = useState(1250000);
   const [rothBalance, setRothBalance] = useState(40000);
-  const [iulLumpSum, setIulLumpSum] = useState<number>(100000);
-  const [iulMonthly, setIulMonthly] = useState<number>(2000);
 
   // Pre-Retirement & Post-Retirement Cash Flows
   const [currentEarnedIncome, setCurrentEarnedIncome] = useState(120000);
@@ -289,14 +295,6 @@ export default function AdvisorTool() {
   const finalEquityOnly = feeAdjustedBacktestResults.length > 0
     ? feeAdjustedBacktestResults[feeAdjustedBacktestResults.length - 1].equityBalance
     : 0;
-
-  const yearsToRetireIul = Math.max(1, retirementAge - currentAge);
-  const iulAccumYears = yearsToRetireIul + 5; // Through age 70 SS bridge
-  const iulFutureValue = Math.round(
-    iulLumpSum * Math.pow(1.062, iulAccumYears) +
-    (iulMonthly * 12) * ((Math.pow(1.062, yearsToRetireIul) - 1) / 0.062) * Math.pow(1.062, 5)
-  );
-  const iulLtcPool = Math.round((iulLumpSum + iulMonthly * 12 * yearsToRetireIul) * 2.6);
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans print:p-0 print:bg-white print:text-slate-900">
       
@@ -2272,7 +2270,7 @@ export default function AdvisorTool() {
             const preRmdYears = Math.max(0, rmdTriggerAge - currentAge);
             const isSsDeferred = Number(socialSecurity || 0) === 0 && savedSocialSecurity > 0;
 
-            return (
+  return (
               <div className="rounded-xl bg-slate-950/90 border border-amber-500/30 p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -2604,7 +2602,19 @@ export default function AdvisorTool() {
                             <td className="py-3.5 px-3 text-emerald-400 font-bold">${guaranteedFiaIncome.toLocaleString()}/yr</td>
                             <td className="py-3.5 px-3 text-right text-emerald-400 font-bold">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
                           </tr>
-                          <tr className="bg-indigo-950/50 font-black text-base border-t-2 border-indigo-500/70">
+                          <tr className="border-b border-slate-800/70">
+                    <td className="py-4 px-4 font-semibold text-white">Tax-Free IUL Bucket & LTC Shield</td>
+                    <td className="py-4 px-4 text-slate-400">Taxable Bank Cash</td>
+                    <td className="py-4 px-4 text-emerald-400 font-semibold">${iulFutureValue.toLocaleString()} Tax-Free</td>
+                    <td className="py-4 px-4 text-right text-sky-400 font-semibold">~${iulLtcPool.toLocaleString()} LTC Pool</td>
+                  </tr>
+                  <tr className="border-b border-slate-800/70">
+              <td className="py-4 px-4 font-semibold text-white">Tax-Free IUL Bucket & LTC Shield</td>
+              <td className="py-4 px-4 text-slate-400">Taxable Bank Cash</td>
+              <td className="py-4 px-4 text-emerald-400 font-semibold">${iulFutureValue.toLocaleString()} Tax-Free</td>
+              <td className="py-4 px-4 text-right text-sky-400 font-semibold">~${iulLtcPool.toLocaleString()} LTC Pool</td>
+            </tr>
+            <tr className="bg-indigo-950/50 font-black text-base border-t-2 border-indigo-500/70">
                             <td className="py-4 px-3 text-white">{lang === 'es' ? 'Ventaja Patrimonial Integral Neta' : 'Total Comprehensive Wealth Advantage'}</td>
                             <td className="py-4 px-3">--</td>
                             <td className="py-4 px-3">--</td>
