@@ -2548,7 +2548,36 @@ export default function AdvisorTool() {
                 {activeTab === 'summary' && (
                   <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-xl space-y-6 shadow-sm">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm border-collapse">
+                      <div className="mb-3 px-3.5 py-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                    {lang === 'es' ? 'Financiamiento IUL Libre de Impuestos:' : 'Tax-Free IUL Bucket Funding:'}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                      <span>{lang === 'es' ? 'Suma Global ($):' : 'Lump Sum ($):'}</span>
+                      <input
+                        type="number"
+                        step={10000}
+                        min={0}
+                        value={iulLumpSum}
+                        onChange={(e) => setIulLumpSum(Math.max(0, Number(e.target.value) || 0))}
+                        className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-emerald-300 focus:border-emerald-500 outline-none"
+                      />
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                      <span>{lang === 'es' ? 'Mensual ($/mes):' : 'Monthly ($/mo):'}</span>
+                      <input
+                        type="number"
+                        step={250}
+                        min={0}
+                        value={iulMonthly}
+                        onChange={(e) => setIulMonthly(Math.max(0, Number(e.target.value) || 0))}
+                        className="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-emerald-300 focus:border-emerald-500 outline-none"
+                      />
+                    </label>
+                  </div>
+                </div>
+                <table className="w-full text-left text-sm border-collapse">
                         <thead>
                           <tr className="border-b-2 border-slate-800 text-slate-300 uppercase tracking-wider text-xs font-bold">
                             <th className="py-3 px-3">{lang === 'es' ? 'Dimensión Estratégica' : 'Strategic Dimension'}</th>
@@ -2604,7 +2633,21 @@ export default function AdvisorTool() {
                             <td className="py-3.5 px-3 text-emerald-400 font-bold">${guaranteedFiaIncome.toLocaleString()}/yr</td>
                             <td className="py-3.5 px-3 text-right text-emerald-400 font-bold">+${annualIncomeAdvantage.toLocaleString()}/yr Floor</td>
                           </tr>
-                          <tr className="bg-indigo-950/50 font-black text-base border-t-2 border-indigo-500/70">
+                          <tr>
+                    <td className="py-3.5 px-3 font-semibold text-white">
+                      {lang === 'es' ? 'Cubeta IUL Libre de Impuestos y LTC' : 'Tax-Free IUL Bucket & LTC Shield'}
+                    </td>
+                    <td className="py-3.5 px-3 text-slate-400">
+                      {lang === 'es' ? 'Efectivo Bancario Gravable' : 'Taxable Bank Cash'}
+                    </td>
+                    <td className="py-3.5 px-3 text-emerald-400 font-bold">
+                      ${iulFutureValue.toLocaleString()} {lang === 'es' ? 'Libre de Impuestos' : 'Tax-Free'}
+                    </td>
+                    <td className="py-3.5 px-3 text-right text-sky-400 font-bold">
+                      ~${iulLtcPool.toLocaleString()} LTC Pool
+                    </td>
+                  </tr>
+                  <tr className="bg-indigo-950/50 font-black text-base border-t-2 border-indigo-500/70">
                             <td className="py-4 px-3 text-white">{lang === 'es' ? 'Ventaja Patrimonial Integral Neta' : 'Total Comprehensive Wealth Advantage'}</td>
                             <td className="py-4 px-3">--</td>
                             <td className="py-4 px-3">--</td>
