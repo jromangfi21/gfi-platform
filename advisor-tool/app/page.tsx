@@ -38,6 +38,8 @@ export default function AdvisorTool() {
   const [filingStatus, setFilingStatus] = useState<FilingStatus>('mfj');
   const [iraBalance, setIraBalance] = useState(1250000);
   const [rothBalance, setRothBalance] = useState(40000);
+  const [iulLumpSum, setIulLumpSum] = useState<number>(100000);
+  const [iulMonthly, setIulMonthly] = useState<number>(2000);
 
   // Pre-Retirement & Post-Retirement Cash Flows
   const [currentEarnedIncome, setCurrentEarnedIncome] = useState(120000);
@@ -288,6 +290,13 @@ export default function AdvisorTool() {
     ? feeAdjustedBacktestResults[feeAdjustedBacktestResults.length - 1].equityBalance
     : 0;
 
+  const yearsToRetireIul = Math.max(1, retirementAge - currentAge);
+  const iulAccumYears = yearsToRetireIul + 5; // Through age 70 SS bridge
+  const iulFutureValue = Math.round(
+    iulLumpSum * Math.pow(1.062, iulAccumYears) +
+    (iulMonthly * 12) * ((Math.pow(1.062, yearsToRetireIul) - 1) / 0.062) * Math.pow(1.062, 5)
+  );
+  const iulLtcPool = Math.round((iulLumpSum + iulMonthly * 12 * yearsToRetireIul) * 2.6);
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans print:p-0 print:bg-white print:text-slate-900">
       
@@ -306,6 +315,32 @@ export default function AdvisorTool() {
                   {lang === 'es' ? 'El Plan Maestro de Distribución GFI™' : 'The GFI Distribution Blueprint™'}
                 </h1>
                 <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">{t.subtitle}</p>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-slate-800/80 space-y-3">
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-400">IUL Lump Sum Pour-In:</span>
+                  <span className="text-emerald-400 font-semibold">${iulLumpSum.toLocaleString()}</span>
+                </div>
+                <input
+                  type="number"
+                  value={iulLumpSum}
+                  onChange={(e) => setIulLumpSum(Number(e.target.value) || 0)}
+                  className="w-full bg-slate-900/90 border border-slate-700 rounded px-3 py-1.5 text-sm text-emerald-300 font-semibold"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-400">IUL Monthly Funding:</span>
+                  <span className="text-emerald-400 font-semibold">${iulMonthly.toLocaleString()}/mo</span>
+                </div>
+                <input
+                  type="number"
+                  value={iulMonthly}
+                  onChange={(e) => setIulMonthly(Number(e.target.value) || 0)}
+                  className="w-full bg-slate-900/90 border border-slate-700 rounded px-3 py-1.5 text-sm text-emerald-300 font-semibold"
+                />
               </div>
             </div>
             <div className="text-right text-[11px] text-slate-700 space-y-0.5">
@@ -442,6 +477,12 @@ export default function AdvisorTool() {
           <div className="border border-slate-300 rounded-lg overflow-hidden">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
+                <tr className="border-b border-slate-800/70">
+                  <td className="py-4 px-4 font-semibold text-white">Tax-Free IUL Bucket & LTC Shield</td>
+                  <td className="py-4 px-4 text-slate-400">Taxable Bank Cash</td>
+                  <td className="py-4 px-4 text-emerald-400 font-semibold">${iulFutureValue.toLocaleString()} Tax-Free</td>
+                  <td className="py-4 px-4 text-right text-sky-400 font-semibold">~${iulLtcPool.toLocaleString()} LTC Pool</td>
+                </tr>
                 <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-2.5 px-3">{lang === 'es' ? 'Dimensión Estratégica' : 'Strategic Dimension'}</th>
                   <th className="py-2.5 px-3">{lang === 'es' ? 'Camino Actual (Tradicional 60/40)' : 'Current Path (Traditional 60/40)'}</th>
