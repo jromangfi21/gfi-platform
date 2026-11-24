@@ -132,7 +132,11 @@ export default function DiscoveryCallCoPilot({
     setActiveStage(1);
     setCompletedStages([]);
     setRememberedRequest('yes');
-    setAiOverlay(null);
+    setAiOverlay({
+      suggestedNextPrompt: `Hey, there, this is ${advisorName || 'Advisor Name'}. You recently requested some information about retirement income strategies, so I wanted to follow up and see what you were looking for. Do you remember doing that?`,
+      coachingTip: 'Confirm request & secure 10-minute window',
+      branchDetected: 'Stage 1: Open & Permission',
+    });
     if (typeof lastAutoAnalyzedRef !== 'undefined') lastAutoAnalyzedRef.current = '';
     setFormData({
       clientName: '',
